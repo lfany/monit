@@ -548,7 +548,7 @@ void Event_queue_process() {
                 snprintf(file_name, sizeof(file_name), "%s/%s", Run.eventlist_dir, de->d_name);
 
                 if (File_isFile(file_name)) {
-                        LogInfo("Processing queued event %s\n", file_name);
+                        DEBUG("Processing queued event %s\n", file_name);
 
                         FILE *file = fopen(file_name, "r");
                         if (! file) {
