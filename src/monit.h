@@ -98,6 +98,11 @@
 #ifdef HAVE_VM_VM_H
 #include <vm/vm.h>
 #endif
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h>
+#else
+#define PRIu64 "llu"
+#endif
 
 
 //FIXME: we can export this type in libmonit

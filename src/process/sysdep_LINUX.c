@@ -140,10 +140,10 @@ boolean_t init_process_info_sysdep(void) {
         FILE *f = fopen("/proc/meminfo", "r");
         if (f) {
                 char line[STRLEN];
-                long mem_max = 0L;
+                systeminfo.mem_max = 0L;
                 while (fgets(line, sizeof(line), f)) {
-                        if (sscanf(line, "MemTotal: %lu\n", &mem_max) == 1) {
-                                systeminfo.mem_max = (uint64_t)mem_max * 1024;
+                        if (sscanf(line, "MemTotal: %"PRIu64, &systeminfo.mem_max) == 1) {
+                                systeminfo.mem_max *= 1024;
                                 break;
                         }
                 }
@@ -157,10 +157,9 @@ boolean_t init_process_info_sysdep(void) {
         f = fopen("/proc/stat", "r");
         if (f) {
                 char line[STRLEN];
-                unsigned long booted = 0UL;
+                systeminfo.booted = 0;
                 while (fgets(line, sizeof(line), f)) {
-                        if (sscanf(line, "btime %lu\n", &booted) == 1) {
-                                systeminfo.booted = booted;
+                        if (sscanf(line, "btime %"PRIu64, &systeminfo.booted) == 1) {
                                 break;
                         }
                 }
