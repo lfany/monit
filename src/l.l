@@ -670,6 +670,18 @@ group[ \t]+       {
                     return SERVICENAME;
                   }
 
+  \"{str}\"       {
+                    yylval.string = handle_quoted_string(yytext);
+                    save_arg();
+                    return SERVICENAME;
+                  }
+
+  \'{str}\'       {
+                    yylval.string = handle_quoted_string(yytext);
+                    save_arg();
+                    return SERVICENAME;
+                  }
+
   [ \r\n\t]+[^,]  {
                     steplinenobycr(yytext);
                     unput(yytext[strlen(yytext)-1]);

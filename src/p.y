@@ -966,6 +966,7 @@ mailserveropt   : username {
                 | certmd5
                 ;
 
+//FIXME: make PORT NUMBER / UNIXSOCKET PATH position independent
 sethttpd        : SET HTTPD PORT NUMBER httpdnetlist {
                         Run.httpd.flags |= Httpd_Net;
                         Run.httpd.socket.net.port = $4;
@@ -1575,12 +1576,20 @@ protocol        : PROTOCOL APACHESTATUS apache_stat_list {
                 ;
 
 sendexpect      : SEND STRING {
-                    portset.protocol = Protocol_get(Protocol_GENERIC);
-                    addgeneric(&portset, $2, NULL);
+                        if (portset.protocol->check == check_default || portset.protocol->check == check_generic) {
+                                portset.protocol = Protocol_get(Protocol_GENERIC);
+                                addgeneric(&portset, $2, NULL);
+                        } else {
+                                yyerror("The SEND statement is not allowed in the %s protocol context", portset.protocol->name);
+                        }
                   }
                 | EXPECT STRING {
-                    portset.protocol = Protocol_get(Protocol_GENERIC);
-                    addgeneric(&portset, NULL, $2);
+                        if (portset.protocol->check == check_default || portset.protocol->check == check_generic) {
+                                portset.protocol = Protocol_get(Protocol_GENERIC);
+                                addgeneric(&portset, NULL, $2);
+                        } else {
+                                yyerror("The EXPECT statement is not allowed in the %s protocol context", portset.protocol->name);
+                        }
                   }
                 ;
 
