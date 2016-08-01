@@ -230,7 +230,7 @@ static boolean_t _send(List_T list) {
                                                 "Date: %s\r\n"
                                                 "X-Mailer: Monit %s\r\n"
                                                 "MIME-Version: 1.0\r\n"
-                                                "Content-Type: text/plain; charset=\"iso-8859-1\"\r\n"
+                                                "Content-Type: text/plain; charset=utf-8\r\n"
                                                 "Content-Transfer-Encoding: 8bit\r\n"
                                                 "Message-Id: <%lld.%lu@%s>\r\n"
                                                 "\r\n"
