@@ -231,10 +231,14 @@ static boolean_t _parseNetwork(char *pattern, HostsAllow_T net) {
                         return false;
                 _mapIPv4toIPv6((uint32_t *)&(addr.sin_addr), (uint32_t *)&net->address);
         } else {
+#ifdef HAVE_IPV6
                 struct sockaddr_in6 addr;
                 if (inet_pton(AF_INET6, buf, &(addr.sin6_addr)) != 1)
                         return false;
                 memcpy(&net->address, &(addr.sin6_addr), 16);
+#else
+                THROW(AssertException, "IP-version 6 not supported on this system");
+#endif
         }
         if (longmask == NULL) {
                 // Convert CIDR notation to integer mask
@@ -299,7 +303,6 @@ static boolean_t _appendAllow(HostsAllow_T h, const char *pattern) {
         {
                 if (_hasAllow(h))  {
                         LogWarning("Skipping redundant '%s'\n", pattern);
-                        FREE(h);
                 } else {
                         DEBUG("Adding allow '%s'\n", pattern);
                         h->next = hostlist;
@@ -345,13 +348,17 @@ static boolean_t _authenticateHost(struct sockaddr *addr) {
                 if (! (allow = _checkAllow(address)))
                         LogError("Denied connection from non-authorized client [%s]\n", inet_ntop(addr->sa_family, &a->sin_addr, (char[INET_ADDRSTRLEN]){}, INET_ADDRSTRLEN));
                 return allow;
-        } else if (addr->sa_family == AF_INET6) {
+        }
+#ifdef HAVE_IPV6
+        else if (addr->sa_family == AF_INET6) {
                 boolean_t allow = false;
                 struct sockaddr_in6 *a = (struct sockaddr_in6 *)addr;
                 if (! (allow = _checkAllow((uint32_t *)&(a->sin6_addr))))
                         LogError("Denied connection from non-authorized client [%s]\n", inet_ntop(addr->sa_family, &(a->sin6_addr), (char[INET6_ADDRSTRLEN]){}, INET6_ADDRSTRLEN));
                 return allow;
-        } else if (addr->sa_family == AF_UNIX) {
+        }
+#endif
+        else if (addr->sa_family == AF_UNIX) {
                 return true;
         }
         return false;
@@ -492,11 +499,14 @@ boolean_t Engine_addHostAllow(char *pattern) {
                                 NEW(h);
                                 struct sockaddr_in *sin = (struct sockaddr_in *)_res->ai_addr;
                                 _mapIPv4toIPv6((uint32_t *)&(sin->sin_addr), h->address);
-                        } else if (_res->ai_family == AF_INET6) {
+                        }
+#ifdef HAVE_IPV6
+                        else if (_res->ai_family == AF_INET6) {
                                 NEW(h);
                                 struct sockaddr_in6 *sin = (struct sockaddr_in6 *)_res->ai_addr;
                                 memcpy(&h->address, &(sin->sin6_addr), 16);
                         }
+#endif
                         if (h) {
                                 memset(h->mask, 0xff, 16); // compare all 128 bits
                                 if (_appendAllow(h, pattern))

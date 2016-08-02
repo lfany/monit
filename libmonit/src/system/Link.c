@@ -230,8 +230,10 @@ static const char *_findInterfaceForAddress(const char *address) {
                 char host[NI_MAXHOST];
                 if (a->ifa_addr->sa_family == AF_INET)
                         s = getnameinfo(a->ifa_addr, sizeof(struct sockaddr_in), host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+#ifdef HAVE_IPV6
                 else if (a->ifa_addr->sa_family == AF_INET6)
                         s = getnameinfo(a->ifa_addr, sizeof(struct sockaddr_in6), host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+#endif
                 else
                         continue;
                 if (s != 0)
