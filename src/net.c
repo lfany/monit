@@ -142,6 +142,7 @@
 // libmonit
 #include "system/Net.h"
 #include "system/Time.h"
+#include "exceptions/AssertException.h"
 #include "exceptions/IOException.h"
 
 
@@ -197,54 +198,67 @@ boolean_t check_host(const char *hostname) {
 }
 
 
-//FIXME: we support IPv4 only currently
-int create_server_socket(const char *address, int port, int backlog) {
-        int s = socket(AF_INET, SOCK_STREAM, 0);
-        if (s < 0) {
-                LogError("Cannot create socket -- %s\n", STRERROR);
-                return -1;
+int create_server_socket_tcp(const char *address, int port, Socket_Family family, int backlog) {
+        char _port[6];
+        snprintf(_port, sizeof(_port), "%d", port);
+        struct addrinfo *result, hints = {
+                .ai_flags = AI_PASSIVE,
+                .ai_socktype = SOCK_STREAM
+        };
+        switch (family) {
+                case Socket_Ip:
+                        hints.ai_family = AF_UNSPEC;
+                        break;
+                case Socket_Ip4:
+                        hints.ai_family = AF_INET;
+                        break;
+#ifdef HAVE_IPV6
+                case Socket_Ip6:
+                        hints.ai_family = AF_INET6;
+                        break;
+#endif
+                default:
+                        THROW(AssertException, "Invalid socket family %d", family);
         }
-        struct sockaddr_in addr;
-        memset(&addr, 0, sizeof(struct sockaddr_in));
-        if (address) {
-                struct addrinfo *result, hints = {
-                        .ai_family = AF_INET
-                };
-                int status = getaddrinfo(address, NULL, &hints, &result);
-                if (status) {
-                        LogError("Cannot translate '%s' to IP address -- %s\n", address, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
-                        goto error;
-                }
-                memcpy(&addr, result->ai_addr, result->ai_addrlen);
-                freeaddrinfo(result);
-        } else {
-                addr.sin_addr.s_addr = htonl(INADDR_ANY);
-        }
-        addr.sin_family = AF_INET;
-        addr.sin_port = htons(port);
+#ifdef AI_ADDRCONFIG
+        hints.ai_flags |= AI_ADDRCONFIG;
+#endif
+        int status = getaddrinfo(address, _port, &hints, &result);
+        if (status)
+                THROW(IOException, "Cannot translate %s socket [%s]:%d -- %s", socketnames[family], NVLSTR(address), port, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
         int flag = 1;
-        if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&flag, sizeof(flag)) < 0)  {
-                LogError("Cannot set reuseaddr option -- %s\n", STRERROR);
-                goto error;
+        char error[STRLEN];
+        for (struct addrinfo *_result = result; _result; _result = _result->ai_next) {
+                int s = socket(_result->ai_family, _result->ai_socktype, _result->ai_protocol);
+                if (s) {
+                        if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&flag, sizeof(flag)) == 0) {
+                                if (Net_setNonBlocking(s)) {
+                                        if (fcntl(s, F_SETFD, FD_CLOEXEC) != -1) {
+                                                if (bind(s, _result->ai_addr, _result->ai_addrlen) == 0) {
+                                                        if (listen(s, backlog) == 0) {
+                                                                freeaddrinfo(result);
+                                                                return s;
+                                                        } else {
+                                                                snprintf(error, sizeof(error), "Cannot listen: %s", STRERROR);
+                                                        }
+                                                } else {
+                                                        snprintf(error, sizeof(error), "Cannot bind: %s", STRERROR);
+                                                }
+                                        } else {
+                                                snprintf(error, sizeof(error), "Cannot set close on exec option: %s", STRERROR);
+                                        }
+                                } else {
+                                        snprintf(error, sizeof(error), "Cannot set nonblocking socket: %s", STRERROR);
+                                }
+                        } else {
+                                snprintf(error, sizeof(error), "Cannot set reuseaddr option: %s", STRERROR);
+                        }
+                        if (close(s) < 0)
+                                LogError("Server socket %d close failed: %s\n", s, STRERROR);
+                }
         }
-        if (! Net_setNonBlocking(s))
-                goto error;
-        if (fcntl(s, F_SETFD, FD_CLOEXEC) == -1) {
-                LogError("Cannot set close on exec option -- %s\n", STRERROR);
-                goto error;
-        }
-        if (bind(s, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) < 0) {
-                LogError("Cannot bind -- %s\n", STRERROR);
-                goto error;
-        }
-        if (listen(s, backlog) < 0) {
-                LogError("Cannot listen -- %s\n", STRERROR);
-                goto error;
-        }
-        return s;
-error:
-        if (close(s) < 0)
-                LogError("Socket %d close failed -- %s\n", s, STRERROR);
+        freeaddrinfo(result);
+        THROW(IOException, "Cannot create server %s socket for [%s]:%d -- %s", socketnames[family], NVLSTR(address), port, error);
         return -1;
 }
 
@@ -252,31 +266,33 @@ error:
 int create_server_socket_unix(const char *path, int backlog) {
         int s = socket(AF_UNIX, SOCK_STREAM, 0);
         if (s < 0) {
-                LogError("Cannot create socket -- %s\n", STRERROR);
-                return -1;
+                THROW(IOException, "Cannot create socket -- %s", STRERROR);
         }
         struct sockaddr_un addr = {
                 .sun_family = AF_UNIX
         };
         snprintf(addr.sun_path, sizeof(addr.sun_path), "%s", path);
-        if (! Net_setNonBlocking(s))
-                goto error;
-        if (fcntl(s, F_SETFD, FD_CLOEXEC) == -1) {
-                LogError("Cannot set close on exec option -- %s\n", STRERROR);
-                goto error;
+        char error[STRLEN];
+        if (Net_setNonBlocking(s)) {
+                if (fcntl(s, F_SETFD, FD_CLOEXEC) != -1) {
+                        if (bind(s, (struct sockaddr *)&addr, sizeof(struct sockaddr_un)) == 0) {
+                                if (listen(s, backlog) == 0) {
+                                        return s;
+                                } else {
+                                        snprintf(error, sizeof(error), "Cannot listen -- %s", STRERROR);
+                                }
+                        } else {
+                                snprintf(error, sizeof(error), "Cannot bind -- %s", STRERROR);
+                        }
+                } else {
+                        snprintf(error, sizeof(error), "Cannot set close on exec option -- %s", STRERROR);
+                }
+        } else {
+                snprintf(error, sizeof(error), "Cannot set nonblocking socket: %s", STRERROR);
         }
-        if (bind(s, (struct sockaddr *)&addr, sizeof(struct sockaddr_un)) < 0) {
-                LogError("Cannot bind -- %s\n", STRERROR);
-                goto error;
-        }
-        if (listen(s, backlog) < 0) {
-                LogError("Cannot listen -- %s\n", STRERROR);
-                goto error;
-        }
-        return s;
-error:
         if (close(s) < 0)
                 LogError("Socket %d close failed -- %s\n", s, STRERROR);
+        THROW(IOException, "Cannot create unix server socket at %s -- %s", path, error);
         return -1;
 }
 

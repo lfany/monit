@@ -1130,7 +1130,7 @@ struct myrun {
         /** An object holding Monit HTTP interface setup */
         struct {
                 Httpd_Flags flags;
-                union {
+                struct {
                         struct {
                                 int  port;
                                 char *address;
@@ -1172,6 +1172,7 @@ struct myrun {
 
 /* -------------------------------------------------------- Global variables */
 
+
 extern const char    *prog;
 extern struct myrun   Run;
 extern Service_T      servicelist;
@@ -1190,6 +1191,8 @@ extern char *servicetypes[];
 extern char *pathnames[];
 extern char *icmpnames[];
 extern char *sslnames[];
+extern char *socketnames[];
+
 
 /* ------------------------------------------------------- Public prototypes */
 

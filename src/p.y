@@ -966,33 +966,19 @@ mailserveropt   : username {
                 | certmd5
                 ;
 
-//FIXME: make PORT NUMBER / UNIXSOCKET PATH position independent
-sethttpd        : SET HTTPD PORT NUMBER httpdnetlist {
-                        Run.httpd.flags |= Httpd_Net;
-                        Run.httpd.socket.net.port = $4;
-                 }
-                | SET HTTPD UNIXSOCKET PATH httpdunixlist {
-                        Run.httpd.flags |= Httpd_Unix;
-                        Run.httpd.socket.unix.path = $4;
-                 }
+sethttpd        : SET HTTPD httpdlist
                 ;
 
-httpdnetlist    : /* EMPTY */
-                | httpdnetlist httpdnetoption
+httpdlist       : /* EMPTY */
+                | httpdlist httpdoption
                 ;
 
-httpdnetoption  : sslserver
+httpdoption     : sslserver
                 | signature
                 | bindaddress
                 | allow
-                ;
-
-httpdunixlist   : /* EMPTY */
-                | httpdunixlist httpdunixoption
-                ;
-
-httpdunixoption : signature
-                | allow
+                | httpdport
+                | httpdsocket
                 ;
 
 sslserver       : ssldisable optssllist {
@@ -1026,6 +1012,18 @@ sslenable       : SSL ENABLE
 
 ssldisable      : SSL DISABLE
                 | DISABLE SSL
+                ;
+
+httpdport       : PORT NUMBER {
+                        Run.httpd.flags |= Httpd_Net;
+                        Run.httpd.socket.net.port = $2;
+                  }
+                ;
+
+httpdsocket     : UNIXSOCKET PATH {
+                        Run.httpd.flags |= Httpd_Unix;
+                        Run.httpd.socket.unix.path = $2;
+                  }
                 ;
 
 signature       : sigenable  {

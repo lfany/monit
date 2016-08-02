@@ -397,11 +397,17 @@ T Socket_createAccepted(int socket, struct sockaddr *addr, socklen_t addrlen, vo
         S->timeout = Run.limits.networkTimeout;
         S->connection_type = Connection_Server;
         S->type = Socket_Tcp;
-        if (addr->sa_family == AF_INET) {
-                struct sockaddr_in *a = (struct sockaddr_in *)addr;
-                S->family = Socket_Ip4;
+        if (addr->sa_family == AF_INET || addr->sa_family == AF_INET6) {
+                if (addr->sa_family == AF_INET) {
+                        struct sockaddr_in *a = (struct sockaddr_in *)addr;
+                        S->family = Socket_Ip4;
+                        S->host = Str_dup(inet_ntop(addr->sa_family, &a->sin_addr, (char[INET_ADDRSTRLEN]){}, INET_ADDRSTRLEN));
+                } else {
+                        struct sockaddr_in6 *a = (struct sockaddr_in6 *)addr;
+                        S->family = Socket_Ip6;
+                        S->host = Str_dup(inet_ntop(addr->sa_family, &a->sin6_addr, (char[INET6_ADDRSTRLEN]){}, INET6_ADDRSTRLEN));
+                }
                 S->port = _getPort(addr, addrlen);
-                S->host = Str_dup(inet_ntoa(a->sin_addr));
 #ifdef HAVE_OPENSSL
                 if (sslserver) {
                         S->sslserver = sslserver;

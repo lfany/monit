@@ -4,6 +4,11 @@
 
 Version 5.19
 
+New: Issue #421: Monit HTTP GUI: support for IPv6 added.
+
+New: Monit HTTP GUI: it is now possible to listen both on TCP and unix sockets (previously it was
+mutually exclusive).
+
 New: Issue #380: apache-status protocol test: Added support for 'username' and 'password' options for
 Basic authentication. Example:
  if failed port 80 protocol apache-status username myuser password 123456
@@ -33,6 +38,9 @@ Fixed: Issue #400: Clarify network tests documentation.
 Fixed: Issue #431: Change charset in emails to UTF-8.
 
 Fixed: Return syntax error if send/expect statement is used in the context of other protocol test.
+
+Fixed: Monit HTTP GUI: The port and unixsocket options are now position independent in the "set httpd"
+context.
 
 Fixed: If the resource check is disabled (for example because the user doesn't have privileges to
 read the data), emit just warning on startup.

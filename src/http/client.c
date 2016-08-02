@@ -175,13 +175,12 @@ static boolean_t _client(const char *request, StringBuffer_T data) {
         }
         Socket_T S = NULL;
         if (Run.httpd.flags & Httpd_Net) {
-                // FIXME: Monit HTTP support IPv4 only currently ... when IPv6 is implemented change the family to Socket_Ip
                 SslOptions_T options = {
                         .flags = (Run.httpd.flags & Httpd_Ssl) ? SSL_Enabled : SSL_Disabled,
                         .clientpemfile = Run.httpd.socket.net.ssl.clientpem,
                         .allowSelfSigned = Run.httpd.flags & Httpd_AllowSelfSignedCertificates
                 };
-                S = Socket_create(Run.httpd.socket.net.address ? Run.httpd.socket.net.address : "localhost", Run.httpd.socket.net.port, Socket_Tcp, Socket_Ip4, options, Run.limits.networkTimeout);
+                S = Socket_create(Run.httpd.socket.net.address ? Run.httpd.socket.net.address : "localhost", Run.httpd.socket.net.port, Socket_Tcp, Socket_Ip, options, Run.limits.networkTimeout);
         } else if (Run.httpd.flags & Httpd_Unix) {
                 S = Socket_createUnix(Run.httpd.socket.unix.path, Socket_Tcp, Run.limits.networkTimeout);
         } else {

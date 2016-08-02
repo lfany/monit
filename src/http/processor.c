@@ -68,6 +68,7 @@
 #include <limits.h>
 #endif
 
+#include "monit.h"
 #include "processor.h"
 #include "base64.h"
 
@@ -217,7 +218,7 @@ void send_error(HttpRequest req, HttpResponse res, int code, const char *msg, ..
         va_end(ap);
         escapeHTML(res->outputbuffer, message);
         if (code != SC_UNAUTHORIZED) // We log details in basic_authenticate() already, no need to log generic error sent to client here
-                LogError("HttpRequest: error -- client %s: %s %d %s\n", Socket_getRemoteHost(req->S), SERVER_PROTOCOL, code, message);
+                LogError("HttpRequest: error -- client [%s]: %s %d %s\n", NVLSTR(Socket_getRemoteHost(req->S)), SERVER_PROTOCOL, code, message);
         FREE(message);
         char server[STRLEN];
         StringBuffer_append(res->outputbuffer,
@@ -725,34 +726,34 @@ static boolean_t is_authenticated(HttpRequest req, HttpResponse res) {
 static boolean_t basic_authenticate(HttpRequest req) {
         const char *credentials = get_header(req, "Authorization");
         if (! (credentials && Str_startsWith(credentials, "Basic "))) {
-                LogError("HttpRequest: access denied -- client %s: missing or invalid Authorization header\n", Socket_getRemoteHost(req->S));
+                LogError("HttpRequest: access denied -- client [%s]: missing or invalid Authorization header\n", NVLSTR(Socket_getRemoteHost(req->S)));
                 return false;
         }
         char buf[STRLEN] = {0};
         strncpy(buf, &credentials[6], sizeof(buf) - 1);
         char uname[STRLEN] = {0};
         if (decode_base64((unsigned char *)uname, buf) <= 0) {
-                LogError("HttpRequest: access denied -- client %s: invalid Authorization header\n", Socket_getRemoteHost(req->S));
+                LogError("HttpRequest: access denied -- client [%s]: invalid Authorization header\n", NVLSTR(Socket_getRemoteHost(req->S)));
                 return false;
         }
         if (! *uname) {
-                LogError("HttpRequest: access denied -- client %s: empty username\n", Socket_getRemoteHost(req->S));
+                LogError("HttpRequest: access denied -- client [%s]: empty username\n", NVLSTR(Socket_getRemoteHost(req->S)));
                 return false;
         }
         char *password = password = strchr(uname, ':');
         if (! password || ! *password) {
-                LogError("HttpRequest: access denied -- client %s: empty password\n", Socket_getRemoteHost(req->S));
+                LogError("HttpRequest: access denied -- client [%s]: empty password\n", NVLSTR(Socket_getRemoteHost(req->S)));
                 return false;
         }
         *password++ = 0;
         /* Check if user exist */
         if (! Util_getUserCredentials(uname)) {
-                LogError("HttpRequest: access denied -- client %s: unknown user '%s'\n", Socket_getRemoteHost(req->S), uname);
+                LogError("HttpRequest: access denied -- client [%s]: unknown user '%s'\n", NVLSTR(Socket_getRemoteHost(req->S)), uname);
                 return false;
         }
         /* Check if user has supplied the right password */
         if (! Util_checkCredentials(uname,  password)) {
-                LogError("HttpRequest: access denied -- client %s: wrong password for user '%s'\n", Socket_getRemoteHost(req->S), uname);
+                LogError("HttpRequest: access denied -- client [%s]: wrong password for user '%s'\n", NVLSTR(Socket_getRemoteHost(req->S)), uname);
                 return false;
         }
         req->remote_user = Str_dup(uname);
@@ -788,7 +789,7 @@ static void internal_error(Socket_T S, int status, char *msg) {
                      "</body></html>\r\n",
                      SERVER_PROTOCOL, status, status_msg, date, server,
                      status_msg, status_msg, msg, SERVER_URL, server);
-        DEBUG("HttpRequest: error -- client %s: %s %d %s\n", Socket_getRemoteHost(S), SERVER_PROTOCOL, status, msg ? msg : status_msg);
+        DEBUG("HttpRequest: error -- client [%s]: %s %d %s\n", NVLSTR(Socket_getRemoteHost(S)), SERVER_PROTOCOL, status, msg ? msg : status_msg);
 }
 
 

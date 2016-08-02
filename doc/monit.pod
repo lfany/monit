@@ -725,7 +725,7 @@ Example:
  set httpd unixsocket /var/run/monit.sock
      allow username:password
 
-B<Options>:
+=head2 Options
 
 B<UNIXSOCKET> set the path to the Unix Socket Monit should bind to
 and listen on.
@@ -788,6 +788,34 @@ HTTP response header and error pages. For example:
     port 2812
     signature disable
     allow myuser:mypassword
+
+=head2 IP version
+
+Monit HTTP over TCP supports both IP version 4 and 6. Support is
+transparent and does not require any special configuration. If
+I<address> is B<not> specified as in this example:
+
+  set httpd
+    port 2812
+    allow ...
+
+Monit will bind to and listen on port 2812 on all interfaces, both IPv6
+and IPv4 interfaces if available. To force Monit HTTP to only listen on
+and accept connections over IP version 6, specify an IPv6 address
+
+  set httpd
+    port 2812
+    use address "fe80::222:19ff:fe53:6c59"
+    allow ...
+
+Likewise, to force Monit HTTP to only listen on and accept connections
+over IP version 4, specify an IPv4 address;
+
+  set httpd
+    port 2812
+    use address 62.109.39.247
+    allow ...
+
 
 =head2 Authentication
 

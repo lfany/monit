@@ -80,6 +80,10 @@
 #include <arpa/inet.h>
 #endif
 
+#ifdef HAVE_POLL_H
+#include <poll.h>
+#endif
+
 #include "monit.h"
 #include "engine.h"
 #include "net.h"
@@ -91,6 +95,7 @@
 // libmonit
 #include "system/Net.h"
 #include "exceptions/AssertException.h"
+#include "exceptions/IOException.h"
 
 
 /**
@@ -103,7 +108,7 @@
  *    connection queue when the current request finish.
  *
  *    Since this server is written for monit, low traffic is expected.
- *    Connect from not-authenicated clients will be closed down
+ *    Connect from not-authenticated clients will be closed down
  *    promptly. The authentication schema or access control is based
  *    on client name/address/pam and only requests from known clients are
  *    accepted. Hosts allowed to connect to this server should be
@@ -117,18 +122,33 @@
 
 
 typedef struct HostsAllow_T {
-        unsigned long network;
-        unsigned long mask;
+        uint32_t address[4]; // IPv4 or IPv6 address
+        uint32_t mask[4];    // mask
         /* For internal use */
         struct HostsAllow_T *next;
 } *HostsAllow_T;
 
 
-static volatile boolean_t stopped = false;
-static int myServerSocket = 0;
+#define MAX_SERVER_SOCKETS 3
+
+
+static struct {
+        Socket_Family family;
+        union {
+                struct sockaddr_storage addr_in;
+                struct sockaddr_un addr_un;
+        } _addr;
+        struct sockaddr *addr;
+        socklen_t addrlen;
 #ifdef HAVE_OPENSSL
-SslServer_T mySSLServerConnection = NULL;
+        SslServer_T ssl;
 #endif
+} data[MAX_SERVER_SOCKETS] = {};
+
+
+static volatile boolean_t stopped = false;
+static int myServerSocketsCount = 0;
+static struct pollfd myServerSockets[3] = {};
 static HostsAllow_T hostlist = NULL;
 static Mutex_T mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -136,12 +156,15 @@ static Mutex_T mutex = PTHREAD_MUTEX_INITIALIZER;
 /* ----------------------------------------------------------------- Private */
 
 
-/**
- * Parse network string and return numeric IP and netmask
- * @param pattern A network identifier in IP/mask format to be parsed
- * @param net A structure holding IP and mask of the network
- * @return false if parsing fails otherwise true
- */
+static void _mapIPv4toIPv6(uint32_t *address4, uint32_t *address6) {
+        // Map IPv4 address to IPv6 "::ffff:x.x.x.x" notation, so we can compare IPv4 address in IPv6 namespace
+        *(address6 + 0) = 0x00000000;
+        *(address6 + 1) = 0x00000000;
+        *(address6 + 2) = htonl(0x0000ffff);
+        *(address6 + 3) = *address4;
+}
+
+
 static boolean_t _parseNetwork(char *pattern, HostsAllow_T net) {
         ASSERT(pattern);
         ASSERT(net);
@@ -150,153 +173,261 @@ static boolean_t _parseNetwork(char *pattern, HostsAllow_T net) {
         int shortmask = 0;
         int slashcount = 0;
         int dotcount = 0;
+        int columncount = 0;
         int count = 0;
 
         char buf[STRLEN];
-        snprintf(buf, STRLEN, "%s", pattern);
+        strncpy(buf, pattern, sizeof(buf));
         char *temp = buf;
-        /* decide if we have xxx.xxx.xxx.xxx/yyy or xxx.xxx.xxx.xxx/yyy.yyy.yyy.yyy */
+        Socket_Family family = Socket_Ip4;
+        // check if we have IPv4/IPv6 CIDR notation (x.x.x.x/yyy or x::/y) or IPv4 dot-decimal (x.x.x.x/y.y.y.y)
         while (*temp) {
                 if (*temp == '/') {
-                        /* We have found a "/" -> we are preceeding to the netmask */
-                        if ((slashcount == 1) || (dotcount != 3))
-                                /* We have already found a "/" or we haven't had enough dots before finding the slash -> Error! */
-                                return false;
+                        if (slashcount > 0 || dotcount != 3 || columncount < 2)
+                                return false; // The "/" was found already or its prefix doesn't look like valid address
                         *temp = 0;
                         longmask = *(temp + 1) ? temp + 1 : NULL;
-                        count = 0;
-                        slashcount = 1;
-                        dotcount = 0;
+                        slashcount++;
+                        dotcount = columncount = count = 0;
                 } else if (*temp == '.') {
-                        /* We have found the next dot! */
+                        if (family == Socket_Ip6 && slashcount > 0)
+                                return false; // No "." allowed past "/" for IPv6 address
                         dotcount++;
-                } else if (! isdigit((int)*temp)) {
-                        /* No number, "." or "/" -> Error! */
-                        return false;
+                } else if (*temp == ':') {
+                        if (slashcount > 0)
+                                return false; // ":" not allowed past "/"
+                        columncount++;
+                        family = Socket_Ip6;
+                } else {
+                        if (slashcount == 0) {
+                                // [0-9a-fA-F] allowed before "/"
+                                if (! isxdigit((int)*temp))
+                                        return false;
+                        } else {
+                                // only [0-9] allowed past "/"
+                                if (! isdigit((int)*temp))
+                                        return false;
+                        }
                 }
                 count++;
                 temp++;
         }
         if (slashcount == 0) {
-                /* We have just host portion */
-                shortmask = 32;
-        } else if ((dotcount == 0) && (count > 1) && (count < 4)) {
-                /* We have no dots but 1 or 2 numbers after the slash -> short netmask */
-                if (longmask != NULL) {
+                // Host part only
+                shortmask = 128;
+        } else if (dotcount == 0 && count > 0 && count < 4) {
+                // Mask in CIDR notation
+                if (longmask) {
                         shortmask = atoi(longmask);
                         longmask = NULL;
                 }
         } else if (dotcount != 3) {
-                /* A long netmask requires three dots */
+                // The IPv4 dot-decimal mask requires three dots
                 return false;
         }
-        /* Parse the network */
-        struct in_addr inp;
-        if (! inet_aton(buf, &inp))
-                return false;
-        net->network = inp.s_addr;
-        /* Convert short netmasks to integer */
-        if (longmask == NULL) {
-                if ((shortmask > 32) || (shortmask < 0)) {
+        if (family == Socket_Ip4) {
+                struct sockaddr_in addr;
+                if (inet_pton(AF_INET, buf, &(addr.sin_addr)) != 1)
                         return false;
-                } else if ( shortmask == 32 ) {
-                        net->mask = -1;
+                _mapIPv4toIPv6((uint32_t *)&(addr.sin_addr), (uint32_t *)&net->address);
+        } else {
+                struct sockaddr_in6 addr;
+                if (inet_pton(AF_INET6, buf, &(addr.sin6_addr)) != 1)
+                        return false;
+                memcpy(&net->address, &(addr.sin6_addr), 16);
+        }
+        if (longmask == NULL) {
+                // Convert CIDR notation to integer mask
+                if (shortmask < 0)
+                        return false;
+                if (family == Socket_Ip4) {
+                        if (shortmask > 32) {
+                                return false;
+                        } else if (shortmask == 32) {
+                                uint32_t mask = 0xffffffff;
+                                _mapIPv4toIPv6(&mask, net->mask);
+                        } else {
+                                uint32_t mask = htonl(0xffffffff << (32 - shortmask));
+                                _mapIPv4toIPv6(&mask, net->mask);
+                        }
                 } else {
-                        net->mask = (1 << shortmask) - 1;
-                        net->mask = htonl(net->mask << (32 - shortmask));
+                        if (shortmask > 128) {
+                                return false;
+                        } else if (shortmask == 128) {
+                                memset(net->mask, 0xff, 16);
+                        } else {
+                                for (int i = 0; i < 4; i++) {
+                                        if (shortmask > 32) {
+                                                net->mask[i] = 0xffffffff;
+                                                shortmask -= 32;
+                                        } else if (shortmask > 0) {
+                                                net->mask[i] = htonl(0xffffffff << (32 - shortmask));
+                                        }
+                                }
+                        }
                 }
         } else {
-                /* Parse long netmasks */
-                if (! inet_aton(longmask, &inp))
+                // Parse IPv4 dot-decimal mask
+                struct sockaddr_in addr;
+                if (! inet_aton(longmask, &(addr.sin_addr)))
                         return false;
-                net->mask = inp.s_addr;
+                _mapIPv4toIPv6((uint32_t *)&(addr.sin_addr), net->mask);
         }
-        /* Remove bogus network components */
-        net->network &= net->mask;
         return true;
 }
 
 
-static boolean_t _hasHostAllow(HostsAllow_T host) {
+static void _destroyAllow(HostsAllow_T p) {
+        HostsAllow_T a = p;
+        if (a->next)
+                _destroyAllow(a->next);
+        FREE(a);
+}
+
+
+static boolean_t _hasAllow(HostsAllow_T host) {
         for (HostsAllow_T p = hostlist; p; p = p->next)
-                if ((p->network == host->network) && ((p->mask == host->mask)))
+                if (memcmp(p->address, &(host->address), 16) == 0 && memcmp(p->mask, &(host->mask), 16) == 0)
                         return true;
         return false;
 }
 
 
-static void _destroyHostAllow(HostsAllow_T p) {
-        HostsAllow_T a = p;
-        if (a->next)
-                _destroyHostAllow(a->next);
-        FREE(a);
+static boolean_t _appendAllow(HostsAllow_T h, const char *pattern) {
+        boolean_t rv = false;
+        LOCK(mutex)
+        {
+                if (_hasAllow(h))  {
+                        LogWarning("Skipping redundant '%s'\n", pattern);
+                        FREE(h);
+                } else {
+                        DEBUG("Adding allow '%s'\n", pattern);
+                        h->next = hostlist;
+                        hostlist = h;
+                        rv = true;
+                }
+        }
+        END_LOCK;
+        return rv;
 }
 
 
-/**
- * Returns true if remote host is allowed to connect, otherwise return false
- */
+static boolean_t _matchAllow(uint32_t address1[4], uint32_t address2[4], uint32_t mask[4]) {
+        for (int i = 0; i < 4; i++)
+                if ((address1[i] & mask[i]) != (address2[i] & mask[i]))
+                        return false;
+        return true;
+}
+
+
+static boolean_t _checkAllow(uint32_t address[4]) {
+        boolean_t allow = false;
+        LOCK(mutex)
+        {
+                if (! hostlist) {
+                        allow = true;
+                } else  {
+                        for (HostsAllow_T p = hostlist; p && allow == false; p = p->next)
+                                allow = _matchAllow(p->address, address, p->mask);
+                }
+        }
+        END_LOCK;
+        return allow;
+}
+
+
 static boolean_t _authenticateHost(struct sockaddr *addr) {
-        if (addr->sa_family == AF_INET) { //FIXME: we support only IPv4 currently
+        if (addr->sa_family == AF_INET) {
                 boolean_t allow = false;
                 struct sockaddr_in *a = (struct sockaddr_in *)addr;
-                LOCK(mutex)
-                {
-                        if (! hostlist) {
-                                allow = true;
-                        } else  {
-                                for (HostsAllow_T p = hostlist; p; p = p->next) {
-                                        if ((p->network & p->mask) == (a->sin_addr.s_addr & p->mask)) {
-                                                allow = true;
-                                                break;
-                                        }
-                                }
-                        }
-                }
-                END_LOCK;
-                if (! allow)
-                        LogError("Denied connection from non-authorized client [%s]\n", inet_ntoa(a->sin_addr));
+                uint32_t address[4];
+                _mapIPv4toIPv6((uint32_t *)&(a->sin_addr), (uint32_t *)&address);
+                if (! (allow = _checkAllow(address)))
+                        LogError("Denied connection from non-authorized client [%s]\n", inet_ntop(addr->sa_family, &a->sin_addr, (char[INET_ADDRSTRLEN]){}, INET_ADDRSTRLEN));
+                return allow;
+        } else if (addr->sa_family == AF_INET6) {
+                boolean_t allow = false;
+                struct sockaddr_in6 *a = (struct sockaddr_in6 *)addr;
+                if (! (allow = _checkAllow((uint32_t *)&(a->sin6_addr))))
+                        LogError("Denied connection from non-authorized client [%s]\n", inet_ntop(addr->sa_family, &(a->sin6_addr), (char[INET6_ADDRSTRLEN]){}, INET6_ADDRSTRLEN));
                 return allow;
         } else if (addr->sa_family == AF_UNIX) {
                 return true;
-        } else {
-                return false;
         }
+        return false;
 }
 
 
-/**
- * Accept connections from Clients and create a Socket_T object for each successful accept. If accept fails, return a NULL object
- */
-static Socket_T _socketProducer(int server, Httpd_Flags flags) {
-        int client;
-        struct sockaddr_storage addr_in;
-        struct sockaddr_un addr_un;
-        struct sockaddr *addr = NULL;
-        socklen_t addrlen;
-        if (Net_canRead(server, 1000)) {
-                if (flags & Httpd_Net) {
-                        addr = (struct sockaddr *)&addr_in;
-                        addrlen = sizeof(struct sockaddr_storage);
-                } else {
-                        addr = (struct sockaddr *)&addr_un;
-                        addrlen = sizeof(struct sockaddr_un);
-                }
-                if ((client = accept(server, addr, &addrlen)) < 0) {
-                        LogError("HTTP server: cannot accept connection -- %s\n", stopped ? "service stopped" : STRERROR);
-                        return NULL;
-                }
-                if (Net_setNonBlocking(client) < 0 || ! Net_canRead(client, 500) || ! Net_canWrite(client, 500) || ! _authenticateHost(addr)) {
-                        Net_abort(client);
-                        return NULL;
-                }
+static Socket_T _socketProducer(Httpd_Flags flags) {
+        int r = 0;
+        do {
+                r = poll(myServerSockets, myServerSocketsCount, 1000);
+        } while (r == -1 && errno == EINTR);
+        if (r > 0) {
+                for (int i = 0; i < myServerSocketsCount; i++) {
+                        if (myServerSockets[i].revents & POLLIN) {
+                                int client = accept(myServerSockets[i].fd, data[i].addr, &(data[i].addrlen));
+                                if (client < 0) {
+                                        LogError("HTTP server: cannot accept connection -- %s\n", stopped ? "service stopped" : STRERROR);
+                                        return NULL;
+                                }
+                                if (Net_setNonBlocking(client) < 0 || ! Net_canRead(client, 500) || ! Net_canWrite(client, 500) || ! _authenticateHost(data[i].addr)) {
+                                        Net_abort(client);
+                                        return NULL;
+                                }
 #ifdef HAVE_OPENSSL
-                return Socket_createAccepted(client, addr, addrlen, mySSLServerConnection);
+                                return Socket_createAccepted(client, data[i].addr, data[i].addrlen, data[i].ssl);
 #else
-                return Socket_createAccepted(client, addr, addrlen, NULL);
+                                return Socket_createAccepted(client, data[i].addr, data[i].addrlen, NULL);
 #endif
+                        }
+                }
         }
         return NULL;
+}
+
+
+static void _createTcpServer(Socket_Family family, char error[STRLEN]) {
+        TRY
+        {
+                myServerSockets[myServerSocketsCount].fd = create_server_socket_tcp(Run.httpd.socket.net.address, Run.httpd.socket.net.port, family, 1024);
+#ifdef HAVE_OPENSSL
+                if (Run.httpd.flags & Httpd_Ssl) {
+                        if (! (data[myServerSocketsCount].ssl = SslServer_new(Run.httpd.socket.net.ssl.pem, Run.httpd.socket.net.ssl.clientpem, myServerSockets[myServerSocketsCount].fd))) {
+                                Net_close(myServerSockets[myServerSocketsCount].fd);
+                                THROW(IOException, "HTTP server: could not initialize SSL engine");
+                        }
+                }
+#endif
+                data[myServerSocketsCount].family = family;
+                data[myServerSocketsCount].addr = (struct sockaddr *)&(data[myServerSocketsCount]._addr.addr_in);
+                data[myServerSocketsCount].addrlen = sizeof(struct sockaddr_storage);
+                myServerSockets[myServerSocketsCount].events = POLLIN;
+                myServerSocketsCount++;
+        }
+        ELSE
+        {
+                snprintf(error, STRLEN, "%s", Exception_frame.message);
+        }
+        END_TRY;
+}
+
+
+static void _createUnixServer() {
+        TRY
+        {
+                myServerSockets[myServerSocketsCount].fd = create_server_socket_unix(Run.httpd.socket.unix.path, 1024);
+                data[myServerSocketsCount].family = Socket_Unix;
+                data[myServerSocketsCount].addr = (struct sockaddr *)&(data[myServerSocketsCount]._addr.addr_un);
+                data[myServerSocketsCount].addrlen = sizeof(struct sockaddr_un);
+                myServerSockets[myServerSocketsCount].events = POLLIN;
+                myServerSocketsCount++;
+        }
+        ELSE
+        {
+                LogError("HTTP server: not available -- could not create a unix socket at %s -- %s\n", Run.httpd.socket.unix.path, STRERROR);
+        }
+        END_TRY;
 }
 
 
@@ -307,42 +438,29 @@ void Engine_start() {
         Engine_cleanup();
         stopped = Run.flags & Run_Stopped;
         init_service();
-        //FIXME: we listen currently only on one server socket: either on IP or unix socket ... should support listening on multiple sockets (IPv4, IPv6, unix)
         if (Run.httpd.flags & Httpd_Net) {
-                if ((myServerSocket = create_server_socket(Run.httpd.socket.net.address, Run.httpd.socket.net.port, 1024)) >= 0) {
+                char error[STRLEN];
+                // Try to create IPv4 and IPv6 sockets
+                _createTcpServer(Socket_Ip4, error);
+                _createTcpServer(Socket_Ip6, error);
+                // Log error only if no IPv4 nor IPv6 socket was created
+                if (myServerSocketsCount == 0)
+                        LogError("HTTP server: could not create a server socket at TCP port %d -- %s\n", Run.httpd.socket.net.port, STRERROR);
+        }
+        if (Run.httpd.flags & Httpd_Unix) {
+                _createUnixServer();
+        }
+        while (! stopped) {
+                Socket_T S = _socketProducer(Run.httpd.flags);
+                if (S)
+                        http_processor(S);
+        }
+        for (int i = 0; i < myServerSocketsCount; i++) {
 #ifdef HAVE_OPENSSL
-                        if (Run.httpd.flags & Httpd_Ssl) {
-                                if (! (mySSLServerConnection = SslServer_new(Run.httpd.socket.net.ssl.pem, Run.httpd.socket.net.ssl.clientpem, myServerSocket))) {
-                                        LogError("HTTP server: not available -- could not initialize SSL engine\n");
-                                        Net_close(myServerSocket);
-                                        return;
-                                }
-                        }
+                if (data[i].ssl)
+                        SslServer_free(&(data[i].ssl));
 #endif
-                        while (! stopped) {
-                                Socket_T S = _socketProducer(myServerSocket, Run.httpd.flags);
-                                if (S)
-                                        http_processor(S);
-                        }
-#ifdef HAVE_OPENSSL
-                        if (Run.httpd.flags & Httpd_Ssl)
-                                SslServer_free(&mySSLServerConnection);
-#endif
-                        Net_close(myServerSocket);
-                } else {
-                        LogError("HTTP server: not available -- could not create a server socket at port %d -- %s\n", Run.httpd.socket.net.port, STRERROR);
-                }
-        } else if (Run.httpd.flags & Httpd_Unix) {
-                if ((myServerSocket = create_server_socket_unix(Run.httpd.socket.unix.path, 1024)) >= 0) {
-                        while (! stopped) {
-                                Socket_T S = _socketProducer(myServerSocket, Run.httpd.flags);
-                                if (S)
-                                        http_processor(S);
-                        }
-                        Net_close(myServerSocket);
-                } else {
-                        LogError("HTTP server: not available -- could not create a server socket at %s -- %s\n", Run.httpd.socket.unix.path, STRERROR);
-                }
+                Net_close(myServerSockets[i].fd);
         }
         Engine_cleanup();
 }
@@ -354,6 +472,7 @@ void Engine_stop() {
 
 
 void Engine_cleanup() {
+        myServerSocketsCount = 0;
         if (Run.httpd.flags & Httpd_Unix)
                 unlink(Run.httpd.socket.unix.path);
 }
@@ -365,33 +484,28 @@ boolean_t Engine_addHostAllow(char *pattern) {
         struct addrinfo *res, hints = {
                 .ai_protocol = IPPROTO_TCP
         };
-        int rv = false;
+        int added = 0;
         if (! getaddrinfo(pattern, NULL, &hints, &res)) {
                 for (struct addrinfo *_res = res; _res; _res = _res->ai_next) {
-                        if (_res->ai_family == AF_INET) { // we support just IPv4 currently
-                                struct sockaddr_in *sin = (struct sockaddr_in *)_res->ai_addr;
-                                HostsAllow_T h;
+                        HostsAllow_T h = NULL;
+                        if (_res->ai_family == AF_INET) {
                                 NEW(h);
-                                memcpy(&h->network, &sin->sin_addr, 4);
-                                h->mask = 0xffffffff;
-                                LOCK(mutex)
-                                {
-                                        if (_hasHostAllow(h))  {
-                                                LogWarning("Skipping redundant host '%s'\n", pattern);
-                                                FREE(h);
-                                        } else {
-                                                DEBUG("Adding host allow '%s'\n", pattern);
-                                                h->next = hostlist;
-                                                hostlist = h;
-                                        }
-                                        rv = true;
-                                }
-                                END_LOCK;
+                                struct sockaddr_in *sin = (struct sockaddr_in *)_res->ai_addr;
+                                _mapIPv4toIPv6((uint32_t *)&(sin->sin_addr), h->address);
+                        } else if (_res->ai_family == AF_INET6) {
+                                NEW(h);
+                                struct sockaddr_in6 *sin = (struct sockaddr_in6 *)_res->ai_addr;
+                                memcpy(&h->address, &(sin->sin6_addr), 16);
+                        }
+                        if (h) {
+                                memset(h->mask, 0xff, 16); // compare all 128 bits
+                                if (_appendAllow(h, pattern))
+                                        added++;
                         }
                 }
                 freeaddrinfo(res);
         }
-        return rv;
+        return added ? true : false;
 }
 
 
@@ -400,21 +514,8 @@ boolean_t Engine_addNetAllow(char *pattern) {
 
         HostsAllow_T h;
         NEW(h);
-        if (_parseNetwork(pattern, h)) {
-                LOCK(mutex)
-                {
-                        if (_hasHostAllow(h)) {
-                                LogWarning("Skipping redundant net '%s'\n", pattern);
-                                FREE(h);
-                        } else {
-                                DEBUG("Adding net allow '%s'\n", pattern);
-                                h->next = hostlist;
-                                hostlist = h;
-                        }
-                }
-                END_LOCK;
+        if (_parseNetwork(pattern, h) && _appendAllow(h, pattern))
                 return true;
-        }
         FREE(h);
         return false;
 }
@@ -435,7 +536,7 @@ void Engine_destroyHostsAllow() {
         if (Engine_hasHostsAllow()) {
                 LOCK(mutex)
                 {
-                        _destroyHostAllow(hostlist);
+                        _destroyAllow(hostlist);
                         hostlist = NULL;
                 }
                 END_LOCK;
