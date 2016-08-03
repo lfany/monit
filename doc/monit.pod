@@ -792,16 +792,16 @@ HTTP response header and error pages. For example:
 =head2 IP version
 
 Monit HTTP over TCP supports both IP version 4 and 6. Support is
-transparent and does not require any special configuration. If
+transparent and does not require any special configuration. If the bind
 I<address> is B<not> specified as in this example:
 
   set httpd
     port 2812
     allow ...
 
-Monit will bind to and listen on port 2812 on all interfaces, both IPv6
-and IPv4 interfaces if available. To force Monit HTTP to only listen on
-and accept connections over IP version 6, specify an IPv6 address
+Monit will bind to and listen on port 2812 on all interfaces, both IPv4
+and IPv6 if available. To force Monit HTTP to only listen on and accept
+connections over IP version 6, specify a IPv6 address:
 
   set httpd
     port 2812
@@ -809,7 +809,7 @@ and accept connections over IP version 6, specify an IPv6 address
     allow ...
 
 Likewise, to force Monit HTTP to only listen on and accept connections
-over IP version 4, specify an IPv4 address;
+over IP version 4, specify a IPv4 address:
 
   set httpd
     port 2812
@@ -972,36 +972,6 @@ A user is set to read-only by using the I<read-only> keyword
 B<after> username:password. In the above example the user I<hauk>
 is defined as a read-only user, while the I<admin> user has all
 access rights.
-
-
-=head1 CENTRAL MANAGEMENT OF MULTIPLE MONIT HOSTS WITH M/MONIT
-
-You can use L<M/Monit|https://mmonit.com> for central management of multiple
-Monit hosts and to keep event log, draw charts, trends and more.
-
-To send data to M/Monit, add the following statement:
-
-  SET MMONIT <url>
-
-Example:
-
- set mmonit http://monit:monit@192.168.1.10:8080/collector
-
-Monit will register itself in M/Monit and will start sending service
-statistics (for charts) and events to M/Monit.
-
-By default Monit registers its own credentials from the SET HTTPD statement's
-ALLOW option, so M/Monit can communicate back to Monit (such as restart a specific service).
-
-It is possible to disable credentials registration, Monit will still be able
-to send statistics and events to M/Monit, but if you'll want to control some
-service remotely from M/Monit, you'll have to enter credentials manually. Example:
-
- set mmonit http://monit:monit@192.168.1.10:8080/collector and register without credentials
-
-The password should be URL encoded if it contains URL-significant characters like ":", "?", "@".
-
-Important: always use M/Monit with HTTPS url scheme, so the communication is encrypted.
 
 
 =head1 ALERT MESSAGES
@@ -3232,6 +3202,33 @@ For example:
           origin 'http://websocket.com'
           version 13
        then alert
+
+
+=head1 MANAGE YOUR MONIT INSTANCES
+
+L<M/Monit|https://mmonit.com> expands on Monit's capabilities and
+provides monitoring and management of all your Monit enabled hosts.
+M/Monit uses Monit as an agent. With regular intervals, Monit can send
+a message to M/Monit with the status of the host it is running on.
+M/Monit presents the collected data in charts and event logs and give
+you the option to view key performance data of all your hosts in a
+modern, clean and well designed user interface which also works on
+mobile devices. From M/Monit, you can also start, stop and restart
+services on your hosts running Monit.
+
+To send data to M/Monit, add the following statement to your Monit
+control file:
+
+  SET MMONIT <url>
+
+Example:
+
+ set mmonit https://monit:monit@192.168.1.10:8443/collector
+
+Monit will register itself in M/Monit and will start sending status and
+event messages to M/Monit. We recommend using I<https> as in the
+example above to ensure that the communication between Monit and
+M/Monit is secure
 
 
 =head1 CONFIGURATION EXAMPLES
