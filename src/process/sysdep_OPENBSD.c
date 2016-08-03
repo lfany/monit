@@ -71,7 +71,7 @@
 
 
 /**
- *  System dependent resource gathering code for OpenBSD.
+ *  System dependent resource data collecting code for OpenBSD.
  *
  *  @file
  */

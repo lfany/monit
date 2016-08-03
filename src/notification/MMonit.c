@@ -106,7 +106,7 @@ static boolean_t _receive(Socket_T socket, Mmonit_T C) {
         Str_chomp(buf);
         int n = sscanf(buf, "%*s %d", &status);
         if (n != 1 || (status >= 400)) {
-                LogError("M/Monit: message sending failed to %s -- %s\n", C->url->url, buf);
+                LogError("M/Monit: failed to send message to %s -- %s\n", C->url->url, buf);
                 return false;
         }
         return true;

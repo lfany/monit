@@ -55,7 +55,7 @@
 
 
 /**
- *  System dependent resource gathering code for MacOS X.
+ *  System dependent resource data collecting code for MacOS X.
  *
  *  @file
  */

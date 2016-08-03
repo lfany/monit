@@ -1422,8 +1422,8 @@ BUGFIXES:
   Monit will not accept new action and return temporary error until
   the previous action completed.
 
-* If process resource usage gathering failed, retry next cycle as the
-  error can be temporary.
+* If process resource usage data collection failed, retry next cycle
+  as the error can be temporary.
 
 * Fixed sporadic failures when SSL was used.
 

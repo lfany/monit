@@ -108,7 +108,7 @@
 #include "process_sysdep.h"
 
 /**
- *  System dependent resource gathering code for AIX
+ *  System dependent resource data collecting code for AIX
  *
  *  @file
  */

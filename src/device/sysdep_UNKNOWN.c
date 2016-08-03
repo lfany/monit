@@ -40,7 +40,7 @@ char *device_mountpoint_sysdep(char *dev, char *buf, int buflen) {
 
 
 boolean_t filesystem_usage_sysdep(Info_T inf) {
-        LogError("Unsupported filesystem informations gathering method\n");
+        LogError("Unsupported filesystem data collection method\n");
         return false;
 }
 

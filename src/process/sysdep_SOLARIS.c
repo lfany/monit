@@ -95,7 +95,7 @@
 #include "process_sysdep.h"
 
 /**
- *  System dependent resource gathering code for Solaris.
+ *  System dependent resource data collecting code for Solaris.
  *
  *  @file
  */
@@ -227,7 +227,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
                 if ((kstat = kstat_lookup(kctl, "memory_cap", -1, NULL))) {
                         /* Joyent SmartOS zone: reports wrong unix::system_pages:freemem in the zone - shows global zone freemem, switch to SmartOS specific memory_cap kstat, which is more effective then common getvmusage() */
                         if (kstat_read(kctl, kstat, NULL) == -1) {
-                                LogError("system statistic error -- memory_cap usage gathering failed\n");
+                                LogError("system statistic error -- memory_cap usage data collection failed\n");
                                 kstat_close(kctl);
                                 return false;
                         }
@@ -248,7 +248,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
         } else {
                 kstat = kstat_lookup(kctl, "unix", 0, "system_pages");
                 if (kstat_read(kctl, kstat, 0) == -1) {
-                        LogError("system statistic error -- memory usage gathering failed\n");
+                        LogError("system statistic error -- memory usage data collection failed\n");
                         kstat_close(kctl);
                         return false;
                 }
@@ -268,7 +268,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
         /* Swap */
 again:
         if ((num = swapctl(SC_GETNSWP, 0)) == -1) {
-                LogError("system statistic error -- swap usage gathering failed: %s\n", STRERROR);
+                LogError("system statistic error -- swap usage data collection failed: %s\n", STRERROR);
                 return false;
         }
         if (num == 0) {
@@ -282,7 +282,7 @@ again:
                 s->swt_ent[i].ste_path = strtab + (i * MAXSTRSIZE);
         s->swt_n = num + 1;
         if ((n = swapctl(SC_LIST, s)) < 0) {
-                LogError("system statistic error -- swap usage gathering failed: %s\n", STRERROR);
+                LogError("system statistic error -- swap usage data collection failed: %s\n", STRERROR);
                 si->swap_max = 0ULL;
                 FREE(s);
                 FREE(strtab);

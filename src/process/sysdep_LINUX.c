@@ -81,7 +81,7 @@
 #include "system/Time.h"
 
 /**
- *  System dependent resource gathering code for Linux.
+ *  System dependent resource data collection code for Linux.
  *
  *  @file
  */
@@ -282,7 +282,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         pt[i].cmdline = Str_dup(*buf ? buf : procname);
                 }
 
-                /* Set the data in ptree only if all process related reads succeeded (prevent partial data in the case that continue was called during data gathering) */
+                /* Set the data in ptree only if all process related reads succeeded (prevent partial data in the case that continue was called during data collecting) */
                 pt[i].pid = stat_pid;
                 pt[i].ppid = stat_ppid;
                 pt[i].cred.uid = stat_uid;

@@ -30,7 +30,7 @@
 
 
 /**
- *  System dependent resource gathering code for UNKNOWN systems
+ *  System dependent resource data collecting code for UNKNOWN systems
  *
  *  @file
  */

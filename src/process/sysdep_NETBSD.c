@@ -67,7 +67,7 @@
 
 
 /**
- *  System dependent resource gathering code for NetBSD.
+ *  System dependent resource data collecting code for NetBSD.
  *
  *  @file
  */

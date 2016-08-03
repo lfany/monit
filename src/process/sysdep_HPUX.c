@@ -99,7 +99,7 @@ struct pst_status *psall;
 #define MAXSTRSIZE 80
 
 /**
- *  System dependent resource gathering code for HP/UX.
+ *  System dependent resource data collecting code for HP/UX.
  *
  *  @file
  */
@@ -230,7 +230,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
         /* Swap */
 again:
         if ((num = swapctl(SC_GETNSWP, 0)) == -1) {
-                LogError("system statistic error -- swap usage gathering failed: %s\n", STRERROR);
+                LogError("system statistic error -- swap usage data collection failed: %s\n", STRERROR);
                 return false;
         }
         if (num == 0) {
@@ -244,7 +244,7 @@ again:
                 s->swt_ent[i].ste_path = strtab + (i * MAXSTRSIZE);
         s->swt_n = num + 1;
         if ((n = swapctl(SC_LIST, s)) < 0) {
-                LogError("system statistic error -- swap usage gathering failed: %s\n", STRERROR);
+                LogError("system statistic error -- swap usage data collection failed: %s\n", STRERROR);
                 si->swap_max = 0ULL;
                 FREE(s);
                 FREE(strtab);

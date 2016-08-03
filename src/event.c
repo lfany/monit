@@ -161,7 +161,7 @@ static void _queueAdd(Event_T E) {
         ASSERT(E->flag != Handler_Succeeded);
 
         if (! file_checkQueueDirectory(Run.eventlist_dir)) {
-                LogError("Aborting event - cannot access the directory %s\n", Run.eventlist_dir);
+                LogError("Aborting event - cannot access the event queue directory %s\n", Run.eventlist_dir);
                 return;
         }
 
@@ -178,7 +178,7 @@ static void _queueAdd(Event_T E) {
 
         FILE *file = fopen(file_name, "w");
         if (! file) {
-                LogError("Aborting event - cannot open the event file %s -- %s\n", file_name, STRERROR);
+                LogError("Aborting event - cannot create event file %s -- %s\n", file_name, STRERROR);
                 return;
         }
 
@@ -235,7 +235,7 @@ static void _queueUpdate(Event_T E, const char *file_name) {
         ASSERT(E->flag != Handler_Succeeded);
 
         if (! file_checkQueueDirectory(Run.eventlist_dir)) {
-                LogError("Aborting event - cannot access the directory %s\n", Run.eventlist_dir);
+                LogError("Aborting event - cannot access the event queue directory %s\n", Run.eventlist_dir);
                 return;
         }
 
@@ -270,7 +270,7 @@ static void _queueUpdate(Event_T E, const char *file_name) {
 error:
         fclose(file);
         if (! rv) {
-                LogError("Aborting event - unable to update event information to %s\n", file_name);
+                LogError("Aborting event - unable to update event information in '%s'\n", file_name);
                 if (unlink(file_name) < 0)
                         LogError("Failed to remove event file '%s' -- %s\n", file_name, STRERROR);
         }
@@ -548,11 +548,11 @@ void Event_queue_process() {
                 snprintf(file_name, sizeof(file_name), "%s/%s", Run.eventlist_dir, de->d_name);
 
                 if (File_isFile(file_name)) {
-                        DEBUG("Processing queued event %s\n", file_name);
+                        DEBUG("Processing queued event '%s'\n", file_name);
 
                         FILE *file = fopen(file_name, "r");
                         if (! file) {
-                                LogError("Queued event processing failed - cannot open the file %s -- %s\n", file_name, STRERROR);
+                                LogError("Queued event processing failed - cannot open the file '%s' -- %s\n", file_name, STRERROR);
                                 goto error1;
                         }
 
@@ -561,7 +561,7 @@ void Event_queue_process() {
                         /* read event structure version */
                         int *version = file_readQueue(file, &size);
                         if (! version) {
-                                DEBUG("Skipping file %s - not an event queue data format\n", file_name);
+                                DEBUG("Skipping file '%s' - not event queue data formatted\n", file_name);
                                 goto error2;
                         }
                         if (size != sizeof(int)) {
@@ -585,7 +585,7 @@ void Event_queue_process() {
                         if (! service)
                                 goto error4;
                         if (! (e->source = Util_getService(service))) {
-                                LogError("Aborting queued event %s - service %s not found in monitor configuration\n", file_name, service);
+                                LogError("Aborting queued event '%s' - service %s not found in monit configuration\n", file_name, service);
                                 FREE(service);
                                 goto error4;
                         }

@@ -178,7 +178,7 @@ static void _appendMail(List_T list, Mail_T m, Event_T e, char *host) {
 
 static MailServer_T _connectMTA() {
         if (! Run.mailservers)
-                THROW(IOException, "No mail servers are defined -- see manual for 'set mailserver' statement");
+                THROW(IOException, "No mail servers are defined -- please see the 'set mailserver' statement in the manual");
         MailServer_T mta = NULL;
         for (mta = Run.mailservers; mta; mta = mta->next) {
                 DEBUG("Trying to send mail via %s:%i\n", mta->host, mta->port);

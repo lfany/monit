@@ -96,7 +96,7 @@ boolean_t filesystem_usage(Service_T s) {
                         if (! device_mountpoint_sysdep(s->path, buf, sizeof(buf)))
                                 return false;
                 } else {
-                        LogError("Cannot get filesystem for '%s' -- not file, directory nor device\n", s->path);
+                        LogError("Cannot get filesystem for '%s' -- not file, directory or device\n", s->path);
                 }
         } else {
                 // Generic device string (such as sshfs connection info): look for mountpoint

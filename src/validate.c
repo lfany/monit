@@ -1471,13 +1471,13 @@ State_Type check_net(Service_T s) {
         {
                 havedata = false;
                 for (LinkStatus_T link = s->linkstatuslist; link; link = link->next)
-                        Event_post(s, Event_Link, State_Failed, link->action, "link data gathering failed -- %s", Exception_frame.message);
+                        Event_post(s, Event_Link, State_Failed, link->action, "link data collection failed -- %s", Exception_frame.message);
         }
         END_TRY;
         if (! havedata)
                 return State_Failed; // Terminate test if no data are available
         for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
-                Event_post(s, Event_Size, State_Succeeded, link->action, "link data gathering succeeded");
+                Event_post(s, Event_Size, State_Succeeded, link->action, "link data collection succeeded");
         }
         // State
         if (! Link_getState(s->inf->priv.net.stats)) {

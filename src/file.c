@@ -124,7 +124,7 @@ time_t file_getTimestamp(char *object, mode_t type) {
                     ) {
                         return MAX(buf.st_mtime, buf.st_ctime);
                 } else {
-                        LogError("Invalid object type - %s\n", object);
+                        LogError("Invalid file object type - %s\n", object);
                 }
         }
         return 0;
@@ -202,15 +202,15 @@ boolean_t file_checkQueueDirectory(char *path) {
         if (stat(path, &st)) {
                 if (errno == ENOENT) {
                         if (mkdir(path, 0700)) {
-                                LogError("Cannot create the event queue directory %s -- %s\n", path, STRERROR);
+                                LogError("Cannot create the event queue directory '%s' -- %s\n", path, STRERROR);
                                 return false;
                         }
                 } else {
-                        LogError("Cannot read the event queue directory %s -- %s\n", path, STRERROR);
+                        LogError("Cannot read the event queue directory '%s' -- %s\n", path, STRERROR);
                         return false;
                 }
         } else if (! S_ISDIR(st.st_mode)) {
-                LogError("Event queue: the %s is not directory\n", path);
+                LogError("Event queue: '%s' is not a directory\n", path);
                 return false;
         }
         return true;
@@ -221,7 +221,7 @@ boolean_t file_checkQueueLimit(char *path, int limit) {
         if (limit >= 0) {
                 DIR *dir = opendir(path);
                 if (! dir) {
-                        LogError("Cannot open the event queue directory %s -- %s\n", path, STRERROR);
+                        LogError("Cannot open the event queue directory '%s' -- %s\n", path, STRERROR);
                         return false;
                 }
                 int used = 0;
@@ -306,7 +306,7 @@ boolean_t file_readProc(char *buf, int buf_size, char *name, int pid, int *bytes
 
         int fd = open(filename, O_RDONLY);
         if (fd < 0) {
-                DEBUG("Cannot open proc file %s -- %s\n", filename, STRERROR);
+                DEBUG("Cannot open proc file '%s' -- %s\n", filename, STRERROR);
                 return false;
         }
 
@@ -318,11 +318,11 @@ boolean_t file_readProc(char *buf, int buf_size, char *name, int pid, int *bytes
                 buf[bytes] = 0;
                 rv = true;
         } else {
-                DEBUG("Cannot read proc file %s -- %s\n", filename, STRERROR);
+                DEBUG("Cannot read proc file '%s' -- %s\n", filename, STRERROR);
         }
 
         if (close(fd) < 0)
-                LogError("proc file %s close failed -- %s\n", filename, STRERROR);
+                LogError("Failed to close proc file '%s' -- %s\n", filename, STRERROR);
 
         return rv;
 }

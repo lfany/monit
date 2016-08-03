@@ -581,7 +581,7 @@ static void _testIp(Port_T p) {
                                 }
                                 END_TRY;
                         } else {
-                                snprintf(error, sizeof(error), "No target IP with family matching our outgoing address '%s' was found", p->outgoing.ip);
+                                snprintf(error, sizeof(error), "No IP address matching '%s' was found", p->outgoing.ip);
                         }
                 }
                 freeaddrinfo(result);
