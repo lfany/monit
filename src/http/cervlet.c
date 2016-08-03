@@ -824,7 +824,7 @@ static void do_runtime(HttpRequest req, HttpResponse res) {
 
 static void do_viewlog(HttpRequest req, HttpResponse res) {
         if (is_readonly(req)) {
-                send_error(req, res, SC_FORBIDDEN, "You do not have sufficent privileges to access this page");
+                send_error(req, res, SC_FORBIDDEN, "You do not have sufficient privileges to access this page");
                 return;
         }
         do_head(res, "_viewlog", "View log", 100);
@@ -871,7 +871,7 @@ static void handle_action(HttpRequest req, HttpResponse res) {
         const char *action = get_parameter(req, "action");
         if (action) {
                 if (is_readonly(req)) {
-                        send_error(req, res, SC_FORBIDDEN, "You do not have sufficent privileges to access this page");
+                        send_error(req, res, SC_FORBIDDEN, "You do not have sufficient privileges to access this page");
                         return;
                 }
                 Action_Type doaction = Util_getAction(action);
@@ -901,7 +901,7 @@ static void handle_do_action(HttpRequest req, HttpResponse res) {
 
         if (action) {
                 if (is_readonly(req)) {
-                        send_error(req, res, SC_FORBIDDEN, "You do not have sufficent privileges to access this page");
+                        send_error(req, res, SC_FORBIDDEN, "You do not have sufficient privileges to access this page");
                         return;
                 }
                 if ((doaction = Util_getAction(action)) == Action_Ignored) {
@@ -940,7 +940,7 @@ static void handle_run(HttpRequest req, HttpResponse res) {
         const char *action = get_parameter(req, "action");
         if (action) {
                 if (is_readonly(req)) {
-                        send_error(req, res, SC_FORBIDDEN, "You do not have sufficent privileges to access this page");
+                        send_error(req, res, SC_FORBIDDEN, "You do not have sufficient privileges to access this page");
                         return;
                 }
                 if (IS(action, "validate")) {

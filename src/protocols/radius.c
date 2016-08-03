@@ -138,7 +138,7 @@ void check_radius(Socket_T socket) {
 
         /* compare the response code (should be Access-Accept or Accounting-Response) */
         if ((response[0] != 2) && (response[0] != 5))
-                THROW(IOException, "RADIUS: Invalid reply code -- error occured");
+                THROW(IOException, "RADIUS: Invalid reply code -- error occurred");
 
         /* compare the packet ID (it should be the same as in our request) */
         if (response[1] != 0x00)

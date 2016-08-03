@@ -847,11 +847,11 @@ static State_Type _checkFilesystemFlags(Service_T s) {
         if (s->inf->priv.filesystem._flags >= 0) {
                 if (s->inf->priv.filesystem._flags != s->inf->priv.filesystem.flags) {
                         for (Fsflag_T l = s->fsflaglist; l; l = l->next)
-                                Event_post(s, Event_Fsflag, State_Changed, l->action, "filesytem flags changed to %#x", s->inf->priv.filesystem.flags);
+                                Event_post(s, Event_Fsflag, State_Changed, l->action, "filesystem flags changed to %#x", s->inf->priv.filesystem.flags);
                         return State_Changed;
                 }
                 for (Fsflag_T l = s->fsflaglist; l; l = l->next)
-                        Event_post(s, Event_Fsflag, State_ChangedNot, l->action, "filesytem flags has not changed");
+                        Event_post(s, Event_Fsflag, State_ChangedNot, l->action, "filesystem flags has not changed");
                 return State_ChangedNot;
         }
         return State_Init;
@@ -1342,7 +1342,7 @@ State_Type check_program(Service_T s) {
                                 // Fall-through with P and evaluate exit value below.
                         } else {
                                 // Defer test of exit value until program exit or timeout
-                                DEBUG("'%s' status check defered - waiting on program to exit\n", s->name);
+                                DEBUG("'%s' status check deferred - waiting on program to exit\n", s->name);
                                 return State_Init;
                         }
                 }

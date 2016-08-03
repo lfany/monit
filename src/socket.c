@@ -134,7 +134,7 @@ struct T {
  * operation timed out -1 is returned.
  * @param S A Socket object
  * @param timeout The number of milliseconds to wait for data to be read
- * @return the length of data read or -1 if an error occured
+ * @return the length of data read or -1 if an error occurred
  */
 static int _fill(T S, int timeout) {
         S->offset = 0;

@@ -1628,7 +1628,7 @@ mysqllist       : /* EMPTY */
 mysql           : username {
                         if ($<string>1) {
                                 if (strlen($<string>1) > 16)
-                                        yyerror2("Username too long -- Maximum MySQL username lengh is 16 characters");
+                                        yyerror2("Username too long -- Maximum MySQL username length is 16 characters");
                                 else
                                         portset.parameters.mysql.username = $<string>1;
                         }
@@ -2447,7 +2447,7 @@ match           : IF CONTENT urloperator PATH rate1 THEN action1 {
                     matchset.match_string = $4;
                     addmatch(&matchset, Action_Ignored, 0);
                   }
-                /* The bellow MATCH statement is deprecated (replaced by CONTENT) */
+                /* The below MATCH statement is deprecated (replaced by CONTENT) */
                 | IF matchflagnot MATCH PATH rate1 THEN action1 {
                     matchset.ignore = false;
                     matchset.match_path = $4;

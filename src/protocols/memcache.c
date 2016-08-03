@@ -84,7 +84,7 @@ void check_memcache(Socket_T socket) {
                 THROW(IOException, "MEMCACHE: Received %d bytes from server, expected %d bytes", length, MEMCACHELEN);
 
         if (response[0] != MAGIC_RESPONSE)
-                THROW(IOException, "MEMCACHELEN: Invalid response code -- error occured");
+                THROW(IOException, "MEMCACHELEN: Invalid response code -- error occurred");
 
         status = (response[6] << 8) | response[7];
         switch (status ) {
@@ -112,7 +112,7 @@ void check_memcache(Socket_T socket) {
                         THROW(IOException, "MEMCACHELEN: Invalid response code -- Key exists");
                         break;
                 default:
-                        THROW(IOException, "MEMCACHELEN: Unknow response code %u -- error occured", status);
+                        THROW(IOException, "MEMCACHELEN: Unknow response code %u -- error occurred", status);
                         break;
         }
 }

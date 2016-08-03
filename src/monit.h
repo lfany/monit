@@ -1063,7 +1063,7 @@ typedef struct myservice {
         struct myevent {
                 #define           EVENT_VERSION  4      /**< The event structure version */
                 long              id;                      /**< The event identification */
-                struct timeval    collected;                 /**< When the event occured */
+                struct timeval    collected;                /**< When the event occurred */
                 struct myservice *source;                              /**< Event source */
                 Monitor_Mode      mode;             /**< Monitoring mode for the service */
                 Service_Type      type;                      /**< Monitored service type */

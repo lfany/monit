@@ -330,7 +330,7 @@ static void _handleEvent(Service_T S, Event_T E) {
 
         if (E->message) {
                 /* In the case that the service state is initializing yet and error
-                 * occured, log it and exit. Succeeded events in init state are not
+                 * occurred, log it and exit. Succeeded events in init state are not
                  * logged. Instance and action events are logged always with priority
                  * info. */
                 if (E->state != State_Init || E->state_map & 0x1) {
