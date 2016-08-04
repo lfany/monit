@@ -164,11 +164,20 @@ static boolean_t _hasAllow(HostsAllow_T host) {
 
 
 static void _appendAllow(HostsAllow_T h, const char *pattern) {
+        char buf[INET6_ADDRSTRLEN] = {};
+        if (! Str_sub(pattern, "/"))
+                inet_ntop(AF_INET6, &(h->address), buf, sizeof(buf));
         if (_hasAllow(h))  {
-                LogWarning("Skipping 'allow %s' -- resolved to [%s] which is present in ACL already\n", pattern, inet_ntop(AF_INET6, &(h->address), (char[INET6_ADDRSTRLEN]){}, INET6_ADDRSTRLEN));
+                if (*buf)
+                        LogWarning("Skipping 'allow %s' -- host resolved to [%s] which is present in ACL already\n", pattern, buf);
+                else
+                        LogWarning("Skipping 'allow %s' -- present in ACL already\n", pattern);
                 FREE(h);
         } else {
-                DEBUG("Adding 'allow %s' resolved to [%s]\n", pattern, inet_ntop(AF_INET6, &(h->address), (char[INET6_ADDRSTRLEN]){}, INET6_ADDRSTRLEN));
+                if (*buf)
+                        DEBUG("Adding 'allow %s' -- host resolved to [%s]\n", pattern, buf);
+                else
+                        DEBUG("Adding 'allow %s'\n", pattern);
                 h->next = allowlist;
                 allowlist = h;
         }
@@ -226,7 +235,7 @@ static boolean_t _parseNetwork(char *pattern) {
         // check if we have IPv4/IPv6 CIDR notation (x.x.x.x/yyy or x::/y) or IPv4 dot-decimal (x.x.x.x/y.y.y.y)
         while (*temp) {
                 if (*temp == '/') {
-                        if (slashcount > 0 || dotcount != 3 || columncount < 2)
+                        if (slashcount > 0 || (family == Socket_Ip4 && dotcount != 3) || (family == Socket_Ip6 && columncount < 2))
                                 return false; // The "/" was found already or its prefix doesn't look like valid address
                         *temp = 0;
                         longmask = *(temp + 1) ? temp + 1 : NULL;
@@ -251,20 +260,20 @@ static boolean_t _parseNetwork(char *pattern) {
                                 if (! isdigit((int)*temp))
                                         return false;
                         }
+                        count++;
                 }
-                count++;
                 temp++;
         }
         if (slashcount == 0) {
                 // Host part only
-                shortmask = 128;
+                return false;
         } else if (dotcount == 0 && count > 0 && count < 4) {
                 // Mask in CIDR notation
                 if (longmask) {
                         shortmask = atoi(longmask);
                         longmask = NULL;
                 }
-        } else if (dotcount != 3) {
+        } else if (family == Socket_Ip4 && dotcount != 3) {
                 // The IPv4 dot-decimal mask requires three dots
                 return false;
         }
