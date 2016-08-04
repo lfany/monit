@@ -344,6 +344,39 @@ static boolean_t _parseNetwork(char *pattern) {
 }
 
 
+//FIXME: don't store the translated hostname->IPaddress on Monit startup to support DHCP hosts ... resolve the hostname in _authenticateHost()
+static boolean_t _parseHost(char *pattern) {
+        struct addrinfo *res, hints = {
+                .ai_protocol = IPPROTO_TCP
+        };
+        int added = 0;
+        if (! getaddrinfo(pattern, NULL, &hints, &res)) {
+                for (struct addrinfo *_res = res; _res; _res = _res->ai_next) {
+                        HostsAllow_T h = NULL;
+                        if (_res->ai_family == AF_INET) {
+                                NEW(h);
+                                struct sockaddr_in *sin = (struct sockaddr_in *)_res->ai_addr;
+                                _mapIPv4toIPv6((uint32_t *)&(sin->sin_addr), h->address);
+                        }
+#ifdef HAVE_IPV6
+                        else if (_res->ai_family == AF_INET6) {
+                                NEW(h);
+                                struct sockaddr_in6 *sin = (struct sockaddr_in6 *)_res->ai_addr;
+                                memcpy(&h->address, &(sin->sin6_addr), 16);
+                        }
+#endif
+                        if (h) {
+                                memset(h->mask, 0xff, 16); // compare all 128 bits
+                                _appendAllow(h, pattern);
+                                added++;
+                        }
+                }
+                freeaddrinfo(res);
+        }
+        return added ? true : false;
+}
+
+
 static boolean_t _authenticateHost(struct sockaddr *addr) {
         if (addr->sa_family == AF_INET) {
                 boolean_t allow = false;
@@ -487,39 +520,6 @@ void Engine_cleanup() {
         myServerSocketsCount = 0;
         if (Run.httpd.flags & Httpd_Unix)
                 unlink(Run.httpd.socket.unix.path);
-}
-
-
-//FIXME: don't store the translated hostname->IPaddress on Monit startup to support DHCP hosts ... resolve the hostname in _authenticateHost()
-static boolean_t _parseHost(char *pattern) {
-        struct addrinfo *res, hints = {
-                .ai_protocol = IPPROTO_TCP
-        };
-        int added = 0;
-        if (! getaddrinfo(pattern, NULL, &hints, &res)) {
-                for (struct addrinfo *_res = res; _res; _res = _res->ai_next) {
-                        HostsAllow_T h = NULL;
-                        if (_res->ai_family == AF_INET) {
-                                NEW(h);
-                                struct sockaddr_in *sin = (struct sockaddr_in *)_res->ai_addr;
-                                _mapIPv4toIPv6((uint32_t *)&(sin->sin_addr), h->address);
-                        }
-#ifdef HAVE_IPV6
-                        else if (_res->ai_family == AF_INET6) {
-                                NEW(h);
-                                struct sockaddr_in6 *sin = (struct sockaddr_in6 *)_res->ai_addr;
-                                memcpy(&h->address, &(sin->sin6_addr), 16);
-                        }
-#endif
-                        if (h) {
-                                memset(h->mask, 0xff, 16); // compare all 128 bits
-                                _appendAllow(h, pattern);
-                                added++;
-                        }
-                }
-                freeaddrinfo(res);
-        }
-        return added ? true : false;
 }
 
 
