@@ -70,29 +70,31 @@
 /* ----------------------------------------------------------------- Private */
 
 
-// Translate system hostname to FQDN, fallback to plain system hostname if failed
+// If the host is not set already (cached), translate system hostname to FQDN or fallback to plain system hostname if failed
 static char *_getFQDNhostname(char host[256]) {
-        *host = 0;
-        struct addrinfo *result = NULL, hints = {
-                .ai_family = AF_UNSPEC,
-                .ai_flags = AI_CANONNAME,
-                .ai_socktype = SOCK_STREAM
-        };
-        int status = getaddrinfo(Run.system->name, NULL, &hints, &result);
-        if (status == 0) {
-                for (struct addrinfo *r = result; r; r = r->ai_next) {
-                        if (Str_startsWith(r->ai_canonname, Run.system->name)) {
-                                strncpy(host, r->ai_canonname, 255);
-                                break;
-                        }
-                }
-                freeaddrinfo(result);
-        } else {
-                LogError("Cannot translate '%s' to FQDN name -- %s\n", Run.system->name, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
-        }
+        assert(host);
         if (! *host) {
-                // Fallback
-                strncpy(host, Run.system->name, 255);
+                struct addrinfo *result = NULL, hints = {
+                        .ai_family = AF_UNSPEC,
+                        .ai_flags = AI_CANONNAME,
+                        .ai_socktype = SOCK_STREAM
+                };
+                int status = getaddrinfo(Run.system->name, NULL, &hints, &result);
+                if (status == 0) {
+                        for (struct addrinfo *r = result; r; r = r->ai_next) {
+                                if (Str_startsWith(r->ai_canonname, Run.system->name)) {
+                                        strncpy(host, r->ai_canonname, 255);
+                                        break;
+                                }
+                        }
+                        freeaddrinfo(result);
+                } else {
+                        LogError("Cannot translate '%s' to FQDN name -- %s\n", Run.system->name, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
+                }
+                if (! *host) {
+                        // Fallback
+                        strncpy(host, Run.system->name, 255);
+                }
         }
         return host;
 }
@@ -102,9 +104,12 @@ static void _substitute(Mail_T m, Event_T e) {
         ASSERT(m);
         ASSERT(e);
 
-        Util_replaceString(&m->from->address, "$HOST", m->host);
-        Util_replaceString(&m->subject, "$HOST", m->host);
-        Util_replaceString(&m->message, "$HOST", m->host);
+        // If the sender address contains a $HOST macro, expand it to FQDN hostname, otherwise it was overriden via a mail-format "from" option
+        if (Str_sub(m->from->address, "$HOST"))
+                Util_replaceString(&m->from->address, "$HOST", _getFQDNhostname(m->host));
+
+        Util_replaceString(&m->subject, "$HOST", Run.system->name);
+        Util_replaceString(&m->message, "$HOST", Run.system->name);
 
         char timestamp[26];
         Time_string(e->collected.tv_sec, timestamp);
@@ -239,7 +244,7 @@ static boolean_t _send(List_T list) {
                                                 m->subject,
                                                 now,
                                                 VERSION,
-                                                (long long)Time_now(), random(), Run.mail_hostname ? Run.mail_hostname : m->host,
+                                                (long long)Time_now(), random(), Run.mail_hostname ? Run.mail_hostname : Run.system->name,
                                                 m->message) <= 0
                                    )
                                 {
@@ -292,8 +297,7 @@ Handler_Type handle_alert(Event_T E) {
         Handler_Type rv = Handler_Succeeded;
         Service_T s = E->source;
         if (s->maillist || Run.maillist) {
-                char host[256];
-                _getFQDNhostname(host);
+                char host[256] = {};
                 List_T list = List_new();
                 // Build a mail-list with local recipients that has registered interest for this event
                 for (Mail_T m = s->maillist; m; m = m->next)
