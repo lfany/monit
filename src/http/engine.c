@@ -156,14 +156,6 @@ static Mutex_T mutex = PTHREAD_MUTEX_INITIALIZER;
 /* ----------------------------------------------------------------- Private */
 
 
-static void _destroyAllow(HostsAllow_T p) {
-        HostsAllow_T a = p;
-        if (a->next)
-                _destroyAllow(a->next);
-        FREE(a);
-}
-
-
 static boolean_t _hasAllow(HostsAllow_T host) {
         for (HostsAllow_T p = allowlist; p; p = p->next)
                 if (memcmp(p->address, &(host->address), 16) == 0 && memcmp(p->mask, &(host->mask), 16) == 0)
@@ -546,7 +538,10 @@ void Engine_destroyAllow() {
         if (Engine_hasAllow()) {
                 LOCK(mutex)
                 {
-                        _destroyAllow(allowlist);
+                        for (HostsAllow_T current = allowlist, next = NULL; current; current = next) {
+                                next = current->next;
+                                FREE(current);
+                        }
                         allowlist = NULL;
                 }
                 END_LOCK;
