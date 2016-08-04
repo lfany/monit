@@ -302,9 +302,9 @@ static boolean_t _appendAllow(HostsAllow_T h, const char *pattern) {
         LOCK(mutex)
         {
                 if (_hasAllow(h))  {
-                        LogWarning("Skipping redundant '%s'\n", pattern);
+                        LogWarning("Skipping redundant 'allow %s' resolved to [%s]\n", pattern, inet_ntop(AF_INET6, &(h->address), (char[INET6_ADDRSTRLEN]){}, INET6_ADDRSTRLEN));
                 } else {
-                        DEBUG("Adding allow '%s'\n", pattern);
+                        DEBUG("Adding 'allow %s' resolved to [%s]\n", pattern, inet_ntop(AF_INET6, &(h->address), (char[INET6_ADDRSTRLEN]){}, INET6_ADDRSTRLEN));
                         h->next = hostlist;
                         hostlist = h;
                         rv = true;

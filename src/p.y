@@ -1121,7 +1121,7 @@ allow           : ALLOW STRING':'STRING readonly {
                   }
                 | ALLOW STRING {
                         if (! (Engine_addNetAllow($2) || Engine_addHostAllow($2)))
-                                yyerror2("Erroneous network or host identifier %s", $2);
+                                yywarning2("duplicate or invalid allow option", $2);
                         FREE($2);
                   }
                 ;
