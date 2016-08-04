@@ -38,6 +38,8 @@ Fixed: Issue #400: Clarify network tests documentation.
 Fixed: Issue #403: If the sender address for monit alert was overriden by "set mail-format" statement,
 don't try to resolve the hostname to FQDN.
 
+Fixed: Issue #420: Monit doesn't check service on startup when "every X cycles" is used.
+
 Fixed: Issue #428: Spelling fixes.
 
 Fixed: Issue #431: Change charset in emails to UTF-8.

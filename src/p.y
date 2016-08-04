@@ -1955,7 +1955,7 @@ formatoption    : MAILFROM ADDRESSOBJECT { mailset.from = $<address>1; }
 
 every           : EVERY NUMBER CYCLE {
                    current->every.type = Every_SkipCycles;
-                   current->every.spec.cycle.number = $2;
+                   current->every.spec.cycle.counter = current->every.spec.cycle.number = $2;
                  }
                 | EVERY TIMESPEC {
                    current->every.type = Every_Cron;
