@@ -622,13 +622,13 @@ group[ \t]+       {
                       return STRING;
                   }
 
-{ipv4}            {
+{ipv4}[/]?[0-9]{0,2} {
                       yylval.string = Str_dup(yytext);
                       save_arg();
                       return STRING;
                   }
 
-{ipv6}            {
+{ipv6}[/]?[0-9]{0,3} {
                       yylval.string = Str_dup(yytext);
                       save_arg();
                       return STRING;
