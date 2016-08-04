@@ -1,8 +1,8 @@
-                     CHANGES version 5.19
+                     CHANGES version 5.19.0
 
            This file summarizes changes made since 5.0
 
-Version 5.19
+Version 5.19.0
 
 New: Issue #421: Monit HTTP GUI: support for IPv6 added.
 
