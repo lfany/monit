@@ -88,7 +88,7 @@ static void _gc_request(Request_T *);
 
 
 void gc() {
-        Engine_destroyHostsAllow();
+        Engine_destroyAllow();
         if (Run.flags & Run_ProcessEngineEnabled)
                 ProcessTree_delete();
         if (servicelist)

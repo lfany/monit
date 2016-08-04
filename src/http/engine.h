@@ -46,34 +46,24 @@ void Engine_cleanup();
 
 
 /**
- * Add hosts allowed to connect to this server.
- * @param pattern A hostname (A-Record) or IP address to be added to the hosts allow list
- * @return false if the given host does not resolve, otherwise true
+ * Add network/host allowed to connect to this server.
+ * @param pattern A hostname, IP address or network identifier in IP/mask format to be added to the allow list
+ * @return true if the the pattern was added, otherwise false
  */
-boolean_t Engine_addHostAllow(char *pattern);
-
-
-/**
- * Add network allowed to connect to this server.
- * @param pattern A network identifier in IP/mask format to be added
- * to the hosts allow list
- * @return false if no correct network identifier is provided,
- * otherwise true
- */
-boolean_t Engine_addNetAllow(char *pattern);
+boolean_t Engine_addAllow(char *pattern);
 
 
 /**
  * Are any hosts present in the host allow list?
  * @return true if the host allow list is non-empty, otherwise false
  */
-boolean_t Engine_hasHostsAllow();
+boolean_t Engine_hasAllow();
 
 
 /**
  * Free the host allow list
  */
-void Engine_destroyHostsAllow();
+void Engine_destroyAllow();
 
 
 #endif

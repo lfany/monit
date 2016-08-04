@@ -1120,8 +1120,8 @@ allow           : ALLOW STRING':'STRING readonly {
                         FREE(htpasswd_file);
                   }
                 | ALLOW STRING {
-                        if (! (Engine_addNetAllow($2) || Engine_addHostAllow($2)))
-                                yywarning2("duplicate or invalid allow option", $2);
+                        if (! Engine_addAllow($2))
+                                yywarning2("invalid allow option", $2);
                         FREE($2);
                   }
                 ;

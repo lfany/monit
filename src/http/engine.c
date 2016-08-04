@@ -149,11 +149,75 @@ static struct {
 static volatile boolean_t stopped = false;
 static int myServerSocketsCount = 0;
 static struct pollfd myServerSockets[3] = {};
-static HostsAllow_T hostlist = NULL;
+static HostsAllow_T allowlist = NULL;
 static Mutex_T mutex = PTHREAD_MUTEX_INITIALIZER;
 
 
 /* ----------------------------------------------------------------- Private */
+
+
+static void _destroyAllow(HostsAllow_T p) {
+        HostsAllow_T a = p;
+        if (a->next)
+                _destroyAllow(a->next);
+        FREE(a);
+}
+
+
+static boolean_t _hasAllow(HostsAllow_T host) {
+        for (HostsAllow_T p = allowlist; p; p = p->next)
+                if (memcmp(p->address, &(host->address), 16) == 0 && memcmp(p->mask, &(host->mask), 16) == 0)
+                        return true;
+        return false;
+}
+
+
+static void _appendAllow(HostsAllow_T h, const char *pattern) {
+        LOCK(mutex)
+        {
+                if (_hasAllow(h))  {
+                        LogWarning("Skipping 'allow %s' -- resolved to [%s] which is present in ACL already\n", pattern, inet_ntop(AF_INET6, &(h->address), (char[INET6_ADDRSTRLEN]){}, INET6_ADDRSTRLEN));
+                        FREE(h);
+                } else {
+                        DEBUG("Adding 'allow %s' resolved to [%s]\n", pattern, inet_ntop(AF_INET6, &(h->address), (char[INET6_ADDRSTRLEN]){}, INET6_ADDRSTRLEN));
+                        h->next = allowlist;
+                        allowlist = h;
+                }
+        }
+        END_LOCK;
+}
+
+
+static boolean_t _matchAllow(uint32_t address1[4], uint32_t address2[4], uint32_t mask[4]) {
+        for (int i = 0; i < 4; i++)
+                if ((address1[i] & mask[i]) != (address2[i] & mask[i]))
+                        return false;
+        return true;
+}
+
+
+static boolean_t _checkAllow(uint32_t address[4]) {
+        boolean_t allow = false;
+        LOCK(mutex)
+        {
+                if (! allowlist) {
+                        allow = true;
+                } else  {
+                        for (HostsAllow_T p = allowlist; p && allow == false; p = p->next)
+                                allow = _matchAllow(p->address, address, p->mask);
+                }
+        }
+        END_LOCK;
+        return allow;
+}
+
+
+static HostsAllow_T _copyAllow(HostsAllow_T source) {
+        HostsAllow_T copy;
+        NEW(copy);
+        memcpy(copy, source, sizeof(struct HostsAllow_T));
+        return copy;
+}
 
 
 static void _mapIPv4toIPv6(uint32_t *address4, uint32_t *address6) {
@@ -165,10 +229,7 @@ static void _mapIPv4toIPv6(uint32_t *address4, uint32_t *address6) {
 }
 
 
-static boolean_t _parseNetwork(char *pattern, HostsAllow_T net) {
-        ASSERT(pattern);
-        ASSERT(net);
-
+static boolean_t _parseNetwork(char *pattern) {
         char *longmask = NULL;
         int shortmask = 0;
         int slashcount = 0;
@@ -225,17 +286,18 @@ static boolean_t _parseNetwork(char *pattern, HostsAllow_T net) {
                 // The IPv4 dot-decimal mask requires three dots
                 return false;
         }
+        struct HostsAllow_T net;
         if (family == Socket_Ip4) {
                 struct sockaddr_in addr;
                 if (inet_pton(AF_INET, buf, &(addr.sin_addr)) != 1)
                         return false;
-                _mapIPv4toIPv6((uint32_t *)&(addr.sin_addr), (uint32_t *)&net->address);
+                _mapIPv4toIPv6((uint32_t *)&(addr.sin_addr), net.address);
         } else {
 #ifdef HAVE_IPV6
                 struct sockaddr_in6 addr;
                 if (inet_pton(AF_INET6, buf, &(addr.sin6_addr)) != 1)
                         return false;
-                memcpy(&net->address, &(addr.sin6_addr), 16);
+                memcpy(net.address, &(addr.sin6_addr), 16);
 #else
                 THROW(AssertException, "IP-version 6 not supported on this system");
 #endif
@@ -249,23 +311,23 @@ static boolean_t _parseNetwork(char *pattern, HostsAllow_T net) {
                                 return false;
                         } else if (shortmask == 32) {
                                 uint32_t mask = 0xffffffff;
-                                _mapIPv4toIPv6(&mask, net->mask);
+                                _mapIPv4toIPv6(&mask, net.mask);
                         } else {
                                 uint32_t mask = htonl(0xffffffff << (32 - shortmask));
-                                _mapIPv4toIPv6(&mask, net->mask);
+                                _mapIPv4toIPv6(&mask, net.mask);
                         }
                 } else {
                         if (shortmask > 128) {
                                 return false;
                         } else if (shortmask == 128) {
-                                memset(net->mask, 0xff, 16);
+                                memset(net.mask, 0xff, 16);
                         } else {
                                 for (int i = 0; i < 4; i++) {
                                         if (shortmask > 32) {
-                                                net->mask[i] = 0xffffffff;
+                                                net.mask[i] = 0xffffffff;
                                                 shortmask -= 32;
                                         } else if (shortmask > 0) {
-                                                net->mask[i] = htonl(0xffffffff << (32 - shortmask));
+                                                net.mask[i] = htonl(0xffffffff << (32 - shortmask));
                                         }
                                 }
                         }
@@ -275,67 +337,10 @@ static boolean_t _parseNetwork(char *pattern, HostsAllow_T net) {
                 struct sockaddr_in addr;
                 if (! inet_aton(longmask, &(addr.sin_addr)))
                         return false;
-                _mapIPv4toIPv6((uint32_t *)&(addr.sin_addr), net->mask);
+                _mapIPv4toIPv6((uint32_t *)&(addr.sin_addr), net.mask);
         }
+        _appendAllow(_copyAllow(&net), pattern);
         return true;
-}
-
-
-static void _destroyAllow(HostsAllow_T p) {
-        HostsAllow_T a = p;
-        if (a->next)
-                _destroyAllow(a->next);
-        FREE(a);
-}
-
-
-static boolean_t _hasAllow(HostsAllow_T host) {
-        for (HostsAllow_T p = hostlist; p; p = p->next)
-                if (memcmp(p->address, &(host->address), 16) == 0 && memcmp(p->mask, &(host->mask), 16) == 0)
-                        return true;
-        return false;
-}
-
-
-static boolean_t _appendAllow(HostsAllow_T h, const char *pattern) {
-        boolean_t rv = false;
-        LOCK(mutex)
-        {
-                if (_hasAllow(h))  {
-                        LogWarning("Skipping redundant 'allow %s' resolved to [%s]\n", pattern, inet_ntop(AF_INET6, &(h->address), (char[INET6_ADDRSTRLEN]){}, INET6_ADDRSTRLEN));
-                } else {
-                        DEBUG("Adding 'allow %s' resolved to [%s]\n", pattern, inet_ntop(AF_INET6, &(h->address), (char[INET6_ADDRSTRLEN]){}, INET6_ADDRSTRLEN));
-                        h->next = hostlist;
-                        hostlist = h;
-                        rv = true;
-                }
-        }
-        END_LOCK;
-        return rv;
-}
-
-
-static boolean_t _matchAllow(uint32_t address1[4], uint32_t address2[4], uint32_t mask[4]) {
-        for (int i = 0; i < 4; i++)
-                if ((address1[i] & mask[i]) != (address2[i] & mask[i]))
-                        return false;
-        return true;
-}
-
-
-static boolean_t _checkAllow(uint32_t address[4]) {
-        boolean_t allow = false;
-        LOCK(mutex)
-        {
-                if (! hostlist) {
-                        allow = true;
-                } else  {
-                        for (HostsAllow_T p = hostlist; p && allow == false; p = p->next)
-                                allow = _matchAllow(p->address, address, p->mask);
-                }
-        }
-        END_LOCK;
-        return allow;
 }
 
 
@@ -486,8 +491,7 @@ void Engine_cleanup() {
 
 
 //FIXME: don't store the translated hostname->IPaddress on Monit startup to support DHCP hosts ... resolve the hostname in _authenticateHost()
-boolean_t Engine_addHostAllow(char *pattern) {
-        ASSERT(pattern);
+static boolean_t _parseHost(char *pattern) {
         struct addrinfo *res, hints = {
                 .ai_protocol = IPPROTO_TCP
         };
@@ -509,8 +513,8 @@ boolean_t Engine_addHostAllow(char *pattern) {
 #endif
                         if (h) {
                                 memset(h->mask, 0xff, 16); // compare all 128 bits
-                                if (_appendAllow(h, pattern))
-                                        added++;
+                                _appendAllow(h, pattern);
+                                added++;
                         }
                 }
                 freeaddrinfo(res);
@@ -519,35 +523,31 @@ boolean_t Engine_addHostAllow(char *pattern) {
 }
 
 
-boolean_t Engine_addNetAllow(char *pattern) {
+boolean_t Engine_addAllow(char *pattern) {
         ASSERT(pattern);
-
-        HostsAllow_T h;
-        NEW(h);
-        if (_parseNetwork(pattern, h) && _appendAllow(h, pattern))
+        if (_parseNetwork(pattern) || _parseHost(pattern))
                 return true;
-        FREE(h);
         return false;
 }
 
 
-boolean_t Engine_hasHostsAllow() {
+boolean_t Engine_hasAllow() {
         int rv;
         LOCK(mutex)
         {
-                rv = hostlist ? true : false;
+                rv = allowlist ? true : false;
         }
         END_LOCK;
         return rv;
 }
 
 
-void Engine_destroyHostsAllow() {
-        if (Engine_hasHostsAllow()) {
+void Engine_destroyAllow() {
+        if (Engine_hasAllow()) {
                 LOCK(mutex)
                 {
-                        _destroyAllow(hostlist);
-                        hostlist = NULL;
+                        _destroyAllow(allowlist);
+                        allowlist = NULL;
                 }
                 END_LOCK;
         }
