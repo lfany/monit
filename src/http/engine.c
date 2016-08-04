@@ -150,7 +150,6 @@ static volatile boolean_t stopped = false;
 static int myServerSocketsCount = 0;
 static struct pollfd myServerSockets[3] = {};
 static HostsAllow_T allowlist = NULL;
-static Mutex_T mutex = PTHREAD_MUTEX_INITIALIZER;
 
 
 /* ----------------------------------------------------------------- Private */
@@ -165,18 +164,14 @@ static boolean_t _hasAllow(HostsAllow_T host) {
 
 
 static void _appendAllow(HostsAllow_T h, const char *pattern) {
-        LOCK(mutex)
-        {
-                if (_hasAllow(h))  {
-                        LogWarning("Skipping 'allow %s' -- resolved to [%s] which is present in ACL already\n", pattern, inet_ntop(AF_INET6, &(h->address), (char[INET6_ADDRSTRLEN]){}, INET6_ADDRSTRLEN));
-                        FREE(h);
-                } else {
-                        DEBUG("Adding 'allow %s' resolved to [%s]\n", pattern, inet_ntop(AF_INET6, &(h->address), (char[INET6_ADDRSTRLEN]){}, INET6_ADDRSTRLEN));
-                        h->next = allowlist;
-                        allowlist = h;
-                }
+        if (_hasAllow(h))  {
+                LogWarning("Skipping 'allow %s' -- resolved to [%s] which is present in ACL already\n", pattern, inet_ntop(AF_INET6, &(h->address), (char[INET6_ADDRSTRLEN]){}, INET6_ADDRSTRLEN));
+                FREE(h);
+        } else {
+                DEBUG("Adding 'allow %s' resolved to [%s]\n", pattern, inet_ntop(AF_INET6, &(h->address), (char[INET6_ADDRSTRLEN]){}, INET6_ADDRSTRLEN));
+                h->next = allowlist;
+                allowlist = h;
         }
-        END_LOCK;
 }
 
 
@@ -188,19 +183,14 @@ static boolean_t _matchAllow(uint32_t address1[4], uint32_t address2[4], uint32_
 }
 
 
-static boolean_t _checkAllow(uint32_t address[4]) {
-        boolean_t allow = false;
-        LOCK(mutex)
-        {
-                if (! allowlist) {
-                        allow = true;
-                } else  {
-                        for (HostsAllow_T p = allowlist; p && allow == false; p = p->next)
-                                allow = _matchAllow(p->address, address, p->mask);
-                }
+static boolean_t _isAllowed(uint32_t address[4]) {
+        if (allowlist) {
+                for (HostsAllow_T p = allowlist; p; p = p->next)
+                        if (_matchAllow(p->address, address, p->mask))
+                                return true;
+                return false;
         }
-        END_LOCK;
-        return allow;
+        return true;
 }
 
 
@@ -375,7 +365,7 @@ static boolean_t _authenticateHost(struct sockaddr *addr) {
                 struct sockaddr_in *a = (struct sockaddr_in *)addr;
                 uint32_t address[4];
                 _mapIPv4toIPv6((uint32_t *)&(a->sin_addr), (uint32_t *)&address);
-                if (! (allow = _checkAllow(address)))
+                if (! (allow = _isAllowed(address)))
                         LogError("Denied connection from non-authorized client [%s]\n", inet_ntop(addr->sa_family, &a->sin_addr, (char[INET_ADDRSTRLEN]){}, INET_ADDRSTRLEN));
                 return allow;
         }
@@ -383,7 +373,7 @@ static boolean_t _authenticateHost(struct sockaddr *addr) {
         else if (addr->sa_family == AF_INET6) {
                 boolean_t allow = false;
                 struct sockaddr_in6 *a = (struct sockaddr_in6 *)addr;
-                if (! (allow = _checkAllow((uint32_t *)&(a->sin6_addr))))
+                if (! (allow = _isAllowed((uint32_t *)&(a->sin6_addr))))
                         LogError("Denied connection from non-authorized client [%s]\n", inet_ntop(addr->sa_family, &(a->sin6_addr), (char[INET6_ADDRSTRLEN]){}, INET6_ADDRSTRLEN));
                 return allow;
         }
@@ -524,27 +514,15 @@ boolean_t Engine_addAllow(char *pattern) {
 
 
 boolean_t Engine_hasAllow() {
-        int rv;
-        LOCK(mutex)
-        {
-                rv = allowlist ? true : false;
-        }
-        END_LOCK;
-        return rv;
+        return allowlist ? true : false;
 }
 
 
 void Engine_destroyAllow() {
-        if (Engine_hasAllow()) {
-                LOCK(mutex)
-                {
-                        for (HostsAllow_T current = allowlist, next = NULL; current; current = next) {
-                                next = current->next;
-                                FREE(current);
-                        }
-                        allowlist = NULL;
-                }
-                END_LOCK;
+        for (HostsAllow_T current = allowlist, next = NULL; current; current = next) {
+                next = current->next;
+                FREE(current);
         }
+        allowlist = NULL;
 }
 
