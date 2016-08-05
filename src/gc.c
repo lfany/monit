@@ -109,9 +109,9 @@ void gc() {
                 FREE(Run.httpd.socket.net.address);
                 FREE(Run.httpd.socket.net.ssl.pem);
                 FREE(Run.httpd.socket.net.ssl.clientpem);
-        } else if (Run.httpd.flags & Httpd_Unix) {
-                FREE(Run.httpd.socket.unix.path);
         }
+        if (Run.httpd.flags & Httpd_Unix)
+                FREE(Run.httpd.socket.unix.path);
         if (Run.MailFormat.from)
                 Address_free(&(Run.MailFormat.from));
         if (Run.MailFormat.replyto)
