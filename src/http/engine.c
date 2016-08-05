@@ -163,7 +163,7 @@ static boolean_t _hasAllow(HostsAllow_T host) {
 }
 
 
-static void _appendAllow(HostsAllow_T h, const char *pattern) {
+static void _pushAllow(HostsAllow_T h, const char *pattern) {
         char buf[INET6_ADDRSTRLEN] = {};
         if (! Str_sub(pattern, "/"))
                 inet_ntop(AF_INET6, &(h->address), buf, sizeof(buf));
@@ -319,6 +319,9 @@ static boolean_t _parseNetwork(char *pattern) {
                                                 shortmask -= 32;
                                         } else if (shortmask > 0) {
                                                 net.mask[i] = htonl(0xffffffff << (32 - shortmask));
+                                                shortmask = 0;
+                                        } else {
+                                                net.mask[i] = 0x00000000;
                                         }
                                 }
                         }
@@ -330,7 +333,7 @@ static boolean_t _parseNetwork(char *pattern) {
                         return false;
                 _mapIPv4toIPv6((uint32_t *)&(addr.sin_addr), net.mask);
         }
-        _appendAllow(_copyAllow(&net), pattern);
+        _pushAllow(_copyAllow(&net), pattern);
         return true;
 }
 
@@ -358,7 +361,7 @@ static boolean_t _parseHost(char *pattern) {
 #endif
                         if (h) {
                                 memset(h->mask, 0xff, 16); // compare all 128 bits
-                                _appendAllow(h, pattern);
+                                _pushAllow(h, pattern);
                                 added++;
                         }
                 }
