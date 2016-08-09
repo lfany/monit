@@ -1,6 +1,12 @@
-                     CHANGES version 5.19.0
+                     CHANGES version 5.19.1
 
            This file summarizes changes made since 5.0
+
+Version 5.19.1
+
+Fixed: Issue #438: When 'include /path/*' is used, silently ignore
+ if there are no files to include. I.e. the directory is empty
+
 
 Version 5.19.0
 
