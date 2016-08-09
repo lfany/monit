@@ -89,7 +89,7 @@ static char *_getFQDNhostname(char host[256]) {
                         }
                         freeaddrinfo(result);
                 } else {
-                        LogWarning("Cannot translate '%s' to FQDN name, please set a sender address using 'set mail-format' statement -- %s\n", Run.system->name, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
+                        LogWarning("Cannot translate '%s' to FQDN name, please set a sender address using 'set mail-format' -- %s\n", Run.system->name, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
                 }
                 if (! *host) {
                         // Fallback
