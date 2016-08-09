@@ -1001,6 +1001,7 @@ static void _include(const char *path) {
 
 static void include_file(char *pattern) {
         glob_t globbuf;
+        errno = 0;
         if (glob(pattern, GLOB_MARK, NULL, &globbuf) == 0) {
                 for (int i = 0; i < globbuf.gl_pathc; i++) {
                         size_t filename_length = strlen(globbuf.gl_pathv[i]);
@@ -1009,9 +1010,9 @@ static void include_file(char *pattern) {
                         _include(globbuf.gl_pathv[i]);
                 }
                 globfree(&globbuf);
-        } else {
-                yywarning("Include failed -- %s", STRERROR); // no include files found
-        }
+        } else if (errno != 0) {
+                yywarning("Include failed -- %s", STRERROR);
+        } // else no include files found -- silently ignore
 }
 
 
