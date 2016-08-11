@@ -277,7 +277,7 @@ static boolean_t _parseNetwork(char *pattern) {
                 // The IPv4 dot-decimal mask requires three dots
                 return false;
         }
-        struct HostsAllow_T net;
+        struct HostsAllow_T net = {};
         if (family == Socket_Ip4) {
                 struct sockaddr_in addr;
                 if (inet_pton(AF_INET, buf, &(addr.sin_addr)) != 1)
@@ -303,7 +303,7 @@ static boolean_t _parseNetwork(char *pattern) {
                         } else if (shortmask == 32) {
                                 uint32_t mask = 0xffffffff;
                                 _mapIPv4toIPv6(&mask, net.mask);
-                        } else {
+                        } else if (shortmask > 0) {
                                 uint32_t mask = htonl(0xffffffff << (32 - shortmask));
                                 _mapIPv4toIPv6(&mask, net.mask);
                         }

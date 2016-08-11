@@ -6,7 +6,9 @@ Version 5.19.1
 
 Fixed: Monit HTTP GUI: Listen on IPv6 interface if no address is specified (linux specific issue).
 
-Fixed: Issue #438: When 'include /path/*' is used, silently ignore
+Fixed: Monit HTTP GUI: Support CIDR mask 0 as explicit allow-all IP ACL (e.g. "allow 0.0.0.0/0").
+
+Fixed: Issue #438: When "include /path/*" is used, silently ignore
  if there are no files to include. I.e. the directory is empty
 
 
