@@ -234,15 +234,19 @@ int create_server_socket_tcp(const char *address, int port, Socket_Family family
                         if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&flag, sizeof(flag)) == 0) {
                                 if (Net_setNonBlocking(s)) {
                                         if (fcntl(s, F_SETFD, FD_CLOEXEC) != -1) {
-                                                if (bind(s, _result->ai_addr, _result->ai_addrlen) == 0) {
-                                                        if (listen(s, backlog) == 0) {
-                                                                freeaddrinfo(result);
-                                                                return s;
+                                                if (family != Socket_Ip6 || setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, &flag, sizeof(flag)) == 0) {
+                                                        if (bind(s, _result->ai_addr, _result->ai_addrlen) == 0) {
+                                                                if (listen(s, backlog) == 0) {
+                                                                        freeaddrinfo(result);
+                                                                        return s;
+                                                                } else {
+                                                                        snprintf(error, sizeof(error), "Cannot listen: %s", STRERROR);
+                                                                }
                                                         } else {
-                                                                snprintf(error, sizeof(error), "Cannot listen: %s", STRERROR);
+                                                                snprintf(error, sizeof(error), "Cannot bind: %s", STRERROR);
                                                         }
                                                 } else {
-                                                        snprintf(error, sizeof(error), "Cannot bind: %s", STRERROR);
+                                                        snprintf(error, sizeof(error), "Cannot set IPV6_V6ONLY option: %s", STRERROR);
                                                 }
                                         } else {
                                                 snprintf(error, sizeof(error), "Cannot set close on exec option: %s", STRERROR);
