@@ -198,9 +198,7 @@ boolean_t check_host(const char *hostname) {
 }
 
 
-int create_server_socket_tcp(const char *address, int port, Socket_Family family, int backlog) {
-        char _port[6];
-        snprintf(_port, sizeof(_port), "%d", port);
+int create_server_socket_tcp(const char *address, int port, Socket_Family family, int backlog, char error[STRLEN]) {
         struct addrinfo *result, hints = {
                 .ai_flags = AI_PASSIVE,
                 .ai_socktype = SOCK_STREAM
@@ -218,19 +216,23 @@ int create_server_socket_tcp(const char *address, int port, Socket_Family family
                         break;
 #endif
                 default:
-                        THROW(AssertException, "Invalid socket family %d", family);
+                        snprintf(error, STRLEN, "Invalid socket family %d", family);
+                        return -1;
         }
 #ifdef AI_ADDRCONFIG
         hints.ai_flags |= AI_ADDRCONFIG;
 #endif
+        char _port[6];
+        snprintf(_port, sizeof(_port), "%d", port);
         int status = getaddrinfo(address, _port, &hints, &result);
-        if (status)
-                THROW(IOException, "Cannot translate %s socket [%s]:%d -- %s", socketnames[family], NVLSTR(address), port, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
+        if (status) {
+                snprintf(error, STRLEN, "Cannot translate %s socket [%s]:%d -- %s", socketnames[family], NVLSTR(address), port, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
+                return -1;
+        }
         int flag = 1;
-        char error[STRLEN];
         for (struct addrinfo *_result = result; _result; _result = _result->ai_next) {
                 int s = socket(_result->ai_family, _result->ai_socktype, _result->ai_protocol);
-                if (s) {
+                if (s != -1) {
                         if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&flag, sizeof(flag)) == 0) {
                                 if (Net_setNonBlocking(s)) {
                                         if (fcntl(s, F_SETFD, FD_CLOEXEC) != -1) {
@@ -240,63 +242,63 @@ int create_server_socket_tcp(const char *address, int port, Socket_Family family
                                                                         freeaddrinfo(result);
                                                                         return s;
                                                                 } else {
-                                                                        snprintf(error, sizeof(error), "Cannot listen: %s", STRERROR);
+                                                                        snprintf(error, STRLEN, "Cannot listen: %s", STRERROR);
                                                                 }
                                                         } else {
-                                                                snprintf(error, sizeof(error), "Cannot bind: %s", STRERROR);
+                                                                snprintf(error, STRLEN, "Cannot bind: %s", STRERROR);
                                                         }
                                                 } else {
-                                                        snprintf(error, sizeof(error), "Cannot set IPV6_V6ONLY option: %s", STRERROR);
+                                                        snprintf(error, STRLEN, "Cannot set IPV6_V6ONLY option: %s", STRERROR);
                                                 }
                                         } else {
-                                                snprintf(error, sizeof(error), "Cannot set close on exec option: %s", STRERROR);
+                                                snprintf(error, STRLEN, "Cannot set close on exec option: %s", STRERROR);
                                         }
                                 } else {
-                                        snprintf(error, sizeof(error), "Cannot set nonblocking socket: %s", STRERROR);
+                                        snprintf(error, STRLEN, "Cannot set nonblocking socket: %s", STRERROR);
                                 }
                         } else {
-                                snprintf(error, sizeof(error), "Cannot set reuseaddr option: %s", STRERROR);
+                                snprintf(error, STRLEN, "Cannot set reuseaddr option: %s", STRERROR);
                         }
                         if (close(s) < 0)
                                 LogError("Server socket %d close failed: %s\n", s, STRERROR);
+                } else {
+                        snprintf(error, STRLEN, "Cannot create socket: %s", STRERROR);
                 }
         }
         freeaddrinfo(result);
-        THROW(IOException, "Cannot create server %s socket for [%s]:%d -- %s", socketnames[family], NVLSTR(address), port, error);
         return -1;
 }
 
 
-int create_server_socket_unix(const char *path, int backlog) {
+int create_server_socket_unix(const char *path, int backlog, char error[STRLEN]) {
         int s = socket(AF_UNIX, SOCK_STREAM, 0);
         if (s < 0) {
-                THROW(IOException, "Cannot create socket -- %s", STRERROR);
+                snprintf(error, STRLEN, "Cannot create socket -- %s", STRERROR);
+                return -1;
         }
         struct sockaddr_un addr = {
                 .sun_family = AF_UNIX
         };
         snprintf(addr.sun_path, sizeof(addr.sun_path), "%s", path);
-        char error[STRLEN];
         if (Net_setNonBlocking(s)) {
                 if (fcntl(s, F_SETFD, FD_CLOEXEC) != -1) {
                         if (bind(s, (struct sockaddr *)&addr, sizeof(struct sockaddr_un)) == 0) {
                                 if (listen(s, backlog) == 0) {
                                         return s;
                                 } else {
-                                        snprintf(error, sizeof(error), "Cannot listen -- %s", STRERROR);
+                                        snprintf(error, STRLEN, "Cannot listen -- %s", STRERROR);
                                 }
                         } else {
-                                snprintf(error, sizeof(error), "Cannot bind -- %s", STRERROR);
+                                snprintf(error, STRLEN, "Cannot bind -- %s", STRERROR);
                         }
                 } else {
-                        snprintf(error, sizeof(error), "Cannot set close on exec option -- %s", STRERROR);
+                        snprintf(error, STRLEN, "Cannot set close on exec option -- %s", STRERROR);
                 }
         } else {
-                snprintf(error, sizeof(error), "Cannot set nonblocking socket: %s", STRERROR);
+                snprintf(error, STRLEN, "Cannot set nonblocking socket: %s", STRERROR);
         }
         if (close(s) < 0)
                 LogError("Socket %d close failed -- %s\n", s, STRERROR);
-        THROW(IOException, "Cannot create unix server socket at %s -- %s", path, error);
         return -1;
 }
 
