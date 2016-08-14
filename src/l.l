@@ -771,8 +771,9 @@ group[ \t]+       {
                       yylval.url->hostname = Str_dup(yytext);
                   }
 
-  \[[0-9a-zA-Z:%]+\] {
+  \[[0-9a-zA-Z.:%]+\] {
                       yylval.url->hostname = Str_ndup(yytext + 1, yyleng - 2);
+                      yylval.url->ipv6 = true;
                   }
 
   [:]{number}     {

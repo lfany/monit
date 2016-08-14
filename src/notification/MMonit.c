@@ -67,7 +67,7 @@ static boolean_t _send(Socket_T socket, Mmonit_T C, const char *D) {
         char *auth = Util_getBasicAuthHeader(C->url->user, C->url->password);
         int rv = Socket_print(socket,
                               "POST %s HTTP/1.1\r\n"
-                              "Host: %s:%d\r\n"
+                              "Host: %s%s%s:%d\r\n"
                               "Content-Type: text/xml\r\n"
                               "Content-Length: %lu\r\n"
                               "Pragma: no-cache\r\n"
@@ -77,7 +77,7 @@ static boolean_t _send(Socket_T socket, Mmonit_T C, const char *D) {
                               "\r\n"
                               "%s",
                               C->url->path,
-                              C->url->hostname, C->url->port,
+                              C->url->ipv6 ? "[" : "", C->url->hostname, C->url->ipv6 ? "]" : "", C->url->port,
                               (unsigned long)strlen(D),
                               VERSION,
                               auth ? auth : "",
