@@ -466,7 +466,7 @@ void Engine_start() {
         Engine_cleanup();
         stopped = Run.flags & Run_Stopped;
         init_service();
-        char error[STRLEN][MAX_SERVER_SOCKETS] = {{0}};
+        char error[MAX_SERVER_SOCKETS][STRLEN] = {};
         if (Run.httpd.flags & Httpd_Net) {
                 _createTcpServer(Socket_Ip4, error[0]);
                 _createTcpServer(Socket_Ip6, error[1]);
@@ -476,8 +476,8 @@ void Engine_start() {
         }
         if (myServerSocketsCount == 0) {
                 // Log error only if no socket was created
-                for (int i = 0; i < 2; i++)
-                        if (*error[i])
+                for (int i = 0; i < MAX_SERVER_SOCKETS; i++)
+                        if (STR_DEF(error[i]))
                                 LogError("HTTP server -- %s\n", error[i]);
         } else {
                 while (! stopped) {
