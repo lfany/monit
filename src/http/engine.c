@@ -290,7 +290,7 @@ static boolean_t _parseNetwork(char *pattern) {
                         return false;
                 memcpy(net.address, &(addr.sin6_addr), 16);
 #else
-                THROW(AssertException, "IP-version 6 not supported on this system");
+                THROW(AssertException, "IPv6 not supported on this system");
 #endif
         }
         if (longmask == NULL) {
@@ -301,11 +301,10 @@ static boolean_t _parseNetwork(char *pattern) {
                         if (shortmask > 32) {
                                 return false;
                         } else if (shortmask == 32) {
-                                uint32_t mask = 0xffffffff;
-                                _mapIPv4toIPv6(&mask, net.mask);
+                                memset(net.mask, 0xff, 16);
                         } else if (shortmask > 0) {
-                                uint32_t mask = htonl(0xffffffff << (32 - shortmask));
-                                _mapIPv4toIPv6(&mask, net.mask);
+                                memset(net.mask, 0xff, 16);
+                                net.mask[3] = htonl(0xffffffff << (32 - shortmask));
                         }
                 } else {
                         if (shortmask > 128) {
