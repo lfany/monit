@@ -72,6 +72,7 @@ static boolean_t _send(Socket_T socket, Mmonit_T C, const char *D) {
                               "Content-Length: %lu\r\n"
                               "Pragma: no-cache\r\n"
                               "Accept: */*\r\n"
+                              "Connection: Close\r\n"
                               "User-Agent: Monit/%s\r\n"
                               "%s"
                               "\r\n"
