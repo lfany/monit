@@ -463,9 +463,10 @@ typedef struct myurl {
         char *user;                                        /**< URL user     part */
         char *password;                                    /**< URL password part */
         char *hostname;                                    /**< URL hostname part */
-        int   port;                                        /**< URL port     part */
         char *path;                                        /**< URL path     part */
         char *query;                                       /**< URL query    part */
+        int   port;                                        /**< URL port     part */
+        boolean_t ipv6;
 } *URL_T;
 
 

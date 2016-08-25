@@ -290,7 +290,7 @@ static boolean_t _parseNetwork(char *pattern) {
                         return false;
                 memcpy(net.address, &(addr.sin6_addr), 16);
 #else
-                THROW(AssertException, "IP-version 6 not supported on this system");
+                THROW(AssertException, "IPv6 not supported on this system");
 #endif
         }
         if (longmask == NULL) {
@@ -301,11 +301,10 @@ static boolean_t _parseNetwork(char *pattern) {
                         if (shortmask > 32) {
                                 return false;
                         } else if (shortmask == 32) {
-                                uint32_t mask = 0xffffffff;
-                                _mapIPv4toIPv6(&mask, net.mask);
+                                memset(net.mask, 0xff, 16);
                         } else if (shortmask > 0) {
-                                uint32_t mask = htonl(0xffffffff << (32 - shortmask));
-                                _mapIPv4toIPv6(&mask, net.mask);
+                                memset(net.mask, 0xff, 16);
+                                net.mask[3] = htonl(0xffffffff << (32 - shortmask));
                         }
                 } else {
                         if (shortmask > 128) {
@@ -427,14 +426,14 @@ static Socket_T _socketProducer(Httpd_Flags flags) {
 
 
 static void _createTcpServer(Socket_Family family, char error[STRLEN]) {
-        TRY
-        {
-                myServerSockets[myServerSocketsCount].fd = create_server_socket_tcp(Run.httpd.socket.net.address, Run.httpd.socket.net.port, family, 1024);
+        myServerSockets[myServerSocketsCount].fd = create_server_socket_tcp(Run.httpd.socket.net.address, Run.httpd.socket.net.port, family, 1024, error);
+        if (myServerSockets[myServerSocketsCount].fd != -1) {
 #ifdef HAVE_OPENSSL
                 if (Run.httpd.flags & Httpd_Ssl) {
                         if (! (data[myServerSocketsCount].ssl = SslServer_new(Run.httpd.socket.net.ssl.pem, Run.httpd.socket.net.ssl.clientpem, myServerSockets[myServerSocketsCount].fd))) {
+                                strncpy(error, "Could not initialize SSL engine", STRLEN);
                                 Net_close(myServerSockets[myServerSocketsCount].fd);
-                                THROW(IOException, "HTTP server: could not initialize SSL engine");
+                                return;
                         }
                 }
 #endif
@@ -444,29 +443,18 @@ static void _createTcpServer(Socket_Family family, char error[STRLEN]) {
                 myServerSockets[myServerSocketsCount].events = POLLIN;
                 myServerSocketsCount++;
         }
-        ELSE
-        {
-                snprintf(error, STRLEN, "%s", Exception_frame.message);
-        }
-        END_TRY;
 }
 
 
-static void _createUnixServer() {
-        TRY
-        {
-                myServerSockets[myServerSocketsCount].fd = create_server_socket_unix(Run.httpd.socket.unix.path, 1024);
+static void _createUnixServer(char error[STRLEN]) {
+        myServerSockets[myServerSocketsCount].fd = create_server_socket_unix(Run.httpd.socket.unix.path, 1024, error);
+        if (myServerSockets[myServerSocketsCount].fd != -1) {
                 data[myServerSocketsCount].family = Socket_Unix;
                 data[myServerSocketsCount].addr = (struct sockaddr *)&(data[myServerSocketsCount]._addr.addr_un);
                 data[myServerSocketsCount].addrlen = sizeof(struct sockaddr_un);
                 myServerSockets[myServerSocketsCount].events = POLLIN;
                 myServerSocketsCount++;
         }
-        ELSE
-        {
-                LogError("HTTP server: not available -- could not create a unix socket at %s -- %s\n", Run.httpd.socket.unix.path, STRERROR);
-        }
-        END_TRY;
 }
 
 
@@ -477,31 +465,34 @@ void Engine_start() {
         Engine_cleanup();
         stopped = Run.flags & Run_Stopped;
         init_service();
+        char error[MAX_SERVER_SOCKETS][STRLEN] = {};
         if (Run.httpd.flags & Httpd_Net) {
-                char error[STRLEN];
-                // Try to create IPv4 and IPv6 sockets
-                _createTcpServer(Socket_Ip4, error);
-                _createTcpServer(Socket_Ip6, error);
-                // Log error only if no IPv4 nor IPv6 socket was created
-                if (myServerSocketsCount == 0)
-                        LogError("HTTP server: could not create a server socket at TCP port %d -- %s\n", Run.httpd.socket.net.port, STRERROR);
+                _createTcpServer(Socket_Ip4, error[0]);
+                _createTcpServer(Socket_Ip6, error[1]);
         }
         if (Run.httpd.flags & Httpd_Unix) {
-                _createUnixServer();
+                _createUnixServer(error[2]);
         }
-        while (! stopped) {
-                Socket_T S = _socketProducer(Run.httpd.flags);
-                if (S)
-                        http_processor(S);
-        }
-        for (int i = 0; i < myServerSocketsCount; i++) {
+        if (myServerSocketsCount == 0) {
+                // Log error only if no socket was created
+                for (int i = 0; i < MAX_SERVER_SOCKETS; i++)
+                        if (STR_DEF(error[i]))
+                                LogError("HTTP server -- %s\n", error[i]);
+        } else {
+                while (! stopped) {
+                        Socket_T S = _socketProducer(Run.httpd.flags);
+                        if (S)
+                                http_processor(S);
+                }
+                for (int i = 0; i < myServerSocketsCount; i++) {
 #ifdef HAVE_OPENSSL
-                if (data[i].ssl)
-                        SslServer_free(&(data[i].ssl));
+                        if (data[i].ssl)
+                                SslServer_free(&(data[i].ssl));
 #endif
-                Net_close(myServerSockets[i].fd);
+                        Net_close(myServerSockets[i].fd);
+                }
+                Engine_cleanup();
         }
-        Engine_cleanup();
 }
 
 

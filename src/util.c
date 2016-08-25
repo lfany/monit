@@ -1730,10 +1730,11 @@ boolean_t Util_hasServiceStatus(Service_T s) {
 char *Util_getHTTPHostHeader(Socket_T s, char *hostBuf, int len) {
         int port = Socket_getRemotePort(s);
         const char *host = Socket_getRemoteHost(s);
+        boolean_t ipv6 = Str_sub(host, ":") ? true : false;
         if (port == 80 || port == 443)
-                snprintf(hostBuf, len, "%s", host);
+                snprintf(hostBuf, len, "%s%s%s", ipv6 ? "[" : "", host, ipv6 ? "]" : "");
         else
-                snprintf(hostBuf, len, "%s:%d", host, port);
+                snprintf(hostBuf, len, "%s%s%s:%d", ipv6 ? "[" : "", host, ipv6 ? "]" : "", port);
         return hostBuf;
 }
 

@@ -8,6 +8,10 @@ Fixed: Monit HTTP GUI: Listen on IPv6 interface if no address is specified (linu
 
 Fixed: Monit HTTP GUI: Support CIDR mask 0 as explicit allow-all IP ACL (e.g. "allow 0.0.0.0/0").
 
+Fixed: Host header if IPv6 address is given in HTTP, APACHE-STATUS or WEBSOCKET protocol tests.
+
+Fixed: Support M/Monit on IPv6 address.
+
 Fixed: Issue #438: When "include /path/*" is used, silently ignore
  if there are no files to include. I.e. the directory is empty
 
