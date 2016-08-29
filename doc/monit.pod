@@ -1064,7 +1064,7 @@ above:
 
  Event:     | Failure state:              | Success state:
  ---------------------------------------------------------------------
- action     | "Action done"               | "Action done"
+ action     | "Action failed"             | "Action done"
  checksum   | "Checksum failed"           | "Checksum succeeded"
  bytein     | "Download bytes exceeded"   | "Download bytes ok"
  byteout    | "Upload bytes exceeded"     | "Upload bytes ok"
