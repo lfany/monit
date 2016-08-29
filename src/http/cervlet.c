@@ -551,6 +551,7 @@ static void do_head(HttpResponse res, const char *path, const char *name, int re
                             "<meta HTTP-EQUIV='REFRESH' CONTENT=%d> "\
                             "<meta HTTP-EQUIV='Expires' Content=0> "\
                             "<meta HTTP-EQUIV='Pragma' CONTENT='no-cache'> "\
+                            "<meta charset='UTF-8'>" \
                             "<link rel='shortcut icon' href='favicon.ico'>"\
                             "</head>"\
                             "<body><div id='wrap'><div id='main'>" \

@@ -12,8 +12,9 @@ Fixed: Host header if IPv6 address is given in HTTP, APACHE-STATUS or WEBSOCKET 
 
 Fixed: Support M/Monit on IPv6 address.
 
-Fixed: Issue #438: When "include /path/*" is used, silently ignore
- if there are no files to include. I.e. the directory is empty
+Fixed: Issue #438: When "include /path/*" is used, silently ignore if there the directory is empty.
+
+Fixed: Monit GUI: Set the encoding to UTF-8 to support UTF-8 formatted "check program" output.
 
 
 Version 5.19.0
