@@ -16,6 +16,8 @@ Fixed: Issue #438: When "include /path/*" is used, silently ignore if there the 
 
 Fixed: Monit GUI: Set the encoding to UTF-8 to support UTF-8 formatted "check program" output.
 
+Fixed: Network check on Solaris 10.
+
 
 Version 5.19.0
 
