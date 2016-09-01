@@ -571,7 +571,7 @@ then
    ARCH="AIX"
    CFLAGS=`echo $CFLAGS|sed 's/-g//g'`
    CFLAGS="$CFLAGS -D_THREAD_SAFE -D_REENTRANT"
-   LIBS="$LIBS -lodm -lperfstat"
+   LIBS="$LIBS -lodm -lperfstat -lm"
    AC_DEFINE([HAVE_CPU_WAIT], [1], [Define to 1 if CPU wait information is available.])
 else
    AC_MSG_WARN([Architecture not supported: ${architecture}])
