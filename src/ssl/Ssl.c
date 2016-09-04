@@ -147,16 +147,15 @@ struct SslServer_T {
 };
 
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 static Mutex_T *instanceMutexTable;
+#endif
+
+
 static int session_id_context = 1;
 
 
 /* ----------------------------------------------------------------- Private */
-
-
-static unsigned long _threadID() {
-        return (unsigned long)Thread_self();
-}
 
 
 static boolean_t _retry(int socket, int *timeout, int (*callback)(int socket, time_t milliseconds)) {
@@ -170,12 +169,19 @@ static boolean_t _retry(int socket, int *timeout, int (*callback)(int socket, ti
 }
 
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+static unsigned long _threadID() {
+        return (unsigned long)Thread_self();
+}
+
+
 static void _mutexLock(int mode, int n, const char *file, int line) {
         if (mode & CRYPTO_LOCK)
                 Mutex_lock(instanceMutexTable[n]);
         else
                 Mutex_unlock(instanceMutexTable[n]);
 }
+#endif
 
 
 static int _checkExpiration(T C, X509_STORE_CTX *ctx, X509 *certificate) {
@@ -360,6 +366,7 @@ static boolean_t _setClientCertificate(T C, const char *file) {
 
 
 void Ssl_start() {
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
         SSL_library_init();
         SSL_load_error_strings();
         if (File_exist(URANDOM_DEVICE))
@@ -374,10 +381,12 @@ void Ssl_start() {
                 Mutex_init(instanceMutexTable[i]);
         CRYPTO_set_id_callback(_threadID);
         CRYPTO_set_locking_callback(_mutexLock);
+#endif
 }
 
 
 void Ssl_stop() {
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
         CRYPTO_set_id_callback(NULL);
         CRYPTO_set_locking_callback(NULL);
         for (int i = 0; i < CRYPTO_num_locks(); i++)
@@ -385,6 +394,7 @@ void Ssl_stop() {
         FREE(instanceMutexTable);
         RAND_cleanup();
         ERR_free_strings();
+#endif
         Ssl_threadCleanup();
 }
 
