@@ -15,7 +15,7 @@ __ANSI-C Compiler and Build System__. You will need an ANSI-C99 compiler install
 GIT
 ===
 
-To checkout Monit source code, use `git clone git@bitbucket.org:tildeslash/monit.git`.
+To checkout Monit source code, use `git clone https://tildeslash@bitbucket.org/tildeslash/monit.git`.
 
 
 BOOTSTRAPPING
