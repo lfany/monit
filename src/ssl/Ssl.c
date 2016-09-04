@@ -400,7 +400,7 @@ void Ssl_stop() {
 
 
 void Ssl_threadCleanup() {
-#ifdef HAVE_ERR_REMOVE_STATE
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
         ERR_remove_state(0);
 #endif
 }
@@ -423,7 +423,7 @@ T Ssl_new(Ssl_Version version, const char *CACertificateFile, const char *CACert
         const SSL_METHOD *method;
         switch (version) {
                 case SSL_V2:
-#ifdef OPENSSL_NO_SSL2
+#if defined OPENSSL_NO_SSL2 || ! defined HAVE_SSLV2
                         LogError("SSL: SSLv2 not supported\n");
                         goto sslerror;
 #else

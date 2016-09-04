@@ -894,6 +894,17 @@ if test "$use_sslstatic" = "1" -o "$use_ssl" = "1"; then
         if test "x$ssllibdir" != "x"; then
                 LIBS="$LIBS -L$ssllibdir"
         fi
+
+        AC_MSG_CHECKING([for SSLv2])
+        AC_LINK_IFELSE(
+                [AC_LANG_PROGRAM([#include <openssl/ssl.h>], [SSLv2_client_method()])],
+                [sslv2=yes],
+                [sslv2=no])
+        AC_MSG_RESULT($sslv2)
+        if test "$sslv2" = "yes" ; then
+                AC_DEFINE([HAVE_SSLV2], 1, [Define to 1 if you have openssl with SSLv2])
+        fi
+
         AC_MSG_CHECKING([for TLSv1.1])
         AC_LINK_IFELSE(
                 [AC_LANG_PROGRAM([#include <openssl/ssl.h>], [TLSv1_1_method()])],
@@ -932,16 +943,6 @@ if test "$use_sslstatic" = "1" -o "$use_ssl" = "1"; then
         AC_MSG_RESULT($asn1timediff)
         if test "$asn1timediff" = "yes" ; then
                 AC_DEFINE([HAVE_ASN1_TIME_DIFF], 1, [Define to 1 if you have openssl with ASN1_TIME_diff])
-        fi
-
-        AC_MSG_CHECKING([for ERR_remove_state support])
-        AC_LINK_IFELSE(
-                [AC_LANG_PROGRAM([#include <openssl/ssl.h>], [ERR_remove_state(0)])],
-                [errremovestate=yes],
-                [errremovestate=no])
-        AC_MSG_RESULT($errremovestate)
-        if test "$errremovestate" = "yes" ; then
-                AC_DEFINE([HAVE_ERR_REMOVE_STATE], 1, [Define to 1 if you have openssl with ERR_remove_state])
         fi
 fi
 
