@@ -18,6 +18,8 @@ Fixed: Monit GUI: Set the encoding to UTF-8 to support UTF-8 formatted "check pr
 
 Fixed: Network check on Solaris 10.
 
+Fixed: Issue #460: Add support for OpenSSL 1.1.0
+
 
 Version 5.19.0
 
