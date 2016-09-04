@@ -147,7 +147,7 @@ struct SslServer_T {
 };
 
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
 static Mutex_T *instanceMutexTable;
 #endif
 
@@ -169,7 +169,7 @@ static boolean_t _retry(int socket, int *timeout, int (*callback)(int socket, ti
 }
 
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
 static unsigned long _threadID() {
         return (unsigned long)Thread_self();
 }
@@ -366,7 +366,7 @@ static boolean_t _setClientCertificate(T C, const char *file) {
 
 
 void Ssl_start() {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
         SSL_library_init();
         SSL_load_error_strings();
         if (File_exist(URANDOM_DEVICE))
@@ -386,7 +386,7 @@ void Ssl_start() {
 
 
 void Ssl_stop() {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
         CRYPTO_set_id_callback(NULL);
         CRYPTO_set_locking_callback(NULL);
         for (int i = 0; i < CRYPTO_num_locks(); i++)
@@ -400,7 +400,7 @@ void Ssl_stop() {
 
 
 void Ssl_threadCleanup() {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
         ERR_remove_state(0);
 #endif
 }
