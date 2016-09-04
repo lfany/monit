@@ -390,7 +390,9 @@ void Ssl_stop() {
 
 
 void Ssl_threadCleanup() {
+#ifdef HAVE_ERR_REMOVE_STATE
         ERR_remove_state(0);
+#endif
 }
 
 
