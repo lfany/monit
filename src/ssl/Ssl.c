@@ -505,25 +505,26 @@ T Ssl_new(Ssl_Version version, const char *CACertificateFile, const char *CACert
                         LogError("SSL: SSLv2 not supported\n");
                         goto sslerror;
                 case SSL_V3:
-                        SSL_CTX_set_min_proto_version(C->ctx, SSL3_VERSION)
-                        SSL_CTX_set_max_proto_version(C->ctx, SSL3_VERSION)
+                        SSL_CTX_set_min_proto_version(C->ctx, SSL3_VERSION);
+                        SSL_CTX_set_max_proto_version(C->ctx, SSL3_VERSION);
                         break;
                 case SSL_TLSV1:
-                        SSL_CTX_set_min_proto_version(C->ctx, TLS1_VERSION)
-                        SSL_CTX_set_max_proto_version(C->ctx, TLS1_VERSION)
+                        SSL_CTX_set_min_proto_version(C->ctx, TLS1_VERSION);
+                        SSL_CTX_set_max_proto_version(C->ctx, TLS1_VERSION);
                         break;
                 case SSL_TLSV11:
-                        SSL_CTX_set_min_proto_version(C->ctx, TLS1_1_VERSION)
-                        SSL_CTX_set_max_proto_version(C->ctx, TLS1_1_VERSION)
+                        SSL_CTX_set_min_proto_version(C->ctx, TLS1_1_VERSION);
+                        SSL_CTX_set_max_proto_version(C->ctx, TLS1_1_VERSION);
                         break;
                 case SSL_TLSV12:
-                        SSL_CTX_set_min_proto_version(C->ctx, TLS1_2_VERSION)
-                        SSL_CTX_set_max_proto_version(C->ctx, TLS1_2_VERSION)
+                        SSL_CTX_set_min_proto_version(C->ctx, TLS1_2_VERSION);
+                        SSL_CTX_set_max_proto_version(C->ctx, TLS1_2_VERSION);
                         break;
                 case SSL_Auto:
                 default:
                         //FIXME: add new "set ssl" option for setting minimum version
                         break;
+        }
 #endif
         SSL_CTX_set_default_verify_paths(C->ctx);
         if (CACertificateFile || CACertificatePath) {
