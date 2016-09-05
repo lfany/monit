@@ -431,6 +431,7 @@ T Ssl_new(Ssl_Version version, const char *CACertificateFile, const char *CACert
         T C;
         NEW(C);
         C->version = version;
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
         const SSL_METHOD *method;
         switch (version) {
                 case SSL_V2:
@@ -443,10 +444,10 @@ T Ssl_new(Ssl_Version version, const char *CACertificateFile, const char *CACert
                                 goto sslerror;
                         }
                         method = SSLv2_client_method();
-#endif
                         break;
+#endif
                 case SSL_V3:
-#ifdef OPENSSL_NO_SSL3
+#if defined OPENSSL_NO_SSL3
                         LogError("SSL: SSLv3 not supported\n");
                         goto sslerror;
 #else
@@ -455,26 +456,41 @@ T Ssl_new(Ssl_Version version, const char *CACertificateFile, const char *CACert
                                 goto sslerror;
                         }
                         method = SSLv3_client_method();
-#endif
                         break;
+#endif
                 case SSL_TLSV1:
+#if defined OPENSSL_NO_TLS1_METHOD
+                        LogError("SSL: TLSv1.0 not supported\n");
+                        goto sslerror;
+#else
                         method = TLSv1_client_method();
                         break;
-#ifdef HAVE_TLSV1_1
+#endif
                 case SSL_TLSV11:
+#if defined OPENSSL_NO_TLS1_1_METHOD || ! defined HAVE_TLSV1_1
+                        LogError("SSL: TLSv1.1 not supported\n");
+                        goto sslerror;
+#else
                         method = TLSv1_1_client_method();
                         break;
 #endif
-#ifdef HAVE_TLSV1_2
                 case SSL_TLSV12:
+#if defined OPENSSL_NO_TLS1_2_METHOD || ! defined HAVE_TLSV1_2
+                        LogError("SSL: TLSv1.2 not supported\n");
+                        goto sslerror;
+#else
                         method = TLSv1_2_client_method();
                         break;
 #endif
                 case SSL_Auto:
                 default:
                         method = SSLv23_client_method();
+                        //FIXME: add new "set ssl" option for setting minimum version and use SSL_CTX_set_options() to disable protocols
                         break;
         }
+#else
+        const SSL_METHOD *method = TLS_client_method();
+#endif
         if (! method) {
                 LogError("SSL: client method initialization failed -- %s\n", SSLERROR);
                 goto sslerror;
@@ -483,6 +499,32 @@ T Ssl_new(Ssl_Version version, const char *CACertificateFile, const char *CACert
                 LogError("SSL: client context initialization failed -- %s\n", SSLERROR);
                 goto sslerror;
         }
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L) && ! defined(LIBRESSL_VERSION_NUMBER)
+        switch (version) {
+                case SSL_V2:
+                        LogError("SSL: SSLv2 not supported\n");
+                        goto sslerror;
+                case SSL_V3:
+                        SSL_CTX_set_min_proto_version(C->ctx, SSL3_VERSION)
+                        SSL_CTX_set_max_proto_version(C->ctx, SSL3_VERSION)
+                        break;
+                case SSL_TLSV1:
+                        SSL_CTX_set_min_proto_version(C->ctx, TLS1_VERSION)
+                        SSL_CTX_set_max_proto_version(C->ctx, TLS1_VERSION)
+                        break;
+                case SSL_TLSV11:
+                        SSL_CTX_set_min_proto_version(C->ctx, TLS1_1_VERSION)
+                        SSL_CTX_set_max_proto_version(C->ctx, TLS1_1_VERSION)
+                        break;
+                case SSL_TLSV12:
+                        SSL_CTX_set_min_proto_version(C->ctx, TLS1_2_VERSION)
+                        SSL_CTX_set_max_proto_version(C->ctx, TLS1_2_VERSION)
+                        break;
+                case SSL_Auto:
+                default:
+                        //FIXME: add new "set ssl" option for setting minimum version
+                        break;
+#endif
         SSL_CTX_set_default_verify_paths(C->ctx);
         if (CACertificateFile || CACertificatePath) {
                 if (! SSL_CTX_load_verify_locations(C->ctx, CACertificateFile, CACertificatePath)) {
@@ -716,7 +758,11 @@ SslServer_T SslServer_new(char *pemfile, char *clientpemfile, int socket) {
         S->pemfile = Str_dup(pemfile);
         if (clientpemfile)
                 S->clientpemfile = Str_dup(clientpemfile);
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
         const SSL_METHOD *method = SSLv23_server_method();
+#else
+        const SSL_METHOD *method = TLS_server_method();
+#endif
         if (! method) {
                 LogError("SSL: server method initialization failed -- %s\n", SSLERROR);
                 goto sslerror;
