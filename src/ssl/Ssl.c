@@ -380,12 +380,6 @@ void Ssl_start() {
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
         SSL_library_init();
         SSL_load_error_strings();
-        if (File_exist(URANDOM_DEVICE))
-                RAND_load_file(URANDOM_DEVICE, RANDOM_BYTES);
-        else if (File_exist(RANDOM_DEVICE))
-                RAND_load_file(RANDOM_DEVICE, RANDOM_BYTES);
-        else
-                THROW(AssertException, "SSL: cannot find %s nor %s on the system", URANDOM_DEVICE, RANDOM_DEVICE);
         int locks = CRYPTO_num_locks();
         instanceMutexTable = CALLOC(locks, sizeof(Mutex_T));
         for (int i = 0; i < locks; i++)
@@ -393,6 +387,12 @@ void Ssl_start() {
         CRYPTO_set_id_callback(_threadID);
         CRYPTO_set_locking_callback(_mutexLock);
 #endif
+        if (File_exist(URANDOM_DEVICE))
+                RAND_load_file(URANDOM_DEVICE, RANDOM_BYTES);
+        else if (File_exist(RANDOM_DEVICE))
+                RAND_load_file(RANDOM_DEVICE, RANDOM_BYTES);
+        else
+                THROW(AssertException, "SSL: cannot find %s nor %s on the system", URANDOM_DEVICE, RANDOM_DEVICE);
 }
 
 
