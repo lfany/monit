@@ -20,10 +20,6 @@ Fixed: Network check on Solaris 10.
 
 Fixed: Issue #460: Add support for OpenSSL 1.1.0
 
-Fixed: If the SSL library to which monit was linked didn't support TLSv1.1 or TLSv1.2 and the user
-did set the monit ssl option to explicitly use one of these versions, monit silently falled back to
-SSL version "auto" and thus allowed to negotiate SSLv3 or TLSv1.0 protocols too.
-
 
 Version 5.19.0
 
