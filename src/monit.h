@@ -1107,6 +1107,7 @@ struct myrun {
         uint8_t debug;                                            /**< Debug level */
         volatile Run_Flags flags;
         Handler_Type handler_flag;                    /**< The handlers state flag */
+        Onreboot_Type onreboot;
         struct {
                 char *control;            /**< The file to read configuration from */
                 char *log;                     /**< The file to write logdata into */

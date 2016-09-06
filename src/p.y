@@ -377,6 +377,7 @@ statement       : setalert
                 | setexpectbuffer
                 | setinit
                 | setlimits
+                | setonreboot
                 | setfips
                 | checkproc optproclist
                 | checkfile optfilelist
@@ -613,6 +614,17 @@ startdelay      : /* EMPTY */        { $<number>$ = START_DELAY; }
 
 setinit         : SET INIT {
                         Run.flags |= Run_Foreground;
+                  }
+                ;
+
+setonreboot     : SET ONREBOOT START {
+                        Run.onreboot = Onreboot_Start;
+                  }
+                | SET ONREBOOT NOSTART {
+                        Run.onreboot = Onreboot_Nostart;
+                  }
+                | SET ONREBOOT LASTSTATE {
+                        Run.onreboot = Onreboot_Laststate;
                   }
                 ;
 
@@ -2817,6 +2829,7 @@ static void preparse() {
         Run.limits.httpContentBuffer = LIMIT_HTTPCONTENTBUFFER;
         Run.limits.programOutput     = LIMIT_PROGRAMOUTPUT;
         Run.limits.networkTimeout    = LIMIT_NETWORKTIMEOUT;
+        Run.onreboot                 = Onreboot_Start;
         Run.mmonitcredentials        = NULL;
         Run.httpd.flags              = Httpd_Disabled | Httpd_Signature;
         Run.httpd.credentials        = NULL;
@@ -2979,7 +2992,7 @@ static Service_T createservice(Service_Type type, char *name, char *value, State
         /* Set default values */
         current->mode     = Monitor_Active;
         current->monitor  = Monitor_Init;
-        current->onreboot = Onreboot_Start;
+        current->onreboot = Run.onreboot;
         current->name     = name;
         current->check    = check;
         current->path     = value;

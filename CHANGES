@@ -4,6 +4,9 @@
 
 Version 5.19.1
 
+New: Issue #448: Added global "set onreboot <start | nostart | laststate>" statement which allows
+to override default service startup policy ("onreboot start" by default).
+
 Fixed: Monit HTTP GUI: Listen on IPv6 interface if no address is specified (linux specific issue).
 
 Fixed: Monit HTTP GUI: Support CIDR mask 0 as explicit allow-all IP ACL (e.g. "allow 0.0.0.0/0").

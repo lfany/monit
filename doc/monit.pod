@@ -1499,6 +1499,10 @@ reboot. For instance, if a service was started before reboot, it willl
 be started after reboot. If it was stopped before reboot, it will
 not be started after and so on.
 
+The default ONREBOOT START mode can be overriden globally:
+
+  SET ONREBOOT <START | NOSTART | LASTSTATE>
+
 
 =head1 SERVICE RESTART LIMIT
 

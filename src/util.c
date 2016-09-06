@@ -793,6 +793,7 @@ void Util_printRunList() {
         printf(" %-18s =   httpContentBuffer: %s\n", " ", Str_bytesToSize(Run.limits.httpContentBuffer, buf));
         printf(" %-18s =   networkTimeout:    %s\n", " ", Str_milliToTime(Run.limits.networkTimeout, (char[23]){}));
         printf(" %-18s = }\n", " ");
+        printf(" %-18s = %s\n", "On reboot", onrebootnames[Run.onreboot]);
         printf(" %-18s = %d seconds with start delay %d seconds\n", "Poll time", Run.polltime, Run.startdelay);
 
         if (Run.eventlist_dir) {
