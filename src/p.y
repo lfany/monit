@@ -2069,22 +2069,22 @@ resourcesystemopt  : resourceload
                    | resourcecpu
                    ;
 
-resourcecpuproc : CPU operator NUMBER PERCENT {
+resourcecpuproc : CPU operator value PERCENT {
                     resourceset.resource_id = Resource_CpuPercent;
                     resourceset.operator = $<number>2;
-                    resourceset.limit = $3;
+                    resourceset.limit = $<real>3;
                   }
-                | TOTALCPU operator NUMBER PERCENT {
+                | TOTALCPU operator value PERCENT {
                     resourceset.resource_id = Resource_CpuPercentTotal;
                     resourceset.operator = $<number>2;
-                    resourceset.limit = $3;
+                    resourceset.limit = $<real>3;
                   }
                 ;
 
-resourcecpu     : resourcecpuid operator NUMBER PERCENT {
+resourcecpu     : resourcecpuid operator value PERCENT {
                     resourceset.resource_id = $<number>1;
                     resourceset.operator = $<number>2;
-                    resourceset.limit = $3;
+                    resourceset.limit = $<real>3;
                   }
                 ;
 
@@ -2099,20 +2099,20 @@ resourcemem     : MEMORY operator value unit {
                     resourceset.operator = $<number>2;
                     resourceset.limit = $<real>3 * $<number>4;
                   }
-                | MEMORY operator NUMBER PERCENT {
+                | MEMORY operator value PERCENT {
                     resourceset.resource_id = Resource_MemoryPercent;
                     resourceset.operator = $<number>2;
-                    resourceset.limit = $3;
+                    resourceset.limit = $<real>3;
                   }
                 | TOTALMEMORY operator value unit {
                     resourceset.resource_id = Resource_MemoryKbyteTotal;
                     resourceset.operator = $<number>2;
                     resourceset.limit = $<real>3 * $<number>4;
                   }
-                | TOTALMEMORY operator NUMBER PERCENT  {
+                | TOTALMEMORY operator value PERCENT  {
                     resourceset.resource_id = Resource_MemoryPercentTotal;
                     resourceset.operator = $<number>2;
-                    resourceset.limit = $3;
+                    resourceset.limit = $<real>3;
                   }
                 ;
 
@@ -2121,10 +2121,10 @@ resourceswap    : SWAP operator value unit {
                     resourceset.operator = $<number>2;
                     resourceset.limit = $<real>3 * $<number>4;
                   }
-                | SWAP operator NUMBER PERCENT {
+                | SWAP operator value PERCENT {
                     resourceset.resource_id = Resource_SwapPercent;
                     resourceset.operator = $<number>2;
-                    resourceset.limit = $3;
+                    resourceset.limit = $<real>3;
                   }
                 ;
 
@@ -2347,10 +2347,10 @@ inode           : IF INODE operator NUMBER rate1 THEN action1 recovery {
                     addeventaction(&(filesystemset).action, $<number>7, $<number>8);
                     addfilesystem(&filesystemset);
                   }
-                | IF INODE operator NUMBER PERCENT rate1 THEN action1 recovery {
+                | IF INODE operator value PERCENT rate1 THEN action1 recovery {
                     filesystemset.resource = Resource_Inode;
                     filesystemset.operator = $<number>3;
-                    filesystemset.limit_percent = $4;
+                    filesystemset.limit_percent = $<real>4;
                     addeventaction(&(filesystemset).action, $<number>8, $<number>9);
                     addfilesystem(&filesystemset);
                   }
@@ -2361,10 +2361,10 @@ inode           : IF INODE operator NUMBER rate1 THEN action1 recovery {
                     addeventaction(&(filesystemset).action, $<number>8, $<number>9);
                     addfilesystem(&filesystemset);
                   }
-                | IF INODE TFREE operator NUMBER PERCENT rate1 THEN action1 recovery {
+                | IF INODE TFREE operator value PERCENT rate1 THEN action1 recovery {
                     filesystemset.resource = Resource_InodeFree;
                     filesystemset.operator = $<number>4;
-                    filesystemset.limit_percent = $5;
+                    filesystemset.limit_percent = $<real>5;
                     addeventaction(&(filesystemset).action, $<number>9, $<number>10);
                     addfilesystem(&filesystemset);
                   }
@@ -2379,10 +2379,10 @@ space           : IF SPACE operator value unit rate1 THEN action1 recovery {
                     addeventaction(&(filesystemset).action, $<number>8, $<number>9);
                     addfilesystem(&filesystemset);
                   }
-                | IF SPACE operator NUMBER PERCENT rate1 THEN action1 recovery {
+                | IF SPACE operator value PERCENT rate1 THEN action1 recovery {
                     filesystemset.resource = Resource_Space;
                     filesystemset.operator = $<number>3;
-                    filesystemset.limit_percent = $4;
+                    filesystemset.limit_percent = $<real>4;
                     addeventaction(&(filesystemset).action, $<number>8, $<number>9);
                     addfilesystem(&filesystemset);
                   }
@@ -2395,10 +2395,10 @@ space           : IF SPACE operator value unit rate1 THEN action1 recovery {
                     addeventaction(&(filesystemset).action, $<number>9, $<number>10);
                     addfilesystem(&filesystemset);
                   }
-                | IF SPACE TFREE operator NUMBER PERCENT rate1 THEN action1 recovery {
+                | IF SPACE TFREE operator value PERCENT rate1 THEN action1 recovery {
                     filesystemset.resource = Resource_SpaceFree;
                     filesystemset.operator = $<number>4;
-                    filesystemset.limit_percent = $5;
+                    filesystemset.limit_percent = $<real>5;
                     addeventaction(&(filesystemset).action, $<number>9, $<number>10);
                     addfilesystem(&filesystemset);
                   }

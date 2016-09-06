@@ -7,6 +7,8 @@ Version 5.19.1
 New: Issue #448: Added global "set onreboot <start | nostart | laststate>" statement which allows
 to override default service startup policy ("onreboot start" by default).
 
+New: The cpu, memory, swap, inode and space tests now allow also decimal values for percent limit.
+
 Fixed: Monit HTTP GUI: Listen on IPv6 interface if no address is specified (linux specific issue).
 
 Fixed: Monit HTTP GUI: Support CIDR mask 0 as explicit allow-all IP ACL (e.g. "allow 0.0.0.0/0").
@@ -17,11 +19,9 @@ Fixed: Support M/Monit on IPv6 address.
 
 Fixed: Issue #438: When "include /path/*" is used, silently ignore if there the directory is empty.
 
-Fixed: Monit GUI: Set the encoding to UTF-8 to support UTF-8 formatted "check program" output.
-
 Fixed: Network check on Solaris 10.
 
-Fixed: Issue #460: Add support for OpenSSL 1.1.0
+Fixed: Monit GUI: Set the encoding to UTF-8 to support UTF-8 formatted "check program" output.
 
 
 Version 5.19.0
