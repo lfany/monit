@@ -1,8 +1,8 @@
-                     CHANGES version 5.19.1
+                     CHANGES version 5.20.0
 
            This file summarizes changes made since 5.0
 
-Version 5.19.1
+Version 5.20.0
 
 New: Issue #448: Added global "set onreboot <start | nostart | laststate>" statement which allows
 to override default service startup policy ("onreboot start" by default).
