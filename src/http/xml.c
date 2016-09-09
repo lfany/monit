@@ -173,6 +173,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                             "<status_hint>%d</status_hint>"
                             "<monitor>%d</monitor>"
                             "<monitormode>%d</monitormode>"
+                            "<onreboot>%d</onreboot>"
                             "<pendingaction>%d</pendingaction>",
                             (long long)S->collected.tv_sec,
                             (long)S->collected.tv_usec,
@@ -180,6 +181,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                             S->error_hint,
                             S->monitor,
                             S->mode,
+                            S->onreboot,
                             S->doaction);
         if (S->every.type != Every_Cycle) {
                 StringBuffer_append(B, "<every><type>%d</type>", S->every.type);
