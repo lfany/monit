@@ -25,7 +25,7 @@ KillMode=process
 ExecStart=@prefix@/bin/monit -I -c @sysconfdir@/monitrc
 ExecStop=@prefix@/bin/monit -c @sysconfdir@/monitrc quit
 ExecReload=@prefix@/bin/monit -c @sysconfdir@/monitrc reload
-Restart = on-abnormal
+Restart=on-abnormal
 
 [Install]
 WantedBy=multi-user.target
