@@ -27,6 +27,9 @@ Fixed: Issue #438: When "include /path/*" is used, silently ignore if there the 
 
 Fixed: Issue #441: Incomplete logging of restart action.
 
+Fixed: Issue #444: generic protocol test: "expect" truncated reveived data by one character for each
+zero, which was received.
+
 Fixed: Issue #460: Add support for OpenSSL 1.1.0
 
 Fixed: Network check on Solaris 10.

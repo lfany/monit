@@ -41,10 +41,10 @@
 static char *_escapeZeroInExpectBuffer(char *s, int n) {
         assert(n <= Run.limits.sendExpectBuffer);
         int i, j;
-        char t[n]; // VLA
-        for (i = 0, j = 0; j < n; i++, j++) {
+        char t[Run.limits.sendExpectBuffer]; // VLA
+        for (i = 0, j = 0; i < n && j < Run.limits.sendExpectBuffer; i++, j++) {
                 if ((t[j] = s[i]) == '\0') {
-                        if (j + 2 < n) {
+                        if (j + 2 < Run.limits.sendExpectBuffer) {
                                 t[j] = '\\';
                                 t[j + 1] = '0';
                                 j++;
@@ -52,8 +52,8 @@ static char *_escapeZeroInExpectBuffer(char *s, int n) {
                 }
         }
         if (j > i) {
-                memcpy(s, t, n);
-                s[n] = 0;
+                memcpy(s, t, j);
+                s[j] = 0;
         }
         return s;
 }
