@@ -1381,7 +1381,7 @@ State_Type check_program(Service_T s) {
                 rv = State_Init;
         }
         //FIXME: the current off-by-one-cycle based design requires that the check program will collect the exit value next cycle even if program startup should be skipped in the given cycle => must test skip here (new scheduler will obsolete this deferred skip checking)
-        if (! _checkSkip(s)) {
+        if (! _checkSkip(s) && s->monitor != Monitor_Not) { // The status evaluation may disable service monitoring
                 // Start program
                 s->program->P = Command_execute(s->program->C);
                 if (! s->program->P) {

@@ -31,6 +31,9 @@ Fixed: Network check on Solaris 10.
 
 Fixed: Monit GUI: Set the encoding to UTF-8 to support UTF-8 formatted "check program" output.
 
+Fixed: If the check program monitoring was disabled by exit status dependent stop/unmonitor action,
+don't start the program again.
+
 
 Version 5.19.0
 
