@@ -436,8 +436,8 @@ L<status|/"PROGRAM STATUS TESTING"> test allows one to check the
 program's exit status. If the program does not finish executing within
 <number> seconds, Monit will terminate it. The default program timeout
 is 300 seconds (5 minutes). The output of the program is recorded and
-made available in the User Interface and in alerts (by default up to
-512B, you can customize the limit using the L<set limits|"LIMITS">
+made available in the User Interface and in alerts, by default up to
+512B. You can customize the limits using the L<set limits|"LIMITS">
 statement).
 
 =head3 Network
@@ -1318,7 +1318,8 @@ Example:
 
 In the case of a process check, Monit will wait up to 30 seconds for
 the start/stop action to finish before giving up and report an error.
-You can override this timeout using the I<TIMEOUT> option.
+You can override this timeout using the I<TIMEOUT> option or globally
+using the L<set limits|"LIMITS">.
 
 Example:
 
@@ -1682,6 +1683,10 @@ Syntax:
    FILECONTENTBUFFER: <number> <unit>,
    HTTPCONTENTBUFFER: <number> <unit>,
    NETWORKTIMEOUT:    <number> <timeunit>
+   PROGRAMTIMEOUT:    <number> <timeunit>
+   STOPTIMEOUT:       <number> <timeunit>
+   STARTTIMEOUT:      <number> <timeunit>
+   RESTARTTIMEOUT:    <number> <timeunit>
  }
 
 Where:
@@ -1697,7 +1702,11 @@ Options legend:
  | sendExpectBuffer  | limit for send/expect protocol test              | 256 B   |
  | fileContentBuffer | limit for file content test (line)               | 512 B   |
  | httpContentBuffer | limit for HTTP content test (response body)      | 1 MB    |
- | networkTimeout    | timeout for network I/O                          | 5 sec   |
+ | networkTimeout    | timeout for network I/O                          | 5 s     |
+ | programTimeout    | timeout for check program                        | 300 s   |
+ | stopTimeout       | timeout for service stop                         | 30 s    |
+ | startTimeout      | timeout for service start                        | 30 s    |
+ | startTimeout      | timeout for service restart                      | 30 s    |
  ----------------------------------------------------------------------------------
 
 

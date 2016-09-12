@@ -1134,26 +1134,27 @@ State_Type check_process(Service_T s) {
                         rv = State_Failed;
                 }
         }
+        int64_t uptimeMilli = s->inf->priv.process.uptime * 1000;
         for (Port_T pp = s->portlist; pp; pp = pp->next) {
                 //FIXME: instead of pause, try to test, but ignore any errors in the start timeout timeframe ... will allow to display the port response time as soon as available, instead of waiting for 30+ seconds
                 /* pause port tests in the start timeout timeframe while the process is starting (it may take some time to the process before it starts accepting connections) */
-                if (! s->start || s->inf->priv.process.uptime > s->start->timeout) {
+                if (! s->start || uptimeMilli > s->start->timeout) {
                         if (_checkConnection(s, pp) == State_Failed)
                                 rv = State_Failed;
                 } else {
                         pp->is_available = Connection_Init;
-                        DEBUG("'%s' connection test paused for %lld seconds while the process is starting\n", s->name, (long long)(s->start->timeout - (s->inf->priv.process.uptime < 0 ? 0 : s->inf->priv.process.uptime)));
+                        DEBUG("'%s' connection test paused for %s while the process is starting\n", s->name, Str_milliToTime(s->start->timeout - (uptimeMilli < 0 ? 0 : uptimeMilli), (char[23]){}));
                 }
         }
         for (Port_T pp = s->socketlist; pp; pp = pp->next) {
                 //FIXME: instead of pause, try to test, but ignore any errors in the start timeout timeframe ... will allow to display the port response time as soon as available, instead of waiting for 30+ seconds
                 /* pause socket tests in the start timeout timeframe while the process is starting (it may take some time to the process before it starts accepting connections) */
-                if (! s->start || s->inf->priv.process.uptime > s->start->timeout) {
+                if (! s->start || uptimeMilli > s->start->timeout) {
                         if (_checkConnection(s, pp) == State_Failed)
                                 rv = State_Failed;
                 } else {
                         pp->is_available = Connection_Init;
-                        DEBUG("'%s' connection test paused for %lld seconds while the process is starting\n", s->name, (long long)(s->start->timeout - (s->inf->priv.process.uptime < 0 ? 0 : s->inf->priv.process.uptime)));
+                        DEBUG("'%s' connection test paused for %s while the process is starting\n", s->name, Str_milliToTime(s->start->timeout - (uptimeMilli < 0 ? 0 : uptimeMilli), (char[23]){}));
                 }
         }
         return rv;
@@ -1333,10 +1334,10 @@ State_Type check_program(Service_T s) {
         Process_T P = s->program->P;
         if (P) {
                 if (Process_exitStatus(P) < 0) { // Program is still running
-                        time_t execution_time = (now - s->program->started);
+                        int64_t execution_time = (now - s->program->started) * 1000;
                         if (execution_time > s->program->timeout) { // Program timed out
                                 rv = State_Failed;
-                                LogError("'%s' program timed out after %lld seconds. Killing program with pid %ld\n", s->name, (long long)execution_time, (long)Process_getPid(P));
+                                LogError("'%s' program timed out after %s. Killing program with pid %ld\n", s->name, Str_milliToTime(execution_time, (char[23]){}), (long)Process_getPid(P));
                                 Process_kill(P);
                                 Process_waitFor(P); // Wait for child to exit to get correct exit value
                                 // Fall-through with P and evaluate exit value below.

@@ -373,6 +373,10 @@ filecontentbuffer { return FILECONTENTBUFFER; }
 httpcontentbuffer { return HTTPCONTENTBUFFER; }
 programoutput     { return PROGRAMOUTPUT; }
 networktimeout    { return NETWORKTIMEOUT; }
+programtimeout    { return PROGRAMTIMEOUT; }
+stoptimeout       { return STOPTIMEOUT; }
+starttimeout      { return STARTTIMEOUT; }
+restarttimeout    { return RESTARTTIMEOUT; }
 cleartext         { return CLEARTEXT; }
 md5               { return MD5HASH; }
 sha1              { return SHA1HASH; }

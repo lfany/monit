@@ -792,6 +792,10 @@ void Util_printRunList() {
         printf(" %-18s =   fileContentBuffer: %s\n", " ", Str_bytesToSize(Run.limits.fileContentBuffer, buf));
         printf(" %-18s =   httpContentBuffer: %s\n", " ", Str_bytesToSize(Run.limits.httpContentBuffer, buf));
         printf(" %-18s =   networkTimeout:    %s\n", " ", Str_milliToTime(Run.limits.networkTimeout, (char[23]){}));
+        printf(" %-18s =   programTimeout:    %s\n", " ", Str_milliToTime(Run.limits.programTimeout, (char[23]){}));
+        printf(" %-18s =   stopTimeout:       %s\n", " ", Str_milliToTime(Run.limits.stopTimeout, (char[23]){}));
+        printf(" %-18s =   startTimeout:      %s\n", " ", Str_milliToTime(Run.limits.startTimeout, (char[23]){}));
+        printf(" %-18s =   restartTimeout:    %s\n", " ", Str_milliToTime(Run.limits.restartTimeout, (char[23]){}));
         printf(" %-18s = }\n", " ");
         printf(" %-18s = %s\n", "On reboot", onrebootnames[Run.onreboot]);
         printf(" %-18s = %d seconds with start delay %d seconds\n", "Poll time", Run.polltime, Run.startdelay);
@@ -965,7 +969,7 @@ void Util_printService(Service_T s) {
                         printf(" as uid %d", s->start->uid);
                 if (s->start->has_gid)
                         printf(" as gid %d", s->start->gid);
-                printf(" timeout %d second(s)", s->start->timeout);
+                printf(" timeout %s", Str_milliToTime(s->start->timeout, (char[23]){}));
                 printf("\n");
         }
         if (s->stop) {
@@ -977,7 +981,7 @@ void Util_printService(Service_T s) {
                         printf(" as uid %d", s->stop->uid);
                 if (s->stop->has_gid)
                         printf(" as gid %d", s->stop->gid);
-                printf(" timeout %d second(s)", s->stop->timeout);
+                printf(" timeout %s", Str_milliToTime(s->stop->timeout, (char[23]){}));
                 printf("\n");
         }
         if (s->restart) {
@@ -989,7 +993,7 @@ void Util_printService(Service_T s) {
                         printf(" as uid %d", s->restart->uid);
                 if (s->restart->has_gid)
                         printf(" as gid %d", s->restart->gid);
-                printf(" timeout %d second(s)", s->restart->timeout);
+                printf(" timeout %s", Str_milliToTime(s->restart->timeout, (char[23]){}));
                 printf("\n");
         }
 
@@ -1019,7 +1023,7 @@ void Util_printService(Service_T s) {
 
         if (s->type == Service_Program) {
                 printf(" %-20s = ", "Program timeout");
-                printf("terminate the program if not finished within %d seconds\n", s->program->timeout);
+                printf("terminate the program if not finished within %s\n", Str_milliToTime(s->program->timeout, (char[23]){}));
                 for (Status_T o = s->statuslist; o; o = o->next) {
                         StringBuffer_clear(buf);
                         if (o->operator == Operator_Changed)

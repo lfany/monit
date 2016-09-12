@@ -317,7 +317,7 @@ static int verifyMaxForward(int);
 %token PEMFILE ENABLE DISABLE SSL CLIENTPEMFILE ALLOWSELFCERTIFICATION SELFSIGNED VERIFY CERTIFICATE CACERTIFICATEFILE CACERTIFICATEPATH VALID
 %token INTERFACE LINK PACKET BYTEIN BYTEOUT PACKETIN PACKETOUT SPEED SATURATION UPLOAD DOWNLOAD TOTAL
 %token IDFILE STATEFILE SEND EXPECT CYCLE COUNT REMINDER REPEAT
-%token LIMITS SENDEXPECTBUFFER EXPECTBUFFER FILECONTENTBUFFER HTTPCONTENTBUFFER PROGRAMOUTPUT NETWORKTIMEOUT
+%token LIMITS SENDEXPECTBUFFER EXPECTBUFFER FILECONTENTBUFFER HTTPCONTENTBUFFER PROGRAMOUTPUT NETWORKTIMEOUT PROGRAMTIMEOUT STARTTIMEOUT STOPTIMEOUT RESTARTTIMEOUT
 %token PIDFILE START STOP PATHTOK
 %token HOST HOSTNAME PORT IPV4 IPV6 TYPE UDP TCP TCPSSL PROTOCOL CONNECTION
 %token ALERT NOALERT MAILFORMAT UNIXSOCKET SIGNATURE
@@ -654,10 +654,34 @@ limit           : SENDEXPECTBUFFER ':' NUMBER unit {
                         Run.limits.programOutput = $3 * $<number>4;
                   }
                 | NETWORKTIMEOUT ':' NUMBER MILLISECOND {
-                        Run.limits.networkTimeout= $3;
+                        Run.limits.networkTimeout = $3;
                   }
                 | NETWORKTIMEOUT ':' NUMBER SECOND {
-                        Run.limits.networkTimeout= $3 * 1000;
+                        Run.limits.networkTimeout = $3 * 1000;
+                  }
+                | PROGRAMTIMEOUT ':' NUMBER MILLISECOND {
+                        Run.limits.programTimeout = $3;
+                  }
+                | PROGRAMTIMEOUT ':' NUMBER SECOND {
+                        Run.limits.programTimeout = $3 * 1000;
+                  }
+                | STOPTIMEOUT ':' NUMBER MILLISECOND {
+                        Run.limits.stopTimeout = $3;
+                  }
+                | STOPTIMEOUT ':' NUMBER SECOND {
+                        Run.limits.stopTimeout = $3 * 1000;
+                  }
+                | STARTTIMEOUT ':' NUMBER MILLISECOND {
+                        Run.limits.startTimeout = $3;
+                  }
+                | STARTTIMEOUT ':' NUMBER SECOND {
+                        Run.limits.startTimeout = $3 * 1000;
+                  }
+                | RESTARTTIMEOUT ':' NUMBER MILLISECOND {
+                        Run.limits.restartTimeout = $3;
+                  }
+                | RESTARTTIMEOUT ':' NUMBER SECOND {
+                        Run.limits.restartTimeout = $3 * 1000;
                   }
                 ;
 
@@ -1247,27 +1271,27 @@ checkprogram    : CHECKPROGRAM SERVICENAME PATHTOK argumentlist programtimeout {
                  }
                 ;
 
-start           : START argumentlist exectimeout {
+start           : START argumentlist starttimeout {
                     addcommand(START, $<number>3);
                   }
-                | START argumentlist useroptionlist exectimeout {
+                | START argumentlist useroptionlist starttimeout {
                     addcommand(START, $<number>4);
                   }
                 ;
 
-stop            : STOP argumentlist exectimeout {
+stop            : STOP argumentlist stoptimeout {
                     addcommand(STOP, $<number>3);
                   }
-                | STOP argumentlist useroptionlist exectimeout {
+                | STOP argumentlist useroptionlist stoptimeout {
                     addcommand(STOP, $<number>4);
                   }
                 ;
 
 
-restart         : RESTART argumentlist exectimeout {
+restart         : RESTART argumentlist restarttimeout {
                     addcommand(RESTART, $<number>3);
                   }
-                | RESTART argumentlist useroptionlist exectimeout {
+                | RESTART argumentlist useroptionlist restarttimeout {
                     addcommand(RESTART, $<number>4);
                   }
                 ;
@@ -1836,19 +1860,35 @@ icmpoutgoing    : ADDRESS STRING {
                   }
                 ;
 
-exectimeout     : /* EMPTY */ {
-                   $<number>$ = EXEC_TIMEOUT;
+stoptimeout     : /* EMPTY */ {
+                   $<number>$ = Run.limits.stopTimeout;
                   }
                 | TIMEOUT NUMBER SECOND {
-                   $<number>$ = $2;
+                   $<number>$ = $2 * 1000; // milliseconds internally
+                  }
+                ;
+
+starttimeout    : /* EMPTY */ {
+                   $<number>$ = Run.limits.startTimeout;
+                  }
+                | TIMEOUT NUMBER SECOND {
+                   $<number>$ = $2 * 1000; // milliseconds internally
+                  }
+                ;
+
+restarttimeout  : /* EMPTY */ {
+                   $<number>$ = Run.limits.restartTimeout;
+                  }
+                | TIMEOUT NUMBER SECOND {
+                   $<number>$ = $2 * 1000; // milliseconds internally
                   }
                 ;
 
 programtimeout  : /* EMPTY */ {
-                   $<number>$ = PROGRAM_TIMEOUT; // Default program status check timeout is 5 min
+                   $<number>$ = Run.limits.programTimeout;
                   }
                 | TIMEOUT NUMBER SECOND {
-                   $<number>$ = $2;
+                   $<number>$ = $2 * 1000; // milliseconds internally
                   }
                 ;
 
@@ -2829,6 +2869,10 @@ static void preparse() {
         Run.limits.httpContentBuffer = LIMIT_HTTPCONTENTBUFFER;
         Run.limits.programOutput     = LIMIT_PROGRAMOUTPUT;
         Run.limits.networkTimeout    = LIMIT_NETWORKTIMEOUT;
+        Run.limits.programTimeout    = LIMIT_PROGRAMTIMEOUT;
+        Run.limits.stopTimeout       = LIMIT_STOPTIMEOUT;
+        Run.limits.startTimeout      = LIMIT_STARTTIMEOUT;
+        Run.limits.restartTimeout    = LIMIT_RESTARTTIMEOUT;
         Run.onreboot                 = Onreboot_Start;
         Run.mmonitcredentials        = NULL;
         Run.httpd.flags              = Httpd_Disabled | Httpd_Signature;
@@ -2986,7 +3030,7 @@ static Service_T createservice(Service_Type type, char *name, char *value, State
                 NEW(current->program);
                 current->program->args = command;
                 command = NULL;
-                current->program->timeout = PROGRAM_TIMEOUT;
+                current->program->timeout = Run.limits.programTimeout;
         }
 
         /* Set default values */

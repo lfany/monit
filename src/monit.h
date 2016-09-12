@@ -159,8 +159,6 @@ typedef enum {
 #define SMTP_TIMEOUT       30000
 
 #define START_DELAY        0
-#define EXEC_TIMEOUT       30
-#define PROGRAM_TIMEOUT    300
 
 
 //FIXME: refactor Run_Flags to bit field
@@ -367,6 +365,10 @@ typedef enum {
 #define LIMIT_PROGRAMOUTPUT     512
 #define LIMIT_HTTPCONTENTBUFFER 1048576
 #define LIMIT_NETWORKTIMEOUT    5000
+#define LIMIT_PROGRAMTIMEOUT    300000
+#define LIMIT_STOPTIMEOUT       30000
+#define LIMIT_STARTTIMEOUT      30000
+#define LIMIT_RESTARTTIMEOUT    30000
 
 
 #include "socket.h"
@@ -418,6 +420,10 @@ typedef struct mylimits {
         uint32_t httpContentBuffer;  /**< Maximum tested HTTP content length [B] */
         uint32_t programOutput;           /**< Program output truncate limit [B] */
         uint32_t networkTimeout;               /**< Default network timeout [ms] */
+        uint32_t programTimeout;               /**< Default program timeout [ms] */
+        uint32_t stopTimeout;                     /**< Default stop timeout [ms] */
+        uint32_t startTimeout;                   /**< Default start timeout [ms] */
+        uint32_t restartTimeout;               /**< Default restart timeout [ms] */
 } Limits_T;
 
 

@@ -757,6 +757,10 @@ static void do_runtime(HttpRequest req, HttpResponse res) {
         StringBuffer_append(res->outputbuffer, "<tr><td>Limit for HTTP content buffer</td><td>%s</td></tr>", Str_bytesToSize(Run.limits.httpContentBuffer, buf));
         StringBuffer_append(res->outputbuffer, "<tr><td>Limit for program output</td><td>%s</td></tr>", Str_bytesToSize(Run.limits.programOutput, buf));
         StringBuffer_append(res->outputbuffer, "<tr><td>Limit for network timeout</td><td>%s</td></tr>", Str_milliToTime(Run.limits.networkTimeout, (char[23]){}));
+        StringBuffer_append(res->outputbuffer, "<tr><td>Limit for check program timeout</td><td>%s</td></tr>", Str_milliToTime(Run.limits.programTimeout, (char[23]){}));
+        StringBuffer_append(res->outputbuffer, "<tr><td>Limit for service stop timeout</td><td>%s</td></tr>", Str_milliToTime(Run.limits.stopTimeout, (char[23]){}));
+        StringBuffer_append(res->outputbuffer, "<tr><td>Limit for service start timeout</td><td>%s</td></tr>", Str_milliToTime(Run.limits.startTimeout, (char[23]){}));
+        StringBuffer_append(res->outputbuffer, "<tr><td>Limit for service restart timeout</td><td>%s</td></tr>", Str_milliToTime(Run.limits.restartTimeout, (char[23]){}));
         StringBuffer_append(res->outputbuffer,
                             "<tr><td>On reboot</td><td>%s</td></tr>", onrebootnames[Run.onreboot]);
         StringBuffer_append(res->outputbuffer,
@@ -1020,7 +1024,7 @@ static void do_service(HttpRequest req, HttpResponse res, Service_T s) {
                         StringBuffer_append(res->outputbuffer, " as uid %d", s->start->uid);
                 if (s->start->has_gid)
                         StringBuffer_append(res->outputbuffer, " as gid %d", s->start->gid);
-                StringBuffer_append(res->outputbuffer, " timeout %d second(s)", s->start->timeout);
+                StringBuffer_append(res->outputbuffer, " timeout %s", Str_milliToTime(s->start->timeout, (char[23]){}));
                 StringBuffer_append(res->outputbuffer, "</td></tr>");
         }
         if (s->stop) {
@@ -1036,7 +1040,7 @@ static void do_service(HttpRequest req, HttpResponse res, Service_T s) {
                         StringBuffer_append(res->outputbuffer, " as uid %d", s->stop->uid);
                 if (s->stop->has_gid)
                         StringBuffer_append(res->outputbuffer, " as gid %d", s->stop->gid);
-                StringBuffer_append(res->outputbuffer, " timeout %d second(s)", s->stop->timeout);
+                StringBuffer_append(res->outputbuffer, " timeout %s", Str_milliToTime(s->stop->timeout, (char[23]){}));
                 StringBuffer_append(res->outputbuffer, "</td></tr>");
         }
         if (s->restart) {
@@ -1051,7 +1055,7 @@ static void do_service(HttpRequest req, HttpResponse res, Service_T s) {
                         StringBuffer_append(res->outputbuffer, " as uid %d", s->restart->uid);
                 if (s->restart->has_gid)
                         StringBuffer_append(res->outputbuffer, " as gid %d", s->restart->gid);
-                StringBuffer_append(res->outputbuffer, " timeout %d second(s)", s->restart->timeout);
+                StringBuffer_append(res->outputbuffer, " timeout %s", Str_milliToTime(s->restart->timeout, (char[23]){}));
                 StringBuffer_append(res->outputbuffer, "</td></tr>");
         }
         if (s->every.type != Every_Cycle) {
@@ -2041,7 +2045,7 @@ static void print_service_rules_ppid(HttpResponse res, Service_T s) {
 
 static void print_service_rules_program(HttpResponse res, Service_T s) {
         if (s->type == Service_Program) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Program timeout</td><td>Terminate the program if not finished within %d seconds</td></tr>", s->program->timeout);
+                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Program timeout</td><td>Terminate the program if not finished within %s</td></tr>", Str_milliToTime(s->program->timeout, (char[23]){}));
                 for (Status_T status = s->statuslist; status; status = status->next) {
                         StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Test Exit value</td><td>");
                         if (status->operator == Operator_Changed)
