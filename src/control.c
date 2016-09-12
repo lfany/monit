@@ -143,7 +143,7 @@ static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, int6
                                 *timeout -= RETRY_INTERVAL;
                         } while ((status = Process_exitStatus(P)) < 0 && *timeout > 0 && ! (Run.flags & Run_Stopped));
                         if (*timeout <= 0)
-                                snprintf(msg, msglen, "Program %s timed out after %s", c->arg[0], Str_milliToTime(_timeoutMilli, (char[23]){}));
+                                snprintf(msg, msglen, "Program '%s' timed out after %s", Util_commandDescription(c, (char[STRLEN]){}), Str_milliToTime(_timeoutMilli, (char[23]){}));
                         int n, total = 0;
                         char buf[STRLEN];
                         do {
@@ -154,7 +154,7 @@ static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, int6
                                         DEBUG("%s", buf);
                                         // Report the first message (override existing plain timeout message if some program output is available)
                                         if (! total)
-                                                snprintf(msg, msglen, "%s: %s%s", c->arg[0], *timeout <= 0 ? "Program timed out -- " : "", buf);
+                                                snprintf(msg, msglen, "'%s': %s%s", Util_commandDescription(c, (char[STRLEN]){}), *timeout <= 0 ? "Program timed out -- " : "", buf);
                                         total += n;
                                 }
                         } while (n > 0 && Run.debug && total < 2048); // Limit the debug output (if the program will have endless output, such as 'yes' utility, we have to stop at some point to not spin here forever)
@@ -240,7 +240,7 @@ static boolean_t _doStart(Service_T s) {
         if (rv) {
                 if (s->start) {
                         if (s->type != Service_Process || ! ProcessTree_findProcess(s)) {
-                                LogInfo("'%s' start: %s\n", s->name, s->start->arg[0]);
+                                LogInfo("'%s' start: '%s'\n", s->name, Util_commandDescription(s->start, (char[STRLEN]){}));
                                 char msg[STRLEN];
                                 int64_t timeout = s->start->timeout * USEC_PER_MSEC;
                                 int status = _commandExecute(s, s->start, msg, sizeof(msg), &timeout);
@@ -266,7 +266,7 @@ static boolean_t _doStart(Service_T s) {
 
 
 static int _executeStop(Service_T s, char *msg, int msglen, int64_t *timeout) {
-        LogInfo("'%s' stop: %s\n", s->name, s->stop->arg[0]);
+        LogInfo("'%s' stop: '%s'\n", s->name, Util_commandDescription(s->stop, (char[STRLEN]){}));
         return _commandExecute(s, s->stop, msg, msglen, timeout);
 }
 
@@ -327,7 +327,7 @@ static boolean_t _doRestart(Service_T s) {
         ASSERT(s);
         boolean_t rv = true;
         if (s->restart) {
-                LogInfo("'%s' restart: %s\n", s->name, s->restart->arg[0]);
+                LogInfo("'%s' restart: '%s'\n", s->name, Util_commandDescription(s->restart, (char[STRLEN]){}));
                 Util_resetInfo(s);
                 char msg[STRLEN];
                 int64_t timeout = s->restart->timeout * USEC_PER_MSEC;

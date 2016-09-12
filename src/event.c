@@ -299,7 +299,7 @@ static void _handleAction(Event_T E, Action_T A) {
                         return;
                 } else if (A->id == Action_Exec) {
                         if (E->state_changed || (E->state && A->repeat && E->count % A->repeat == 0)) {
-                                LogInfo("'%s' exec: %s\n", E->source->name, A->exec->arg[0]);
+                                LogInfo("'%s' exec: '%s'\n", E->source->name, Util_commandDescription(A->exec, (char[STRLEN]){}));
                                 spawn(E->source, A->exec, E);
                                 return;
                         }

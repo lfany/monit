@@ -25,6 +25,8 @@ Fixed: Support M/Monit on IPv6 address.
 
 Fixed: Issue #438: When "include /path/*" is used, silently ignore if there the directory is empty.
 
+Fixed: Issue #441: Incomplete logging of restart action.
+
 Fixed: Issue #460: Add support for OpenSSL 1.1.0
 
 Fixed: Network check on Solaris 10.

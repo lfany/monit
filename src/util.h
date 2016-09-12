@@ -394,6 +394,15 @@ char *Util_portDescription(Port_T p, char *buf, int bufsize);
 
 
 /**
+ * Print a command description
+ * @param command Command object
+ * @param s A result buffer, must be large enough to hold STRLEN chars
+ * @return A pointer to s
+ */
+char *Util_commandDescription(command_t command, char s[STRLEN]);
+
+
+/**
  * Return string presentation of TIME_* unit
  *  @param time The TIME_* unit (see monit.h)
  *  @return string

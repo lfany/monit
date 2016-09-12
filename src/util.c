@@ -961,10 +961,7 @@ void Util_printService(Service_T s) {
         printf(" %-20s = %s\n", "Monitoring mode", modenames[s->mode]);
         printf(" %-20s = %s\n", "On reboot", onrebootnames[s->onreboot]);
         if (s->start) {
-                printf(" %-20s = '", "Start program");
-                for (int i = 0; s->start->arg[i]; i++)
-                        printf("%s%s", i ? " " : "", s->start->arg[i]);
-                printf("'");
+                printf(" %-20s = '%s'", "Start program", Util_commandDescription(s->start, (char[STRLEN]){}));
                 if (s->start->has_uid)
                         printf(" as uid %d", s->start->uid);
                 if (s->start->has_gid)
@@ -973,10 +970,7 @@ void Util_printService(Service_T s) {
                 printf("\n");
         }
         if (s->stop) {
-                printf(" %-20s = '", "Stop program");
-                for (int i = 0; s->stop->arg[i]; i++)
-                        printf("%s%s", i ? " " : "", s->stop->arg[i]);
-                printf("'");
+                printf(" %-20s = '%s'", "Stop program", Util_commandDescription(s->stop, (char[STRLEN]){}));
                 if (s->stop->has_uid)
                         printf(" as uid %d", s->stop->uid);
                 if (s->stop->has_gid)
@@ -985,10 +979,7 @@ void Util_printService(Service_T s) {
                 printf("\n");
         }
         if (s->restart) {
-                printf(" %-20s = '", "Restart program");
-                for (int i = 0; s->restart->arg[i]; i++)
-                        printf("%s%s", i ? " " : "", s->restart->arg[i]);
-                printf("'");
+                printf(" %-20s = '%s'", "Restart program", Util_commandDescription(s->restart, (char[STRLEN]){}));
                 if (s->restart->has_uid)
                         printf(" as uid %d", s->restart->uid);
                 if (s->restart->has_gid)
@@ -1958,6 +1949,19 @@ char *Util_portDescription(Port_T p, char *buf, int bufsize) {
                 *buf = 0;
         }
         return buf;
+}
+
+
+char *Util_commandDescription(command_t command, char s[STRLEN]) {
+        ASSERT(s);
+        ASSERT(command);
+        int len = 0;
+        for (int i = 0; command->arg[i] && len < STRLEN - 1; i++) {
+                len += snprintf(s + len, STRLEN - len, "%s%s", i ? " " : "", command->arg[i]);
+        }
+        if (len >= STRLEN - 1)
+                snprintf(s + STRLEN - 3 - 1, STRLEN, "...");
+        return s;
 }
 
 

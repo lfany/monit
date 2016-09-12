@@ -1012,14 +1012,7 @@ static void do_service(HttpRequest req, HttpResponse res, Service_T s) {
                 }
         }
         if (s->start) {
-                int i = 0;
-                StringBuffer_append(res->outputbuffer, "<tr><td>Start program</td><td>'");
-                while (s->start->arg[i]) {
-                        if (i)
-                                StringBuffer_append(res->outputbuffer, " ");
-                        StringBuffer_append(res->outputbuffer, "%s", s->start->arg[i++]);
-                }
-                StringBuffer_append(res->outputbuffer, "'");
+                StringBuffer_append(res->outputbuffer, "<tr><td>Start program</td><td>'%s'", Util_commandDescription(s->start, (char[STRLEN]){}));
                 if (s->start->has_uid)
                         StringBuffer_append(res->outputbuffer, " as uid %d", s->start->uid);
                 if (s->start->has_gid)
@@ -1028,14 +1021,7 @@ static void do_service(HttpRequest req, HttpResponse res, Service_T s) {
                 StringBuffer_append(res->outputbuffer, "</td></tr>");
         }
         if (s->stop) {
-                int i = 0;
-                StringBuffer_append(res->outputbuffer, "<tr><td>Stop program</td><td>'");
-                while (s->stop->arg[i]) {
-                        if (i)
-                                StringBuffer_append(res->outputbuffer, " ");
-                        StringBuffer_append(res->outputbuffer, "%s", s->stop->arg[i++]);
-                }
-                StringBuffer_append(res->outputbuffer, "'");
+                StringBuffer_append(res->outputbuffer, "<tr><td>Stop program</td><td>'%s'", Util_commandDescription(s->stop, (char[STRLEN]){}));
                 if (s->stop->has_uid)
                         StringBuffer_append(res->outputbuffer, " as uid %d", s->stop->uid);
                 if (s->stop->has_gid)
@@ -1044,13 +1030,7 @@ static void do_service(HttpRequest req, HttpResponse res, Service_T s) {
                 StringBuffer_append(res->outputbuffer, "</td></tr>");
         }
         if (s->restart) {
-                int i = 0;
-                StringBuffer_append(res->outputbuffer, "<tr><td>Restart program</td><td>'");
-                while (s->restart->arg[i]) {
-                        if (i) StringBuffer_append(res->outputbuffer, " ");
-                        StringBuffer_append(res->outputbuffer, "%s", s->restart->arg[i++]);
-                }
-                StringBuffer_append(res->outputbuffer, "'");
+                StringBuffer_append(res->outputbuffer, "<tr><td>Restart program</td><td>'%s'", Util_commandDescription(s->restart, (char[STRLEN]){}));
                 if (s->restart->has_uid)
                         StringBuffer_append(res->outputbuffer, " as uid %d", s->restart->uid);
                 if (s->restart->has_gid)
