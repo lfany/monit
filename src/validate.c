@@ -1358,10 +1358,10 @@ State_Type check_program(Service_T s) {
                         if (status->operator == Operator_Changed) {
                                 if (status->initialized) {
                                         if (Util_evalQExpression(status->operator, s->program->exitStatus, status->return_value)) {
-                                                Event_post(s, Event_Status, State_Changed, status->action, "program status changed (%d -> %d) -- %s", status->return_value, s->program->exitStatus, StringBuffer_length(s->program->output) ? StringBuffer_toString(s->program->output) : "no output");
+                                                Event_post(s, Event_Status, State_Changed, status->action, "status changed (%d -> %d) -- %s", status->return_value, s->program->exitStatus, StringBuffer_length(s->program->output) ? StringBuffer_toString(s->program->output) : "no output");
                                                 status->return_value = s->program->exitStatus;
                                         } else {
-                                                Event_post(s, Event_Status, State_ChangedNot, status->action, "program status didn't change [status=%d] -- %s", s->program->exitStatus, StringBuffer_length(s->program->output) ? StringBuffer_toString(s->program->output) : "no output");
+                                                Event_post(s, Event_Status, State_ChangedNot, status->action, "status didn't change (%d) -- %s", s->program->exitStatus, StringBuffer_length(s->program->output) ? StringBuffer_toString(s->program->output) : "no output");
                                         }
                                 } else {
                                         status->initialized = true;
@@ -1370,9 +1370,9 @@ State_Type check_program(Service_T s) {
                         } else {
                                 if (Util_evalQExpression(status->operator, s->program->exitStatus, status->return_value)) {
                                         rv = State_Failed;
-                                        Event_post(s, Event_Status, State_Failed, status->action, "'%s' failed with exit status (%d) -- %s", s->path, s->program->exitStatus, StringBuffer_length(s->program->output) ? StringBuffer_toString(s->program->output) : "no output");
+                                        Event_post(s, Event_Status, State_Failed, status->action, "status failed (%d) -- %s", s->program->exitStatus, StringBuffer_length(s->program->output) ? StringBuffer_toString(s->program->output) : "no output");
                                 } else {
-                                        Event_post(s, Event_Status, State_Succeeded, status->action, "status succeeded [status=%d] -- %s", s->program->exitStatus, StringBuffer_length(s->program->output) ? StringBuffer_toString(s->program->output) : "no output");
+                                        Event_post(s, Event_Status, State_Succeeded, status->action, "status succeeded (%d) -- %s", s->program->exitStatus, StringBuffer_length(s->program->output) ? StringBuffer_toString(s->program->output) : "no output");
                                 }
                         }
                 }
