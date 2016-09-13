@@ -15,6 +15,8 @@ New: Added new options to "set limits" statement, for setting default timeouts:
 
 New: The cpu, memory, swap, inode and space tests now allow also decimal values for percent limit.
 
+New: Issue #457: Update HOME environment variable when executing program as other user.
+
 Fixed: Monit HTTP GUI: Listen on IPv6 interface if no address is specified (linux specific issue).
 
 Fixed: Monit HTTP GUI: Support CIDR mask 0 as explicit allow-all IP ACL (e.g. "allow 0.0.0.0/0").

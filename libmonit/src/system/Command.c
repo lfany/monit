@@ -519,6 +519,7 @@ Process_T Command_execute(T C) {
                 if (C->uid) {
                         struct passwd *user = getpwuid(C->uid);
                         if (user) {
+                                Command_setEnv(C, "HOME", user->pw_dir);
                                 if (initgroups(user->pw_name, P->gid) == 0) {
                                         if (setuid(C->uid) == 0) {
                                                 P->uid = C->uid;

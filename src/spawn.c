@@ -116,7 +116,7 @@ enum ExitStatus_E {
  * Setup the environment with special MONIT_xxx variables. The program
  * executed may use such variable for various purposes.
  */
-static void set_monit_environment(Service_T S, command_t C, Event_T E, const char *date) {
+static void _setMonitEnvironment(Service_T S, command_t C, Event_T E, const char *date) {
         setenv("MONIT_DATE", date, 1);
         setenv("MONIT_SERVICE", S->name, 1);
         setenv("MONIT_HOST", Run.system->name, 1);
@@ -188,6 +188,7 @@ void spawn(Service_T S, command_t C, Event_T E) {
                 if (C->has_uid) {
                         struct passwd *user = getpwuid(C->uid);
                         if (user) {
+                                setenv("HOME", user->pw_dir, 1);
                                 if (initgroups(user->pw_name, getgid()) == 0) {
                                         if (setuid(C->uid) != 0) {
                                                 stat_loc |= setuid_ERROR;
@@ -200,7 +201,7 @@ void spawn(Service_T S, command_t C, Event_T E) {
                         }
                 }
 
-                set_monit_environment(S, C, E, date);
+                _setMonitEnvironment(S, C, E, date);
 
                 if (! (Run.flags & Run_Daemon)) {
                         for (int i = 0; i < 3; i++)
