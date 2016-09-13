@@ -53,7 +53,7 @@
 struct T {
         int used;
         int length;
-	uchar_t *buffer;
+        unsigned char *buffer;
         boolean_t isCompressed;
 };
 
