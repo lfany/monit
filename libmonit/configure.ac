@@ -43,6 +43,7 @@ AC_ARG_ENABLE(optimized,
 	OPTIMIZED=0
     ]
 )
+
 AC_SUBST(UNIT_TEST)
 
 AC_ARG_ENABLE(profiling,
@@ -81,7 +82,38 @@ AC_ARG_ENABLE([openssl],
                        AC_MSG_ERROR([openssl not found in $enableval])
                 fi
         fi
-     ],[openssl="false"])
+     ],[
+        openssl="false"
+     ]
+)
+
+AC_ARG_WITH([zlib],
+        AS_HELP_STRING([--with-zlib(=<path>)],
+                [Link Monit with zlib. An optional path argument may
+                be given to specify the top-level directory to search for
+                zlib to link with]),
+     [
+        if test "x$withval" = "xyes"; then
+                AC_CHECK_LIB([z], [zlibVersion], [zlib="true"], [AC_MSG_ERROR([libz not found])])
+                AC_CHECK_HEADERS([zlib.h])
+        elif test "x$withval" != "xno"; then
+                AC_MSG_CHECKING([for zlib in $withval])
+                LDFLAGS="-L$withval/lib -lz $LDFLAGS "
+                CFLAGS="-I$withval/include $CFLAGS"
+                if test -r "$withval/lib/libz.a" -a -r "$withval/include/zlib.h"; then
+                        zlib="true"
+                        AC_DEFINE([HAVE_ZLIB], [1], [Define if you have zlib library])
+                        AC_DEFINE([HAVE_ZLIB_H], [1], [Define if you have zlib header])
+                        AC_MSG_RESULT([ok])
+                else
+                        AC_MSG_ERROR([zlib not found in $withval])
+                fi
+        fi
+     ],[
+        AC_CHECK_LIB([z], [zlibVersion], [zlib="true"], [AC_MSG_ERROR([libz not found])])
+        AC_CHECK_HEADERS([zlib.h])
+     ]
+)
 
 # ---------------------------------------------------------------------------
 # Libraries 
@@ -347,6 +379,13 @@ echo "|   Profiling:                                    ENABLED    |"
 fi
 if test "xtrue" = "x$openssl"; then
 echo "|   Openssl:                                      ENABLED    |"
+else
+echo "|   Openssl:                                      DISABLED   |"
+fi
+if test "xtrue" = "x$zlib"; then
+echo "|   Compression:                                  ENABLED    |"
+else
+echo "|   Compression:                                  DISABLED   |"
 fi
 echo "+------------------------------------------------------------+"
 
