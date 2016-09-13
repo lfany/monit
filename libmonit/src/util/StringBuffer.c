@@ -274,7 +274,8 @@ const char *StringBuffer_toString(T S) {
 
 boolean_t StringBuffer_compress(T S) {
 #ifdef HAVE_ZLIB
-        S->isCompressed = true;
+        //FIXME: compress
+        //S->isCompressed = true;
 #endif
         return S->isCompressed;
 }
