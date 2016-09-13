@@ -29,6 +29,9 @@
 #include <string.h>
 #include <stdarg.h>
 #include <ctype.h>
+#ifdef HAVE_ZLIB_H
+#include <zlib.h>
+#endif
 
 #include "Str.h"
 #include "StringBuffer.h"
@@ -51,13 +54,14 @@ struct T {
         int used;
         int length;
 	uchar_t *buffer;
+        boolean_t isCompressed;
 };
 
 
 /* ---------------------------------------------------------------- Private */
 
 
-static inline void append(T S, const char *s, va_list ap) {
+static inline void _append(T S, const char *s, va_list ap) {
         va_list ap_copy;
         while (true) {
                 va_copy(ap_copy, ap);
@@ -73,13 +77,14 @@ static inline void append(T S, const char *s, va_list ap) {
 }
 
 
-static inline T ctor(int hint) {
+static inline T _ctor(int hint) {
         T S;
         NEW(S);
         S->used = 0;
         S->length = hint;
         S->buffer = ALLOC(hint);
         *S->buffer = 0;
+        S->isCompressed = false;
         return S;
 }
 
@@ -88,14 +93,14 @@ static inline T ctor(int hint) {
 
 
 T StringBuffer_new(const char *s) {
-        return StringBuffer_append(ctor(STRLEN), "%s", s);
+        return StringBuffer_append(_ctor(STRLEN), "%s", s);
 }
 
 
 T StringBuffer_create(int hint) {
         if (hint <= 0)
                 THROW(AssertException, "Illegal hint value");
-        return ctor(hint);
+        return _ctor(hint);
 }
 
 
@@ -111,7 +116,7 @@ T StringBuffer_append(T S, const char *s, ...) {
         if (STR_DEF(s)) {
                 va_list ap;
                 va_start(ap, s);
-                append(S, s, ap);
+                _append(S, s, ap);
                 va_end(ap);
         }
         return S;
@@ -123,7 +128,7 @@ T StringBuffer_vappend(T S, const char *s, va_list ap) {
         if (STR_DEF(s)) {
                 va_list ap_copy;
                 va_copy(ap_copy, ap);
-                append(S, s, ap_copy);
+                _append(S, s, ap_copy);
                 va_end(ap_copy);
         }
         return S;
@@ -264,5 +269,18 @@ T StringBuffer_clear(T S) {
 const char *StringBuffer_toString(T S) {
         assert(S);
         return (const char*)S->buffer;
+}
+
+
+boolean_t StringBuffer_compress(T S) {
+#ifdef HAVE_ZLIB
+        S->isCompressed = true;
+#endif
+        return S->isCompressed;
+}
+
+
+boolean_t StringBuffer_isCompressed(T S) {
+        return S->isCompressed;
 }
 

@@ -206,5 +206,21 @@ T StringBuffer_clear(T S);
 const char *StringBuffer_toString(T S);
 
 
+/**
+ * Compress the data in the string buffer.
+ * @param S StringBuffer object
+ * @return true if succeeded otherwise false
+ */
+boolean_t StringBuffer_compress(T S);
+
+
+/**
+ * Test if the string buffer is compressed.
+ * @param S StringBuffer object
+ * @return true if compressed otherwise false
+ */
+boolean_t StringBuffer_isCompressed(T S);
+
+
 #undef T
 #endif
