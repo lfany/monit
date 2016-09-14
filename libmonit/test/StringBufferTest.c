@@ -248,6 +248,38 @@ int main(void) {
         }
         printf("=> Test12: OK\n\n");
 
+        printf("=> Test13: compression\n");
+        {
+                const char *input = "<aaaaaaaaaa>"
+                                    "<bbbbbbbbbb>"
+                                    "<cccccccccc></cccccccccc>"
+                                    "<cccccccccc></cccccccccc>"
+                                    "<cccccccccc></cccccccccc>"
+                                    "<cccccccccc></cccccccccc>"
+                                    "<cccccccccc></cccccccccc>"
+                                    "<cccccccccc></cccccccccc>"
+                                    "<cccccccccc></cccccccccc>"
+                                    "</bbbbbbbbbb>"
+                                    "</aaaaaaaaaa>";
+                const char output[] = {0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                       0x00, 0x03, 0xb3, 0x49, 0x84, 0x03, 0x3b, 0x9b,
+                                       0x24, 0x38, 0xb0, 0xb3, 0x49, 0x86, 0x03, 0x3b,
+                                       0x1b, 0x7d, 0x64, 0xce, 0xe0, 0x94, 0xd0, 0x47,
+                                       0x76, 0xbb, 0x3e, 0x92, 0xa7, 0x00, 0xdd, 0x84,
+                                       0x33, 0xe7, 0xe1, 0x00, 0x00, 0x00};
+                sb = StringBuffer_new(input);
+                assert(StringBuffer_length(sb) == 225);
+                const void *compressed = StringBuffer_toCompressedString(sb, 6);
+                assert(compressed);
+                int compressedLength = StringBuffer_compressedLength(sb);
+                assert(compressedLength == 46);
+                for (int i = 0; i < compressedLength; i++)
+                        assert(output[i] == *(unsigned char *)(compressed + i));
+                StringBuffer_free(&sb);
+                assert(sb == NULL);
+        }
+        printf("=> Test13: OK\n\n");
+
         printf("============> StringBuffer Tests: OK\n\n");
 
         return 0;

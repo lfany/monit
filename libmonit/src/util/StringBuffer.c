@@ -49,12 +49,17 @@
 /* ------------------------------------------------------------ Definitions */
 
 
+#define CHUNK 16384
+
+
 #define T StringBuffer_T
 struct T {
         int used;
+        int compressedUsed;
         int length;
+        unsigned long compressedLength;
         unsigned char *buffer;
-        boolean_t isCompressed;
+        void *compressedBuffer;
 };
 
 
@@ -65,7 +70,7 @@ static inline void _append(T S, const char *s, va_list ap) {
         va_list ap_copy;
         while (true) {
                 va_copy(ap_copy, ap);
-                int n = vsnprintf((char*)(S->buffer + S->used), S->length - S->used, s, ap_copy);
+                int n = vsnprintf((char *)(S->buffer + S->used), S->length - S->used, s, ap_copy);
                 va_end(ap_copy);
                 if ((S->used + n) < S->length) {
                         S->used += n;
@@ -84,7 +89,6 @@ static inline T _ctor(int hint) {
         S->length = hint;
         S->buffer = ALLOC(hint);
         *S->buffer = 0;
-        S->isCompressed = false;
         return S;
 }
 
@@ -107,6 +111,7 @@ T StringBuffer_create(int hint) {
 void StringBuffer_free(T *S) {
         assert(S && *S);
         FREE((*S)->buffer);
+        FREE((*S)->compressedBuffer);
         FREE(*S);
 }
 
@@ -248,7 +253,7 @@ const char *StringBuffer_substring(T S, int index) {
         assert(S);
         if (index < 0 || index > S->used)
                 THROW(AssertException, "Index out of bounds");
-        return (const char*)(S->buffer + index);
+        return (const char *)(S->buffer + index);
 }
 
 
@@ -258,30 +263,52 @@ int StringBuffer_length(T S) {
 }
 
 
+int StringBuffer_compressedLength(T S) {
+        assert(S);
+        return S->compressedUsed;
+}
+
+
 T StringBuffer_clear(T S) {
         assert(S);
-        S->used = 0;
+        S->used = S->compressedUsed = 0;
         *S->buffer = 0;
+        FREE(S->compressedBuffer);
         return S;
 }
 
 
 const char *StringBuffer_toString(T S) {
         assert(S);
-        return (const char*)S->buffer;
+        return (const char *)S->buffer;
 }
 
 
-boolean_t StringBuffer_compress(T S) {
+const void *StringBuffer_toCompressedString(T S, int level) {
+        assert(S);
 #ifdef HAVE_ZLIB
-        //FIXME: compress
-        //S->isCompressed = true;
+        int rv;
+        z_stream zstream = {};
+        zstream.next_in = S->buffer;
+        zstream.avail_in = S->used;
+        if ((rv = deflateInit2(&zstream, level, Z_DEFLATED, 15 | 16, 8, Z_DEFAULT_STRATEGY)) == Z_OK) {
+                S->compressedLength = deflateBound(&zstream, S->used);
+                RESIZE(S->compressedBuffer, S->compressedLength);
+                zstream.next_out = S->compressedBuffer;
+                zstream.avail_out = S->compressedLength;
+                rv = deflate(&zstream, Z_FINISH);
+                deflateEnd(&zstream);
+                if (rv == Z_STREAM_END) {
+                        S->compressedUsed = S->compressedLength - zstream.avail_out;
+                        return (const void *)S->compressedBuffer;
+                }
+        }
+        FREE(S->compressedBuffer);
+        S->compressedLength = S->compressedUsed = 0;
+        THROW(AssertException, "compression failed: %s", zError(rv));
+#else
+        THROW(AssertException, "compression not supported");
 #endif
-        return S->isCompressed;
-}
-
-
-boolean_t StringBuffer_isCompressed(T S) {
-        return S->isCompressed;
+        return NULL;
 }
 
