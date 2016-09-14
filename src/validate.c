@@ -779,12 +779,12 @@ next:
                                         goto final2;
                                 } else if (length >= Run.limits.fileContentBuffer - 1) {
                                         /* Our read buffer is full: ignore the content past the Run.limits.fileContentBuffer */
-                                        int rv;
+                                        int _rv;
                                         do {
-                                                if ((rv = fgetc(file)) == EOF)
+                                                if ((_rv = fgetc(file)) == EOF)
                                                         goto final2;
                                                 length++;
-                                        } while (rv != '\n');
+                                        } while (_rv != '\n');
                                 }
                         } else {
                                 /* Remove trailing newline */

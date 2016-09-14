@@ -4611,9 +4611,9 @@ static void reset_icmpset() {
 /*
  * Reset the Rate set to default values
  */
-static void reset_rateset(struct myrate *rate) {
-        rate->count = 1;
-        rate->cycles = 1;
+static void reset_rateset(struct myrate *r) {
+        r->count = 1;
+        r->cycles = 1;
 }
 
 
