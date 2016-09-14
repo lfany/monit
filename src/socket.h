@@ -104,11 +104,10 @@ T Socket_createUnix(const char *path, Socket_Type type, int timeout);
  * ssl. This method does only support TCP sockets.
  * @param socket The accepted socket
  * @param addr The socket address
- * @param addrlen The socket address length
  * @param sslserver A ssl server connection context, may be NULL
  * @return A Socket or NULL if an error occurred
  */
-T Socket_createAccepted(int socket, struct sockaddr *addr, socklen_t addrlen, void *sslserver);
+T Socket_createAccepted(int socket, struct sockaddr *addr, void *sslserver);
 
 
 /**

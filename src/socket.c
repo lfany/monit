@@ -158,7 +158,7 @@ static int _fill(T S, int timeout) {
 }
 
 
-int _getPort(const struct sockaddr *addr, socklen_t addrlen) {
+int _getPort(const struct sockaddr *addr) {
         if (addr->sa_family == AF_INET)
                 return ntohs(((struct sockaddr_in *)addr)->sin_port);
 #ifdef HAVE_IPV6
@@ -246,7 +246,7 @@ T _createIpSocket(const char *host, const struct sockaddr *addr, socklen_t addrl
                                         S->family = family == AF_INET ? Socket_Ip4 : Socket_Ip6;
                                         S->timeout = timeout;
                                         S->host = Str_dup(host);
-                                        S->port = _getPort(addr, addrlen);
+                                        S->port = _getPort(addr);
                                         S->connection_type = Connection_Client;
                                         if (ssl.flags == SSL_Enabled) {
                                                 TRY
@@ -388,7 +388,7 @@ T Socket_createUnix(const char *path, Socket_Type type, int timeout) {
 }
 
 
-T Socket_createAccepted(int socket, struct sockaddr *addr, socklen_t addrlen, void *sslserver) {
+T Socket_createAccepted(int socket, struct sockaddr *addr, void *sslserver) {
         ASSERT(socket >= 0);
         ASSERT(addr);
         T S;
@@ -410,7 +410,7 @@ T Socket_createAccepted(int socket, struct sockaddr *addr, socklen_t addrlen, vo
                         S->host = Str_dup(inet_ntop(addr->sa_family, &a->sin6_addr, (char[INET6_ADDRSTRLEN]){}, INET6_ADDRSTRLEN));
                 }
 #endif
-                S->port = _getPort(addr, addrlen);
+                S->port = _getPort(addr);
 #ifdef HAVE_OPENSSL
                 if (sslserver) {
                         S->sslserver = sslserver;
@@ -510,7 +510,7 @@ int Socket_getLocalPort(T S) {
         struct sockaddr_storage addr;
         socklen_t addrlen = sizeof(addr);
         if (getsockname(S->socket, (struct sockaddr *)&addr, &addrlen) == 0)
-                return _getPort((struct sockaddr *)&addr, addrlen);
+                return _getPort((struct sockaddr *)&addr);
         return -1;
 }
 

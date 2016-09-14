@@ -44,7 +44,7 @@
 /* ----------------------------------------------------------------- Private */
 
 
-static void parse_scoreboard(Socket_T socket, char *scoreboard, Port_T p) {
+static void parse_scoreboard(char *scoreboard, Port_T p) {
         int logging = 0, close = 0, dns = 0, keepalive = 0, reply = 0, request = 0, start = 0, wait = 0, graceful = 0, cleanup = 0, open = 0;
         for (char *state = scoreboard; *state; state++) {
                 switch (*state) {
@@ -154,7 +154,7 @@ void check_apache_status(Socket_T socket) {
         while (Socket_readLine(socket, buf, sizeof(buf))) {
                 if (Str_startsWith(buf, "Scoreboard: ")) {
                         char *scoreboard = buf + 12; // skip header
-                        parse_scoreboard(socket, scoreboard, p);
+                        parse_scoreboard(scoreboard, p);
                         return;
                 }
         }

@@ -396,7 +396,7 @@ static boolean_t _authenticateHost(struct sockaddr *addr) {
 }
 
 
-static Socket_T _socketProducer(Httpd_Flags flags) {
+static Socket_T _socketProducer() {
         int r = 0;
         do {
                 r = poll(myServerSockets, myServerSocketsCount, 1000);
@@ -414,9 +414,9 @@ static Socket_T _socketProducer(Httpd_Flags flags) {
                                         return NULL;
                                 }
 #ifdef HAVE_OPENSSL
-                                return Socket_createAccepted(client, data[i].addr, data[i].addrlen, data[i].ssl);
+                                return Socket_createAccepted(client, data[i].addr, data[i].ssl);
 #else
-                                return Socket_createAccepted(client, data[i].addr, data[i].addrlen, NULL);
+                                return Socket_createAccepted(client, data[i].addr, NULL);
 #endif
                         }
                 }
@@ -480,7 +480,7 @@ void Engine_start() {
                                 LogError("HTTP server -- %s\n", error[i]);
         } else {
                 while (! stopped) {
-                        Socket_T S = _socketProducer(Run.httpd.flags);
+                        Socket_T S = _socketProducer();
                         if (S)
                                 http_processor(S);
                 }

@@ -118,25 +118,25 @@ static void doGet(HttpRequest, HttpResponse);
 static void doPost(HttpRequest, HttpResponse);
 static void do_head(HttpResponse res, const char *path, const char *name, int refresh);
 static void do_foot(HttpResponse res);
-static void do_home(HttpRequest, HttpResponse);
-static void do_home_system(HttpRequest, HttpResponse);
-static void do_home_filesystem(HttpRequest, HttpResponse);
-static void do_home_directory(HttpRequest, HttpResponse);
-static void do_home_file(HttpRequest, HttpResponse);
-static void do_home_fifo(HttpRequest, HttpResponse);
-static void do_home_net(HttpRequest, HttpResponse);
-static void do_home_process(HttpRequest, HttpResponse);
-static void do_home_program(HttpRequest, HttpResponse);
-static void do_home_host(HttpRequest, HttpResponse);
-static void do_about(HttpRequest, HttpResponse);
-static void do_ping(HttpRequest, HttpResponse);
-static void do_getid(HttpRequest, HttpResponse);
+static void do_home(HttpResponse);
+static void do_home_system(HttpResponse);
+static void do_home_filesystem(HttpResponse);
+static void do_home_directory(HttpResponse);
+static void do_home_file(HttpResponse);
+static void do_home_fifo(HttpResponse);
+static void do_home_net(HttpResponse);
+static void do_home_process(HttpResponse);
+static void do_home_program(HttpResponse);
+static void do_home_host(HttpResponse);
+static void do_about(HttpResponse);
+static void do_ping(HttpResponse);
+static void do_getid(HttpResponse);
 static void do_runtime(HttpRequest, HttpResponse);
 static void do_viewlog(HttpRequest, HttpResponse);
 static void handle_action(HttpRequest, HttpResponse);
 static void handle_do_action(HttpRequest, HttpResponse);
 static void handle_run(HttpRequest, HttpResponse);
-static void is_monit_running(HttpRequest, HttpResponse);
+static void is_monit_running(HttpResponse);
 static void do_service(HttpRequest, HttpResponse, Service_T);
 static void print_alerts(HttpResponse, Mail_T);
 static void print_buttons(HttpRequest, HttpResponse, Service_T);
@@ -445,22 +445,22 @@ static void doGet(HttpRequest req, HttpResponse res) {
         set_content_type(res, "text/html");
         if (ACTION(HOME)) {
                 LOCK(Run.mutex)
-                do_home(req, res);
+                do_home(res);
                 END_LOCK;
         } else if (ACTION(RUN)) {
                 handle_run(req, res);
         } else if (ACTION(TEST)) {
-                is_monit_running(req, res);
+                is_monit_running(res);
         } else if (ACTION(VIEWLOG)) {
                 do_viewlog(req, res);
         } else if (ACTION(ABOUT)) {
-                do_about(req, res);
+                do_about(res);
         } else if (ACTION(FAVICON)) {
                 printFavicon(res);
         } else if (ACTION(PING)) {
-                do_ping(req, res);
+                do_ping(res);
         } else if (ACTION(GETID)) {
-                do_getid(req, res);
+                do_getid(res);
         } else if (ACTION(STATUS)) {
                 print_status(req, res, 1);
         } else if (ACTION(STATUS2)) {
@@ -480,7 +480,7 @@ static void doGet(HttpRequest req, HttpResponse res) {
 /* ----------------------------------------------------------------- Helpers */
 
 
-static void is_monit_running(HttpRequest req, HttpResponse res) {
+static void is_monit_running(HttpResponse res) {
         set_status(res, exist_daemon() ? SC_OK : SC_GONE);
 }
 
@@ -580,7 +580,7 @@ static void do_foot(HttpResponse res) {
 }
 
 
-static void do_home(HttpRequest req, HttpResponse res) {
+static void do_home(HttpResponse res) {
         do_head(res, "", "", Run.polltime);
         StringBuffer_append(res->outputbuffer,
                             "<table id='header' width='100%%'>"
@@ -592,21 +592,21 @@ static void do_home(HttpRequest req, HttpResponse res) {
                             " </tr>"
                             "</table>", Run.system->name);
 
-        do_home_system(req, res);
-        do_home_process(req, res);
-        do_home_program(req, res);
-        do_home_filesystem(req, res);
-        do_home_file(req, res);
-        do_home_fifo(req, res);
-        do_home_directory(req, res);
-        do_home_net(req, res);
-        do_home_host(req, res);
+        do_home_system(res);
+        do_home_process(res);
+        do_home_program(res);
+        do_home_filesystem(res);
+        do_home_file(res);
+        do_home_fifo(res);
+        do_home_directory(res);
+        do_home_net(res);
+        do_home_host(res);
 
         do_foot(res);
 }
 
 
-static void do_about(HttpRequest req, HttpResponse res) {
+static void do_about(HttpResponse res) {
         StringBuffer_append(res->outputbuffer,
                             "<html><head><title>about monit</title></head><body bgcolor=white>"
                             "<br><h1><center><a href='http://mmonit.com/monit/'>"
@@ -630,12 +630,12 @@ static void do_about(HttpRequest req, HttpResponse res) {
 }
 
 
-static void do_ping(HttpRequest req, HttpResponse res) {
+static void do_ping(HttpResponse res) {
         StringBuffer_append(res->outputbuffer, "pong");
 }
 
 
-static void do_getid(HttpRequest req, HttpResponse res) {
+static void do_getid(HttpResponse res) {
         StringBuffer_append(res->outputbuffer, "%s", Run.id);
 }
 
@@ -1084,7 +1084,7 @@ static void do_service(HttpRequest req, HttpResponse res, Service_T s) {
 }
 
 
-static void do_home_system(HttpRequest req, HttpResponse res) {
+static void do_home_system(HttpResponse res) {
         Service_T s = Run.system;
         char buf[STRLEN];
 
@@ -1137,7 +1137,7 @@ static void do_home_system(HttpRequest req, HttpResponse res) {
 }
 
 
-static void do_home_process(HttpRequest req, HttpResponse res) {
+static void do_home_process(HttpResponse res) {
         char      buf[STRLEN];
         boolean_t on = true;
         boolean_t header = true;
@@ -1189,7 +1189,7 @@ static void do_home_process(HttpRequest req, HttpResponse res) {
 }
 
 
-static void do_home_program(HttpRequest req, HttpResponse res) {
+static void do_home_program(HttpResponse res) {
         char buf[STRLEN];
         boolean_t on = true;
         boolean_t header = true;
@@ -1259,7 +1259,7 @@ static void do_home_program(HttpRequest req, HttpResponse res) {
 }
 
 
-static void do_home_net(HttpRequest req, HttpResponse res) {
+static void do_home_net(HttpResponse res) {
         char buf[STRLEN];
         boolean_t on = true;
         boolean_t header = true;
@@ -1300,7 +1300,7 @@ static void do_home_net(HttpRequest req, HttpResponse res) {
 }
 
 
-static void do_home_filesystem(HttpRequest req, HttpResponse res) {
+static void do_home_filesystem(HttpResponse res) {
         char buf[STRLEN];
         boolean_t on = true;
         boolean_t header = true;
@@ -1353,7 +1353,7 @@ static void do_home_filesystem(HttpRequest req, HttpResponse res) {
 }
 
 
-static void do_home_file(HttpRequest req, HttpResponse res) {
+static void do_home_file(HttpResponse res) {
         char buf[STRLEN];
         boolean_t on = true;
         boolean_t header = true;
@@ -1406,7 +1406,7 @@ static void do_home_file(HttpRequest req, HttpResponse res) {
 }
 
 
-static void do_home_fifo(HttpRequest req, HttpResponse res) {
+static void do_home_fifo(HttpResponse res) {
         char buf[STRLEN];
         boolean_t on = true;
         boolean_t header = true;
@@ -1453,7 +1453,7 @@ static void do_home_fifo(HttpRequest req, HttpResponse res) {
 }
 
 
-static void do_home_directory(HttpRequest req, HttpResponse res) {
+static void do_home_directory(HttpResponse res) {
         char buf[STRLEN];
         boolean_t on = true;
         boolean_t header = true;
@@ -1500,7 +1500,7 @@ static void do_home_directory(HttpRequest req, HttpResponse res) {
 }
 
 
-static void do_home_host(HttpRequest req, HttpResponse res) {
+static void do_home_host(HttpResponse res) {
         char buf[STRLEN];
         boolean_t on = true;
         boolean_t header = true;
