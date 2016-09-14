@@ -148,7 +148,7 @@ static void _send(Socket_T S, const char *request, StringBuffer_T data) {
                 request,
                 StringBuffer_length(data),
                 _auth ? _auth : "",
-                StringBuffer_toString(data));
+                StringBuffer_toString(data)); //FIXME: send compressed if server supports it
         FREE(_auth);
         if (rv < 0)
                 THROW(IOException, "Monit: cannot send command to the monit daemon -- %s", STRERROR);

@@ -111,7 +111,7 @@ static void destroy_entry(void *);
 static char *get_date(char *, int);
 static char *get_server(char *, int);
 static void create_headers(HttpRequest);
-static void send_response(HttpResponse);
+static void send_response(HttpRequest, HttpResponse);
 static boolean_t basic_authenticate(HttpRequest);
 static void done(HttpRequest, HttpResponse);
 static void destroy_HttpRequest(HttpRequest);
@@ -449,7 +449,7 @@ static void do_service(Socket_T s) {
                         else
                                 send_error(req, res, SC_NOT_IMPLEMENTED, "Method not implemented");
                 }
-                send_response(res);
+                send_response(req, res);
         }
         done(req, res);
 }
@@ -480,29 +480,38 @@ static char *get_server(char *result, int size) {
  * Send the response to the client. If the response has already been
  * commited, this function does nothing.
  */
-static void send_response(HttpResponse res) {
+static void send_response(HttpRequest req, HttpResponse res) {
         Socket_T S = res->S;
 
         if (! res->is_committed) {
                 char date[STRLEN];
                 char server[STRLEN];
+                const char *acceptEncoding = get_header(req, "Accept-Encoding");
+                boolean_t canCompress = acceptEncoding && Str_sub(acceptEncoding, "gzip") ? true : false;
+                const void *body = NULL;
+                int bodyLength = 0;
+                if (canCompress) {
+                        body = StringBuffer_toCompressedString(res->outputbuffer, 6);
+                        bodyLength = StringBuffer_compressedLength(res->outputbuffer);
+                        set_header(res, "Content-Encoding", "gzip");
+                } else {
+                        body = StringBuffer_toString(res->outputbuffer);
+                        bodyLength = StringBuffer_length(res->outputbuffer);
+                }
                 char *headers = get_headers(res);
-                int length = StringBuffer_length(res->outputbuffer);
-
                 res->is_committed = true;
                 get_date(date, STRLEN);
                 get_server(server, STRLEN);
-                Socket_print(S, "%s %d %s\r\n", res->protocol, res->status,
-                             res->status_msg);
+                Socket_print(S, "%s %d %s\r\n", res->protocol, res->status, res->status_msg);
                 Socket_print(S, "Date: %s\r\n", date);
                 Socket_print(S, "Server: %s\r\n", server);
-                Socket_print(S, "Content-Length: %d\r\n", length);
+                Socket_print(S, "Content-Length: %d\r\n", bodyLength);
                 Socket_print(S, "Connection: close\r\n");
                 if (headers)
                         Socket_print(S, "%s", headers);
                 Socket_print(S, "\r\n");
-                if (length)
-                        Socket_write(S, (unsigned char *)StringBuffer_toString(res->outputbuffer), length);
+                if (bodyLength)
+                        Socket_write(S, (unsigned char *)body, bodyLength);
                 FREE(headers);
         }
 }
