@@ -55,9 +55,7 @@
 #define T StringBuffer_T
 struct T {
         int used;
-        int compressedUsed;
         int length;
-        unsigned long compressedLength;
         unsigned char *buffer;
         void *compressedBuffer;
 };
@@ -263,15 +261,9 @@ int StringBuffer_length(T S) {
 }
 
 
-int StringBuffer_compressedLength(T S) {
-        assert(S);
-        return S->compressedUsed;
-}
-
-
 T StringBuffer_clear(T S) {
         assert(S);
-        S->used = S->compressedUsed = 0;
+        S->used = 0;
         *S->buffer = 0;
         FREE(S->compressedBuffer);
         return S;
@@ -284,27 +276,29 @@ const char *StringBuffer_toString(T S) {
 }
 
 
-const void *StringBuffer_toCompressedString(T S, int level) {
+const void *StringBuffer_toCompressedString(T S, int level, size_t *length) {
         assert(S);
+        assert(length);
+        assert(level >= 0 && level <= 9);
 #ifdef HAVE_ZLIB
         int rv;
         z_stream zstream = {};
         zstream.next_in = S->buffer;
         zstream.avail_in = S->used;
         if ((rv = deflateInit2(&zstream, level, Z_DEFLATED, 15 | 16, 8, Z_DEFAULT_STRATEGY)) == Z_OK) {
-                S->compressedLength = deflateBound(&zstream, S->used);
-                RESIZE(S->compressedBuffer, S->compressedLength);
+                unsigned long need = deflateBound(&zstream, S->used);
+                RESIZE(S->compressedBuffer, need);
                 zstream.next_out = S->compressedBuffer;
-                zstream.avail_out = S->compressedLength;
+                zstream.avail_out = need;
                 rv = deflate(&zstream, Z_FINISH);
                 deflateEnd(&zstream);
                 if (rv == Z_STREAM_END) {
-                        S->compressedUsed = S->compressedLength - zstream.avail_out;
+                        *length = need - zstream.avail_out;
                         return (const void *)S->compressedBuffer;
                 }
         }
+        *length = 0;
         FREE(S->compressedBuffer);
-        S->compressedLength = S->compressedUsed = 0;
         THROW(AssertException, "compression failed: %s", zError(rv));
 #else
         THROW(AssertException, "compression not supported");

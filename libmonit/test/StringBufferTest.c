@@ -269,9 +269,9 @@ int main(void) {
                                        0x33, 0xe7, 0xe1, 0x00, 0x00, 0x00};
                 sb = StringBuffer_new(input);
                 assert(StringBuffer_length(sb) == 225);
-                const void *compressed = StringBuffer_toCompressedString(sb, 6);
+                size_t compressedLength;
+                const void *compressed = StringBuffer_toCompressedString(sb, 6, &compressedLength);
                 assert(compressed);
-                int compressedLength = StringBuffer_compressedLength(sb);
                 assert(compressedLength == 46);
                 for (int i = 0; i < compressedLength; i++)
                         assert(output[i] == *(unsigned char *)(compressed + i));

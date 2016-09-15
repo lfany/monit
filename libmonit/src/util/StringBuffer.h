@@ -191,15 +191,6 @@ int StringBuffer_length(T S);
 
 
 /**
- * Returns the length (bytes) of compressed string buffer returned by
- * StringBuffer_toCompressedString().
- * @param S StringBuffer object
- * @return the length of compressed string buffer
- */
-int StringBuffer_compressedLength(T S);
-
-
-/**
  * Clears the contents of the string buffer and set buffer length to 0.
  * @param S StringBuffer object
  * @return a reference to this StringBuffer
@@ -216,13 +207,13 @@ const char *StringBuffer_toString(T S);
 
 
 /**
- * Returns a compressed string in gzip format (binary data). The data
- * length can be obtained using StringBuffer_compressedLength() method.
+ * Returns a compressed string in gzip format (binary data).
  * @param S StringBuffer object
  * @param level a number between 0-9 where 9 is highest compression
+ * @param length The length of returned data
  * @return true if succeeded otherwise false
  */
-const void *StringBuffer_toCompressedString(T S, int level);
+const void *StringBuffer_toCompressedString(T S, int level, size_t *length);
 
 
 #undef T

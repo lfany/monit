@@ -69,7 +69,7 @@ static boolean_t _send(Socket_T socket, Mmonit_T C, const char *D) {
                               "POST %s HTTP/1.1\r\n"
                               "Host: %s%s%s:%d\r\n"
                               "Content-Type: text/xml\r\n"
-                              "Content-Length: %lu\r\n"
+                              "Content-Length: %lu\r\n" //FIXME: send compressed if server supports it ... need to test if mmonit support compression on each monit start (use HEAD method?)
                               "Pragma: no-cache\r\n"
                               "Accept: */*\r\n"
                               "User-Agent: Monit/%s\r\n"

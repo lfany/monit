@@ -489,10 +489,9 @@ static void send_response(HttpRequest req, HttpResponse res) {
                 const char *acceptEncoding = get_header(req, "Accept-Encoding");
                 boolean_t canCompress = acceptEncoding && Str_sub(acceptEncoding, "gzip") ? true : false;
                 const void *body = NULL;
-                int bodyLength = 0;
+                size_t bodyLength = 0;
                 if (canCompress) {
-                        body = StringBuffer_toCompressedString(res->outputbuffer, 6);
-                        bodyLength = StringBuffer_compressedLength(res->outputbuffer);
+                        body = StringBuffer_toCompressedString(res->outputbuffer, 6, &bodyLength);
                         set_header(res, "Content-Encoding", "gzip");
                 } else {
                         body = StringBuffer_toString(res->outputbuffer);
@@ -505,7 +504,7 @@ static void send_response(HttpRequest req, HttpResponse res) {
                 Socket_print(S, "%s %d %s\r\n", res->protocol, res->status, res->status_msg);
                 Socket_print(S, "Date: %s\r\n", date);
                 Socket_print(S, "Server: %s\r\n", server);
-                Socket_print(S, "Content-Length: %d\r\n", bodyLength);
+                Socket_print(S, "Content-Length: %zu\r\n", bodyLength);
                 Socket_print(S, "Connection: close\r\n");
                 if (headers)
                         Socket_print(S, "%s", headers);
