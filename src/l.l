@@ -996,11 +996,11 @@ static void _include(const char *path) {
                         return;
                 }
         }
-        FILE *yyin = fopen(path, "r");
-        if (! yyin)
+        FILE *_yyin = fopen(path, "r");
+        if (! _yyin)
                 yyerror("Cannot include file '%s' -- %s", path, STRERROR);
         else
-                push_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE), (char *)path);
+                push_buffer_state(yy_create_buffer(_yyin, YY_BUF_SIZE), (char *)path);
 }
 
 
