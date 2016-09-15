@@ -236,6 +236,7 @@ void check_http(Socket_T socket) {
 
         StringBuffer_T sb = StringBuffer_create(168);
         char *auth = get_auth_header(P);
+        //FIXME: add decompression support to InputStream and switch here to it + set Accept-Encoding to gzip, so the server can send body compressed (if we test checksum/content)
         StringBuffer_append(sb,
                             "%s %s HTTP/1.1\r\n"
                             "Accept: */*\r\n"
