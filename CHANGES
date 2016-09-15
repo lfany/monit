@@ -6,7 +6,7 @@ Version 5.20.0
 
 New: Add gzip compression support to the HTTP GUI.
 
-New: Add gzip compression support for M/Monit (requires M/Monit 3.6 or later). Note that the first
+New: Add gzip compression support for M/Monit (requires M/Monit 3.6.0 or later). Note that the first
 message is always uncompressed, the compression is enabled when suitable M/Monit version is detected.
 
 New: Issue #448: Added global "set onreboot <start | nostart | laststate>" statement which allows
