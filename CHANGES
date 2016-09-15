@@ -28,7 +28,7 @@ Fixed: Monit HTTP GUI: Support CIDR mask 0 as explicit allow-all IP ACL (e.g. "a
 
 Fixed: Host header if IPv6 address is given in HTTP, APACHE-STATUS or WEBSOCKET protocol tests.
 
-Fixed: Support M/Monit on IPv6 address.
+Fixed: Support M/Monit on IPv6 address (requires M/Monit 3.6.0 or later).
 
 Fixed: Issue #438: When "include /path/*" is used, silently ignore if there the directory is empty.
 
