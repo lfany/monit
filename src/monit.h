@@ -350,6 +350,13 @@ typedef enum {
 } __attribute__((__packed__)) Handler_Type;
 
 
+typedef enum {
+        MmonitCompress_Init = 0,
+        MmonitCompress_No,
+        MmonitCompress_Yes
+} __attribute__((__packed__)) MmonitCompress_Type;
+
+
 /* Length of the longest message digest in bytes */
 #define MD_SIZE 65
 
@@ -489,6 +496,7 @@ typedef struct mymmonit {
         URL_T url;                                             /**< URL definition */
         SslOptions_T ssl;                                      /**< SSL definition */
         int timeout;                /**< The timeout to wait for connection or i/o */
+        MmonitCompress_Type compress;                        /**< Compression flag */
 
         /** For internal use */
         struct mymmonit *next;                         /**< next receiver in chain */

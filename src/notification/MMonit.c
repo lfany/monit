@@ -54,6 +54,12 @@
  */
 
 
+/* ------------------------------------------------------------- Definitions */
+
+
+#define MMONIT_SERVER_HEADER "Server: mmonit/"
+
+
 /* ----------------------------------------------------------------- Private */
 
 
@@ -63,27 +69,35 @@
  * @param D Data to send
  * @return true if the message sending succeeded otherwise false
  */
-static boolean_t _send(Socket_T socket, Mmonit_T C, const char *D) {
+static boolean_t _send(Socket_T socket, Mmonit_T C, StringBuffer_T sb) {
         char *auth = Util_getBasicAuthHeader(C->url->user, C->url->password);
+        const void *body = NULL;
+        size_t bodyLength = 0;
+        if (C->compress == MmonitCompress_Yes) {
+                body = StringBuffer_toCompressedString(sb, 6, &bodyLength);
+        } else {
+                body = StringBuffer_toString(sb);
+                bodyLength = StringBuffer_length(sb);
+        }
         int rv = Socket_print(socket,
                               "POST %s HTTP/1.1\r\n"
                               "Host: %s%s%s:%d\r\n"
                               "Content-Type: text/xml\r\n"
-                              "Content-Length: %lu\r\n" //FIXME: send compressed if server supports it ... need to test if mmonit support compression on each monit start (use HEAD method?)
+                              "Content-Length: %zu\r\n"
                               "Pragma: no-cache\r\n"
                               "Accept: */*\r\n"
                               "User-Agent: Monit/%s\r\n"
                               "%s"
-                              "\r\n"
-                              "%s",
+                              "%s"
+                              "\r\n",
                               C->url->path,
                               C->url->ipv6 ? "[" : "", C->url->hostname, C->url->ipv6 ? "]" : "", C->url->port,
-                              (unsigned long)strlen(D),
+                              bodyLength,
                               VERSION,
-                              auth ? auth : "",
-                              D);
+                              C->compress == MmonitCompress_Yes ? "Content-Encoding: gzip\r\n" : "",
+                              auth ? auth : "");
         FREE(auth);
-        if (rv <0) {
+        if (rv < 0 || Socket_write(socket, (unsigned char *)body, bodyLength) < 0) {
                 LogError("M/Monit: error sending data to %s -- %s\n", C->url->url, STRERROR);
                 return false;
         }
@@ -109,6 +123,23 @@ static boolean_t _receive(Socket_T socket, Mmonit_T C) {
                 LogError("M/Monit: failed to send message to %s -- %s\n", C->url->url, buf);
                 return false;
         }
+        if (C->compress == MmonitCompress_Init) {
+                C->compress = MmonitCompress_No;
+                while (Socket_readLine(socket, buf, sizeof(buf))) {
+                        if ((buf[0] == '\r' && buf[1] == '\n') || (buf[0] == '\n'))
+                                break;
+                        Str_chomp(buf);
+                        if (Str_startsWith(buf, MMONIT_SERVER_HEADER)) {
+                                char *version = buf + strlen(MMONIT_SERVER_HEADER);
+                                if (*version) {
+                                        int major, minor;
+                                        if (sscanf(version, "%d.%d", &major, &minor) == 2 && (major > 3 || (major == 3 && minor >= 6)))
+                                                C->compress = MmonitCompress_Yes;
+                                }
+                                break;
+                        }
+                }
+        }
         return true;
 }
 
@@ -128,9 +159,8 @@ Handler_Type MMonit_send(Event_T E) {
                         LogError("M/Monit: cannot open a connection to %s\n", C->url->url);
                         goto error;
                 }
-                char buf[STRLEN];
-                status_xml(sb, E, 2, Socket_getLocalHost(socket, buf, sizeof(buf)));
-                if (! _send(socket, C, StringBuffer_toString(sb))) {
+                status_xml(sb, E, 2, Socket_getLocalHost(socket, (char[STRLEN]){}, STRLEN));
+                if (! _send(socket, C, sb)) {
                         LogError("M/Monit: cannot send %s message to %s\n", E ? "event" : "status", C->url->url);
                         goto error;
                 }

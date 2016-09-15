@@ -3991,6 +3991,7 @@ static void addmmonit(Mmonit_T mmonit) {
         Mmonit_T c;
         NEW(c);
         c->url = mmonit->url;
+        c->compress = MmonitCompress_Init;
         c->ssl.flags = sslset.flags;
         c->ssl.verify = sslset.verify;
         c->ssl.allowSelfSigned = sslset.allowSelfSigned;
