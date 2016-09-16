@@ -280,7 +280,7 @@ const void *StringBuffer_toCompressedString(T S, int level, size_t *length) {
         assert(S);
         assert(length);
         assert(level >= 0 && level <= 9);
-#ifdef HAVE_ZLIB
+#ifdef HAVE_LIBZ
         int rv;
         z_stream zstream = {};
         zstream.next_in = S->buffer;

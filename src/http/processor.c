@@ -486,8 +486,12 @@ static void send_response(HttpRequest req, HttpResponse res) {
         if (! res->is_committed) {
                 char date[STRLEN];
                 char server[STRLEN];
+#ifdef HAVE_LIBZ
                 const char *acceptEncoding = get_header(req, "Accept-Encoding");
                 boolean_t canCompress = acceptEncoding && Str_sub(acceptEncoding, "gzip") ? true : false;
+#else
+                boolean_t canCompress = false;
+#endif
                 const void *body = NULL;
                 size_t bodyLength = 0;
                 if (canCompress) {

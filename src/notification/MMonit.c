@@ -125,6 +125,7 @@ static boolean_t _receive(Socket_T socket, Mmonit_T C) {
         }
         if (C->compress == MmonitCompress_Init) {
                 C->compress = MmonitCompress_No;
+#ifdef HAVE_LIBZ
                 while (Socket_readLine(socket, buf, sizeof(buf))) {
                         if ((buf[0] == '\r' && buf[1] == '\n') || (buf[0] == '\n'))
                                 break;
@@ -139,6 +140,7 @@ static boolean_t _receive(Socket_T socket, Mmonit_T C) {
                                 break;
                         }
                 }
+#endif
         }
         return true;
 }

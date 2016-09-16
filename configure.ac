@@ -647,6 +647,44 @@ fi
 
 
 # ------------------------------------------------------------------------
+# zlib Code
+# ------------------------------------------------------------------------
+
+AC_ARG_WITH([zlib],
+        AS_HELP_STRING([--with-zlib(=<path>)],
+                [Link Monit with zlib. An optional path argument may
+                be given to specify the top-level directory to search for
+                zlib to link with]),
+     [
+        if test "x$withval" = "xyes"; then
+                AC_CHECK_LIB([z], [zlibVersion], [], [
+                        zlib="false"
+                        AC_MSG_ERROR([libz not found])
+                ])
+                AC_CHECK_HEADERS([zlib.h])
+        elif test "x$withval" != "xno"; then
+                AC_MSG_CHECKING([for zlib in $withval])
+                LDFLAGS="-L$withval/lib -lz $LDFLAGS "
+                CFLAGS="-I$withval/include $CFLAGS"
+                if test -r "$withval/lib/libz.a" -a -r "$withval/include/zlib.h"; then
+                        AC_DEFINE([HAVE_LIBZ], [1], [Define if you have zlib library])
+                        AC_DEFINE([HAVE_ZLIB_H], [1], [Define if you have zlib header])
+                        AC_MSG_RESULT([ok])
+                else
+                        zlib="false"
+                        AC_MSG_ERROR([zlib not found in $withval])
+                fi
+        fi
+     ],[
+        AC_CHECK_LIB([z], [zlibVersion], [], [
+                zlib="false"
+                AC_MSG_ERROR([libz not found])
+        ])
+        AC_CHECK_HEADERS([zlib.h])
+     ]
+)
+
+# ------------------------------------------------------------------------
 # PAM Code
 # ------------------------------------------------------------------------
 
@@ -1037,6 +1075,11 @@ cat <<EOT
 | Monit has been configured with the following options:      |
 |                                                            |
 EOT
+if test "xfalse" = "x$zlib"; then
+echo "|   Compression:                                  DISABLED   |"
+else
+echo "|   Compression:                                  ENABLED    |"
+fi
 if test "$use_pam" = "1"; then
 echo "|   PAM support:                                  ENABLED    |"
 else
