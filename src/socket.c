@@ -448,7 +448,8 @@ void Socket_free(T *S) {
         else
 #endif
         {
-                int type, length = sizeof(int);
+                int type;
+                socklen_t length = sizeof(type);
                 getsockopt((*S)->socket, SOL_SOCKET, SO_TYPE, &type, &length);
                 if (type == SOCK_DGRAM) {
                         struct sockaddr_storage addr;
