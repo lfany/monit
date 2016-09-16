@@ -314,38 +314,6 @@ struct addrinfo *_resolve(const char *hostname, int port, Socket_Type type, Sock
 }
 
 
-static T _createUnixSocket(const char *pathname, Socket_Type type, int timeout) {
-        struct sockaddr_un unixsocket;
-        ASSERT(pathname);
-        int s = socket(PF_UNIX, type, 0);
-        if (s >= 0) {
-                unixsocket.sun_family = AF_UNIX;
-                snprintf(unixsocket.sun_path, sizeof(unixsocket.sun_path), "%s", pathname);
-                if (Net_setNonBlocking(s)) {
-                        char error[STRLEN];
-                        if (_doConnect(s, (struct sockaddr *)&unixsocket, sizeof(unixsocket), timeout, error, sizeof(error))) {
-                                T S;
-                                NEW(S);
-                                S->connection_type = Connection_Client;
-                                S->family = Socket_Unix;
-                                S->type = type;
-                                S->socket = s;
-                                S->timeout = timeout;
-                                S->host = Str_dup(LOCALHOST);
-                                return S;
-                        }
-                        LogError("Unix socket %s error -- %s\n", pathname, error);
-                } else {
-                        LogError("Cannot set nonblocking unix socket %s -- %s\n", pathname, STRERROR);
-                }
-                Net_close(s);
-        } else {
-                LogError("Cannot create unix socket %s -- %s\n", pathname, STRERROR);
-        }
-        return NULL;
-}
-
-
 /* ------------------------------------------------------------------ Public */
 
 
@@ -384,7 +352,41 @@ T Socket_create(const char *host, int port, Socket_Type type, Socket_Family fami
 T Socket_createUnix(const char *path, Socket_Type type, int timeout) {
         ASSERT(path);
         ASSERT(timeout > 0);
-        return _createUnixSocket(path, type, timeout);
+        int s = socket(PF_UNIX, type, 0);
+        if (s >= 0) {
+                struct sockaddr_un unixsocket_client = {};
+                unixsocket_client.sun_family = AF_UNIX;
+                snprintf(unixsocket_client.sun_path, sizeof(unixsocket_client.sun_path), "/tmp/monit_%llx.sock", (long long unsigned)&unixsocket_client);
+                if (bind(s, (struct sockaddr *) &unixsocket_client, sizeof(unixsocket_client)) == 0) {
+                        struct sockaddr_un unixsocket_server = {};
+                        unixsocket_server.sun_family = AF_UNIX;
+                        strncpy(unixsocket_server.sun_path, path, sizeof(unixsocket_server.sun_path));
+                        if (Net_setNonBlocking(s)) {
+                                char error[STRLEN];
+                                if (_doConnect(s, (struct sockaddr *)&unixsocket_server, sizeof(unixsocket_server), timeout, error, sizeof(error))) {
+                                        T S;
+                                        NEW(S);
+                                        S->connection_type = Connection_Client;
+                                        S->family = Socket_Unix;
+                                        S->type = type;
+                                        S->socket = s;
+                                        S->timeout = timeout;
+                                        S->host = Str_dup(LOCALHOST);
+                                        return S;
+                                }
+                                LogError("Unix socket %s connection error -- %s\n", path, error);
+                        } else {
+                                LogError("Cannot set nonblocking unix socket %s -- %s\n", path, STRERROR);
+                        }
+                } else {
+                        LogError("Unix socket %s bind error -- %s\n", path, STRERROR);
+                }
+                Net_close(s);
+                unlink(unixsocket_client.sun_path);
+        } else {
+                LogError("Cannot create unix socket %s -- %s\n", path, STRERROR);
+        }
+        return NULL;
 }
 
 
@@ -442,6 +444,14 @@ void Socket_free(T *S) {
         else
 #endif
         {
+                struct sockaddr_storage addr;
+                socklen_t addrlen = sizeof(addr);
+                if (getsockname((*S)->socket, (struct sockaddr *)&addr, &addrlen) == 0) {
+                        if (addr.ss_family == AF_UNIX) {
+                                struct sockaddr_un *_addr = (struct sockaddr_un *)&addr;
+                                unlink(_addr->sun_path);
+                        }
+                }
                 Net_shutdown((*S)->socket, SHUT_RDWR);
                 Net_close((*S)->socket);
         }
@@ -534,7 +544,7 @@ const char *Socket_getLocalHost(T S, char *host, int hostlen) {
 
 
 static void _testUnix(Port_T p) {
-        T S = _createUnixSocket(p->target.unix.pathname, p->type, p->timeout);
+        T S = Socket_createUnix(p->target.unix.pathname, p->type, p->timeout);
         if (S) {
                 S->Port = p;
                 TRY

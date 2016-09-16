@@ -39,6 +39,8 @@ zero, which was received.
 
 Fixed: Issue #460: Add support for OpenSSL 1.1.0
 
+Fixed: Issue #467: Testing unix sockets of UDP type didn't work.
+
 Fixed: Network check on Solaris 10.
 
 Fixed: Monit GUI: Set the encoding to UTF-8 to support UTF-8 formatted "check program" output.
