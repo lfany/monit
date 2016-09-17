@@ -848,6 +848,10 @@ static void version() {
         printf("out");
 #endif
         printf(" ipv6, with");
+#ifndef HAVE_LIBZ
+        printf("out");
+#endif
+        printf(" compression, with");
 #ifndef HAVE_LIBPAM
         printf("out");
 #endif
