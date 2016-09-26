@@ -207,11 +207,13 @@ const char *StringBuffer_toString(T S);
 
 
 /**
- * Returns a compressed string in gzip format (binary data).
+ * Returns the content of this string buffer as gzip compressed data (binary data).
  * @param S StringBuffer object
- * @param level a number between 0-9 where 9 is highest compression
- * @param length The length of returned data
- * @return true if succeeded otherwise false
+ * @param level compression level. A number between 0 and 9 where 1 gives
+ * best speed, 9 gives best compression, 0 gives no compression. 6 is a good value.
+ * @param length The number of bytes in the returned data is stored in length
+ * @return The compressed data representing this string buffer 
+ * @exception AssertException if level is not in [0..9] or if compression failed
  */
 const void *StringBuffer_toCompressedString(T S, int level, size_t *length);
 
