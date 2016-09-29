@@ -65,7 +65,7 @@ static boolean_t _parseInterface(const char *name, Interface_T interface) {
 
 static kstat_t *_getKstat(kstat_ctl_t *kc, char *name) {
         kstat_t *ksp;
-        struct Interface_T interface;
+        struct Interface_T interface = {};
         if (! _isSolarisX) {
                 if ((ksp = kstat_lookup(kc, "link", -1, name))) {
                         /*
