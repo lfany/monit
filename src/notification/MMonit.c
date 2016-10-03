@@ -74,7 +74,7 @@ static boolean_t _send(Socket_T socket, Mmonit_T C, StringBuffer_T sb) {
         const void *body = NULL;
         size_t bodyLength = 0;
         if (C->compress == MmonitCompress_Yes) {
-                body = StringBuffer_toCompressedString(sb, 6, &bodyLength);
+                body = StringBuffer_toCompressed(sb, 6, &bodyLength);
         } else {
                 body = StringBuffer_toString(sb);
                 bodyLength = StringBuffer_length(sb);

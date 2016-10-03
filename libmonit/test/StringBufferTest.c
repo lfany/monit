@@ -270,7 +270,7 @@ int main(void) {
                 sb = StringBuffer_new(input);
                 assert(StringBuffer_length(sb) == 225);
                 size_t compressedLength;
-                const void *compressed = StringBuffer_toCompressedString(sb, 6, &compressedLength);
+                const void *compressed = StringBuffer_toCompressed(sb, 6, &compressedLength);
                 assert(compressed);
                 assert(compressedLength == 46);
                 for (int i = 0; i < compressedLength; i++)

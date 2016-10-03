@@ -215,7 +215,7 @@ const char *StringBuffer_toString(T S);
  * @return The compressed data representing this string buffer 
  * @exception AssertException if level is not in [0..9] or if compression failed
  */
-const void *StringBuffer_toCompressedString(T S, int level, size_t *length);
+const void *StringBuffer_toCompressed(T S, int level, size_t *length);
 
 
 #undef T

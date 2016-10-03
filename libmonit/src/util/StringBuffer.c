@@ -276,7 +276,7 @@ const char *StringBuffer_toString(T S) {
 }
 
 
-const void *StringBuffer_toCompressedString(T S, int level, size_t *length) {
+const void *StringBuffer_toCompressed(T S, int level, size_t *length) {
         assert(S);
         assert(length);
         assert(level >= 0 && level <= 9);

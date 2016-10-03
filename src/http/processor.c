@@ -495,7 +495,7 @@ static void send_response(HttpRequest req, HttpResponse res) {
                 const void *body = NULL;
                 size_t bodyLength = 0;
                 if (canCompress) {
-                        body = StringBuffer_toCompressedString(res->outputbuffer, 6, &bodyLength);
+                        body = StringBuffer_toCompressed(res->outputbuffer, 6, &bodyLength);
                         set_header(res, "Content-Encoding", "gzip");
                 } else {
                         body = StringBuffer_toString(res->outputbuffer);
