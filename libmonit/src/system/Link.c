@@ -351,159 +351,159 @@ void Link_update(T L) {
 }
 
 
-unsigned long long Link_getBytesInPerSecond(T L) {
+long long Link_getBytesInPerSecond(T L) {
         assert(L);
-        return _deltaSecond(L, &(L->ibytes));
+        return L->state > 0 ? _deltaSecond(L, &(L->ibytes)) : -1LL;
 }
 
 
-unsigned long long Link_getBytesInPerMinute(T L, int count) {
+long long Link_getBytesInPerMinute(T L, int count) {
         assert(L);
-        return _deltaMinute(L, &(L->ibytes), count);
+        return L->state > 0 ? _deltaMinute(L, &(L->ibytes), count) : -1LL;
 }
 
 
-unsigned long long Link_getBytesInPerHour(T L, int count) {
+long long Link_getBytesInPerHour(T L, int count) {
         assert(L);
-        return _deltaHour(L, &(L->ibytes), count);
+        return L->state > 0 ? _deltaHour(L, &(L->ibytes), count) : -1LL;
 }
 
 
-unsigned long long Link_getBytesInTotal(T L) {
+long long Link_getBytesInTotal(T L) {
         assert(L);
-        return L->ibytes.now;
+        return L->state > 0 ? L->ibytes.now : -1LL;
 }
 
 
 double Link_getSaturationInPerSecond(T L) {
         assert(L);
-        return L->speed ? (double)Link_getBytesInPerSecond(L) * 8. * 100. / L->speed : -1.;
+        return L->state > 0 && L->speed ? (double)Link_getBytesInPerSecond(L) * 8. * 100. / L->speed : -1.;
 }
 
 
-unsigned long long Link_getPacketsInPerSecond(T L) {
+long long Link_getPacketsInPerSecond(T L) {
         assert(L);
-        return _deltaSecond(L, &(L->ipackets));
+        return L->state > 0 ? _deltaSecond(L, &(L->ipackets)) : -1LL;
 }
 
 
-unsigned long long Link_getPacketsInPerMinute(T L, int count) {
+long long Link_getPacketsInPerMinute(T L, int count) {
         assert(L);
-        return _deltaMinute(L, &(L->ipackets), count);
+        return L->state > 0 ? _deltaMinute(L, &(L->ipackets), count) : -1LL;
 }
 
 
-unsigned long long Link_getPacketsInPerHour(T L, int count) {
+long long Link_getPacketsInPerHour(T L, int count) {
         assert(L);
-        return _deltaHour(L, &(L->ipackets), count);
+        return L->state > 0 ? _deltaHour(L, &(L->ipackets), count) : -1LL;
 }
 
 
-unsigned long long Link_getPacketsInTotal(T L) {
+long long Link_getPacketsInTotal(T L) {
         assert(L);
-        return L->ipackets.now;
+        return L->state > 0 ? L->ipackets.now : -1LL;
 }
 
 
-unsigned long long Link_getErrorsInPerSecond(T L) {
+long long Link_getErrorsInPerSecond(T L) {
         assert(L);
-        return _deltaSecond(L, &(L->ierrors));
+        return L->state > 0 ? _deltaSecond(L, &(L->ierrors)) : -1LL;
 }
 
 
-unsigned long long Link_getErrorsInPerMinute(T L, int count) {
+long long Link_getErrorsInPerMinute(T L, int count) {
         assert(L);
-        return _deltaMinute(L, &(L->ierrors), count);
+        return L->state > 0 ? _deltaMinute(L, &(L->ierrors), count) : -1LL;
 }
 
 
-unsigned long long Link_getErrorsInPerHour(T L, int count) {
+long long Link_getErrorsInPerHour(T L, int count) {
         assert(L);
-        return _deltaHour(L, &(L->ierrors), count);
+        return L->state > 0 ? _deltaHour(L, &(L->ierrors), count) : -1LL;
 }
 
 
-unsigned long long Link_getErrorsInTotal(T L) {
+long long Link_getErrorsInTotal(T L) {
         assert(L);
-        return L->ierrors.now;
+        return L->state > 0 ? L->ierrors.now : -1LL;
 }
 
 
-unsigned long long Link_getBytesOutPerSecond(T L) {
+long long Link_getBytesOutPerSecond(T L) {
         assert(L);
-        return _deltaSecond(L, &(L->obytes));
+        return L->state > 0 ? _deltaSecond(L, &(L->obytes)) : -1LL;
 }
 
 
-unsigned long long Link_getBytesOutPerMinute(T L, int count) {
+long long Link_getBytesOutPerMinute(T L, int count) {
         assert(L);
-        return _deltaMinute(L, &(L->obytes), count);
+        return L->state > 0 ? _deltaMinute(L, &(L->obytes), count) : -1LL;
 }
 
 
-unsigned long long Link_getBytesOutPerHour(T L, int count) {
+long long Link_getBytesOutPerHour(T L, int count) {
         assert(L);
-        return _deltaHour(L, &(L->obytes), count);
+        return L->state > 0 ? _deltaHour(L, &(L->obytes), count) : -1LL;
 }
 
 
-unsigned long long Link_getBytesOutTotal(T L) {
+long long Link_getBytesOutTotal(T L) {
         assert(L);
-        return L->obytes.now;
+        return L->state > 0 ? L->obytes.now : -1LL;
 }
 
 
 double Link_getSaturationOutPerSecond(T L) {
         assert(L);
-        return L->speed ? (double)Link_getBytesOutPerSecond(L) * 8. * 100. / L->speed : -1.;
+        return L->state > 0 && L->speed ? (double)Link_getBytesOutPerSecond(L) * 8. * 100. / L->speed : -1.;
 }
 
 
-unsigned long long Link_getPacketsOutPerSecond(T L) {
+long long Link_getPacketsOutPerSecond(T L) {
         assert(L);
-        return _deltaSecond(L, &(L->opackets));
+        return L->state > 0 ? _deltaSecond(L, &(L->opackets)) : -1LL;
 }
 
 
-unsigned long long Link_getPacketsOutPerMinute(T L, int count) {
+long long Link_getPacketsOutPerMinute(T L, int count) {
         assert(L);
-        return _deltaMinute(L, &(L->opackets), count);
+        return L->state > 0 ? _deltaMinute(L, &(L->opackets), count) : -1LL;
 }
 
 
-unsigned long long Link_getPacketsOutPerHour(T L, int count) {
+long long Link_getPacketsOutPerHour(T L, int count) {
         assert(L);
-        return _deltaHour(L, &(L->opackets), count);
+        return L->state > 0 ? _deltaHour(L, &(L->opackets), count) : -1LL;
 }
 
 
-unsigned long long Link_getPacketsOutTotal(T L) {
+long long Link_getPacketsOutTotal(T L) {
         assert(L);
-        return L->opackets.now;
+        return L->state > 0 ? L->opackets.now : -1LL;
 }
 
 
-unsigned long long Link_getErrorsOutPerSecond(T L) {
+long long Link_getErrorsOutPerSecond(T L) {
         assert(L);
-        return _deltaSecond(L, &(L->oerrors));
+        return L->state > 0 ? _deltaSecond(L, &(L->oerrors)) : -1LL;
 }
 
 
-unsigned long long Link_getErrorsOutPerMinute(T L, int count) {
+long long Link_getErrorsOutPerMinute(T L, int count) {
         assert(L);
-        return _deltaMinute(L, &(L->oerrors), count);
+        return L->state > 0 ? _deltaMinute(L, &(L->oerrors), count) : -1LL;
 }
 
 
-unsigned long long Link_getErrorsOutPerHour(T L, int count) {
+long long Link_getErrorsOutPerHour(T L, int count) {
         assert(L);
-        return _deltaHour(L, &(L->oerrors), count);
+        return L->state > 0 ? _deltaHour(L, &(L->oerrors), count) : -1LL;
 }
 
 
-unsigned long long Link_getErrorsOutTotal(T L) {
+long long Link_getErrorsOutTotal(T L) {
         assert(L);
-        return L->oerrors.now;
+        return L->state > 0 ? L->oerrors.now : -1LL;
 }
 
 
@@ -515,12 +515,12 @@ int Link_getState(T L) {
 
 long long Link_getSpeed(T L) {
         assert(L);
-        return L->speed;
+        return L->state > 0 ? L->speed : -1LL;
 }
 
 
 int Link_getDuplex(T L) {
         assert(L);
-        return L->duplex;
+        return L->state > 0 ? L->duplex : -1;
 }
 

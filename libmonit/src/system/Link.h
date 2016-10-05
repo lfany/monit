@@ -89,9 +89,9 @@ void Link_update(T L);
 /**
  * Get incoming bytes per second.
  * @param L A Link object
- * @return Incoming bytes per second.
+ * @return Incoming bytes per second or -1 if not available.
  */
-unsigned long long Link_getBytesInPerSecond(T L);
+long long Link_getBytesInPerSecond(T L);
 
 
 /**
@@ -99,17 +99,17 @@ unsigned long long Link_getBytesInPerSecond(T L);
  * @param L A Link object
  * @param count Number of minutes, the returned number will be for the 
  * range given by 'now - count' (count max = 60m)
- * @return Incoming bytes per minute.
+ * @return Incoming bytes per minute or -1 if not available.
  */
-unsigned long long Link_getBytesInPerMinute(T L, int count);
+long long Link_getBytesInPerMinute(T L, int count);
 
 
 /**
  * Get total incoming bytes.
  * @param L A Link object
- * @return Incoming bytes total.
+ * @return Incoming bytes total or -1 if not available.
  */
-unsigned long long Link_getBytesInTotal(T L);
+long long Link_getBytesInTotal(T L);
 
 
 /**
@@ -125,17 +125,17 @@ double Link_getSaturationInPerSecond(T L);
  * @param L A Link object
  * @param count Number of hours, the returned number will be for 
  * range given by 'now - count' (count max = 24h)
- * @return Incoming bytes per hour.
+ * @return Incoming bytes per hour or -1 if not available.
  */
-unsigned long long Link_getBytesInPerHour(T L, int count);
+long long Link_getBytesInPerHour(T L, int count);
 
 
 /**
  * Get incoming packets per second.
  * @param L A Link object
- * @return Incoming packets per second.
+ * @return Incoming packets per second or -1 if not available.
  */
-unsigned long long Link_getPacketsInPerSecond(T L);
+long long Link_getPacketsInPerSecond(T L);
 
 
 /**
@@ -143,9 +143,9 @@ unsigned long long Link_getPacketsInPerSecond(T L);
  * @param L A  object
  * @param count Number of minutes, the returned statistics will be for 
  * the range given by 'now - count' (count max = 60m)
- * @return Incoming packets per minute statistics.
+ * @return Incoming packets per minute statistics or -1 if not available.
  */
-unsigned long long Link_getPacketsInPerMinute(T L, int count);
+long long Link_getPacketsInPerMinute(T L, int count);
 
 
 /**
@@ -153,25 +153,25 @@ unsigned long long Link_getPacketsInPerMinute(T L, int count);
  * @param L A Link object
  * @param count Number of hours, the returned statistics will be for 
  * the range given by 'now - count' (count max = 24h)
- * @return Incoming packets per hour statistics.
+ * @return Incoming packets per hour statistics or -1 if not available.
  */
-unsigned long long Link_getPacketsInPerHour(T L, int count);
+long long Link_getPacketsInPerHour(T L, int count);
 
 
 /**
  * Get total incoming packets statistics.
  * @param L A Link object
- * @return Incoming packets total.
+ * @return Incoming packets total or -1 if not available.
  */
-unsigned long long Link_getPacketsInTotal(T L);
+long long Link_getPacketsInTotal(T L);
 
 
 /**
  * Get incoming errors per second.
  * @param L A Link object
- * @return Incoming errors per second.
+ * @return Incoming errors per second or -1 if not available.
  */
-unsigned long long Link_getErrorsInPerSecond(T L);
+long long Link_getErrorsInPerSecond(T L);
 
 
 /**
@@ -179,9 +179,9 @@ unsigned long long Link_getErrorsInPerSecond(T L);
  * @param L A Link object
  * @param count Number of minutes, the returned statistics will be for
  * the range given by 'now - count' (count max = 60m)
- * @return Incoming errors per minute.
+ * @return Incoming errors per minute or -1 if not available.
  */
-unsigned long long Link_getErrorsInPerMinute(T L, int count);
+long long Link_getErrorsInPerMinute(T L, int count);
 
 
 /**
@@ -189,25 +189,25 @@ unsigned long long Link_getErrorsInPerMinute(T L, int count);
  * @param L A Link object
  * @param count Number of hours, the returned statistics will be for 
  * the range given by 'now - count' (count max = 24h)
- * @return Incoming errors per hour.
+ * @return Incoming errors per hour or -1 if not available.
  */
-unsigned long long Link_getErrorsInPerHour(T L, int count);
+long long Link_getErrorsInPerHour(T L, int count);
 
 
 /**
  * Get total incoming errors.
  * @param L A Link object
- * @return Incoming errors total.
+ * @return Incoming errors total or -1 if not available.
  */
-unsigned long long Link_getErrorsInTotal(T L);
+long long Link_getErrorsInTotal(T L);
 
 
 /**
  * Get outgoing bytes per second.
  * @param L A Link object
- * @return Outgoing bytes per second.
+ * @return Outgoing bytes per second or -1 if not available.
  */
-unsigned long long Link_getBytesOutPerSecond(T L);
+long long Link_getBytesOutPerSecond(T L);
 
 
 /**
@@ -215,9 +215,9 @@ unsigned long long Link_getBytesOutPerSecond(T L);
  * @param L A Link object
  * @param count Number of minutes, the returned statistics will be for
  * the range given by 'now - count' (count max = 60m)
- * @return Outgoing bytes per minute.
+ * @return Outgoing bytes per minute or -1 if not available.
  */
-unsigned long long Link_getBytesOutPerMinute(T L, int count);
+long long Link_getBytesOutPerMinute(T L, int count);
 
 
 /**
@@ -225,17 +225,17 @@ unsigned long long Link_getBytesOutPerMinute(T L, int count);
  * @param L A Link object
  * @param count Number of hours, the returned statistics will be for 
  * the range given by 'now - count' (count max = 24h)
- * @return Outgoing bytes per hour.
+ * @return Outgoing bytes per hour or -1 if not available.
  */
-unsigned long long Link_getBytesOutPerHour(T L, int count);
+long long Link_getBytesOutPerHour(T L, int count);
 
 
 /**
  * Get total outgoing bytes.
  * @param L A Link object
- * @return Outgoing bytes total.
+ * @return Outgoing bytes total or -1 if not available.
  */
-unsigned long long Link_getBytesOutTotal(T L);
+long long Link_getBytesOutTotal(T L);
 
 
 /**
@@ -249,9 +249,9 @@ double Link_getSaturationOutPerSecond(T L);
 /**
  * Get outgoing packets per second.
  * @param L A Link object
- * @return Outgoing packets per second.
+ * @return Outgoing packets per second or -1 if not available.
  */
-unsigned long long Link_getPacketsOutPerSecond(T L);
+long long Link_getPacketsOutPerSecond(T L);
 
 
 /**
@@ -259,9 +259,9 @@ unsigned long long Link_getPacketsOutPerSecond(T L);
  * @param L A Link object
  * @param count Number of minutes, the returned statistics will be for 
  * the range given by 'now - count' (count max = 60m)
- * @return Outgoing packets per minute.
+ * @return Outgoing packets per minute or -1 if not available.
  */
-unsigned long long Link_getPacketsOutPerMinute(T L, int count);
+long long Link_getPacketsOutPerMinute(T L, int count);
 
 
 /**
@@ -269,25 +269,25 @@ unsigned long long Link_getPacketsOutPerMinute(T L, int count);
  * @param L A Link object
  * @param count Number of hours, the returned statistics will be for
  * the range given by 'now - count' (count max = 24h)
- * @return Outgoing packets per hour.
+ * @return Outgoing packets per hour or -1 if not available.
  */
-unsigned long long Link_getPacketsOutPerHour(T L, int count);
+long long Link_getPacketsOutPerHour(T L, int count);
 
 
 /**
  * Get total outgoing packets.
  * @param L A Link object
- * @return Outgoing packets total.
+ * @return Outgoing packets total or -1 if not available.
  */
-unsigned long long Link_getPacketsOutTotal(T L);
+long long Link_getPacketsOutTotal(T L);
 
 
 /**
  * Get outgoing errors per second.
  * @param L A Link object
- * @return Outgoing errors per second.
+ * @return Outgoing errors per second or -1 if not available.
  */
-unsigned long long Link_getErrorsOutPerSecond(T L);
+long long Link_getErrorsOutPerSecond(T L);
 
 
 /**
@@ -295,9 +295,9 @@ unsigned long long Link_getErrorsOutPerSecond(T L);
  * @param L A Link object
  * @param count Number of minutes, the returned statistics will be for
  * the range given by 'now - count' (count max = 60m)
- * @return Outgoing errors per minute.
+ * @return Outgoing errors per minute or -1 if not available.
  */
-unsigned long long Link_getErrorsOutPerMinute(T L, int count);
+long long Link_getErrorsOutPerMinute(T L, int count);
 
 
 /**
@@ -305,17 +305,17 @@ unsigned long long Link_getErrorsOutPerMinute(T L, int count);
  * @param L A Link object
  * @param count Number of hours, the returned statistics will be for
  * the range given by 'now - count' (count max = 24h)
- * @return Outgoing errors per hour.
+ * @return Outgoing errors per hour or -1 if not available.
  */
-unsigned long long Link_getErrorsOutPerHour(T L, int count);
+long long Link_getErrorsOutPerHour(T L, int count);
 
 
 /**
  * Get total outgoing errors.
  * @param L A Link object
- * @return Outgoing errors total
+ * @return Outgoing errors total or -1 if not available
  */
-unsigned long long Link_getErrorsOutTotal(T L);
+long long Link_getErrorsOutTotal(T L);
 
 
 /**
