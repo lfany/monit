@@ -41,6 +41,9 @@ Fixed: Issue #460: Add support for OpenSSL 1.1.0
 
 Fixed: Issue #467: Testing unix sockets of UDP type didn't work.
 
+Fixed: Issue #468: If the filesystem doesn't exist, Monit now triggers an "nonexist" event instead of
+"data" event, so it's possible to override the default action using "if does not exist then <action>".
+
 Fixed: Network check on Solaris 10.
 
 Fixed: Monit GUI: Set the encoding to UTF-8 to support UTF-8 formatted "check program" output.

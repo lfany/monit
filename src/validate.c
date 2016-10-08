@@ -1170,10 +1170,12 @@ State_Type check_filesystem(Service_T s) {
         ASSERT(s->inf);
         State_Type rv = State_Succeeded;
         if (! filesystem_usage(s)) {
-                Event_post(s, Event_Data, State_Failed, s->action_DATA, "unable to read filesystem '%s' state", s->path);
+                for (Nonexist_T l = s->nonexistlist; l; l = l->next)
+                        Event_post(s, Event_Nonexist, State_Failed, l->action, "unable to read filesystem '%s' state", s->path);
                 return State_Failed;
         }
-        Event_post(s, Event_Data, State_Succeeded, s->action_DATA, "succeeded getting filesystem statistics for '%s'", s->path);
+        for (Nonexist_T l = s->nonexistlist; l; l = l->next)
+                Event_post(s, Event_Nonexist, State_Succeeded, l->action, "succeeded getting filesystem statistics for '%s'", s->path);
         if (_checkPerm(s, s->inf->priv.filesystem.mode) == State_Failed)
                 rv = State_Failed;
         if (_checkUid(s, s->inf->priv.filesystem.uid) == State_Failed)

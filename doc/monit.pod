@@ -1847,9 +1847,9 @@ Note: the maximum value for cycles is 64.
 
 =head2 EXISTENCE TESTING
 
-This test is implicite and always active for service checks of type,
-I<process>, I<file>, I<directory> and I<fifo>. If not defined, it
-defaults to a restart action.
+This test is implicit and always active for service checks of type,
+I<process>, I<file>, I<directory>, I<filesystem> and I<fifo>. If not
+defined, it defaults to a restart action.
 
 You can override the default action with the following statement:
 
