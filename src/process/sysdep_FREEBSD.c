@@ -237,7 +237,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
                         return false;
                 }
         }
-        si->total_mem = (uint64_t)(active + wired) * (uint64_t)pagesize - (double)arcsize / 1024.;
+        si->total_mem = (uint64_t)(active + wired) * (uint64_t)pagesize - arcsize;
 
         /* Swap */
         int mib[16] = {};
