@@ -211,7 +211,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
         size_t len = sizeof(unsigned int);
         unsigned int active;
         if (sysctlbyname("vm.stats.vm.v_active_count", &active, &len, NULL, 0) == -1) {
-                LogError("system statistic error -- cannot get for active memory usage: %s\n", STRERROR);
+                LogError("system statistic error -- cannot get active memory usage: %s\n", STRERROR);
                 return false;
         }
         if (len != sizeof(unsigned int)) {
@@ -220,14 +220,24 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
         }
         unsigned int wired;
         if (sysctlbyname("vm.stats.vm.v_wire_count", &wired, &len, NULL, 0) == -1) {
-                LogError("system statistic error -- cannot get for wired memory usage: %s\n", STRERROR);
+                LogError("system statistic error -- cannot get wired memory usage: %s\n", STRERROR);
                 return false;
         }
         if (len != sizeof(unsigned int)) {
                 LogError("system statistic error -- wired memory usage statics error\n");
                 return false;
         }
-        si->total_mem = (uint64_t)(active + wired) * (uint64_t)pagesize;
+        uint64_t arcsize = 0ULL;
+        len = sizeof(arcsize);
+        if (sysctlbyname("kstat.zfs.misc.arcstats.size", &arcsize, &len, NULL, 0) == -1) {
+                DEBUG("system statistic error -- cannot get ZFS ARC memory usage: %s\n", STRERROR);
+        } else {
+                if (len != sizeof(arcsize)) {
+                        LogError("system statistic error -- ZFS ARC memory usage statics error\n");
+                        return false;
+                }
+        }
+        si->total_mem = (uint64_t)(active + wired) * (uint64_t)pagesize - arcsize;
 
         /* Swap */
         int mib[16] = {};
