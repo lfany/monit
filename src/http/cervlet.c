@@ -463,6 +463,14 @@ static void doGet(HttpRequest req, HttpResponse res) {
                 do_ping(res);
         } else if (ACTION(GETID)) {
                 do_getid(res);
+        } else if (ACTION(STATUS)) {
+                print_status(req, res, 1);
+        } else if (ACTION(STATUS2)) {
+                print_status(req, res, 2);
+        } else if (ACTION(SUMMARY)) {
+                print_summary(req, res);
+        } else if (ACTION(REPORT)) {
+                _printReport(req, res);
         } else {
                 handle_service(req, res);
         }
