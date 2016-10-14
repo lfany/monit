@@ -1494,7 +1494,7 @@ State_Type check_net(Service_T s) {
         // Link errors
         long long oerrors = Link_getErrorsOutPerSecond(s->inf->priv.net.stats);
         for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
-                if (oerrors) {
+                if (oerrors > 0) {
                         rv = State_Failed;
                         Event_post(s, Event_Link, State_Failed, link->action, "%lld upload errors detected", oerrors);
                 } else {
@@ -1503,7 +1503,7 @@ State_Type check_net(Service_T s) {
         }
         long long ierrors = Link_getErrorsInPerSecond(s->inf->priv.net.stats);
         for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
-                if (ierrors) {
+                if (ierrors > 0) {
                         rv = State_Failed;
                         Event_post(s, Event_Link, State_Failed, link->action, "%lld download errors detected", ierrors);
                 } else {
@@ -1568,7 +1568,7 @@ State_Type check_net(Service_T s) {
                                 obytes = Link_getBytesOutPerSecond(s->inf->priv.net.stats);
                                 break;
                 }
-                if (Util_evalQExpression(upload->operator, obytes, upload->limit))
+                if (obytes >= 0 && Util_evalQExpression(upload->operator, obytes, upload->limit))
                         Event_post(s, Event_ByteOut, State_Failed, upload->action, "%supload %s matches limit [upload rate %s %s in last %d %s]", upload->range != Time_Second ? "total " : "", Str_bytesToSize(obytes, buf1), operatorshortnames[upload->operator], Str_bytesToSize(upload->limit, buf2), upload->rangecount, Util_timestr(upload->range));
                 else
                         Event_post(s, Event_ByteOut, State_Succeeded, upload->action, "%supload check succeeded [current upload rate %s in last %d %s]", upload->range != Time_Second ? "total " : "", Str_bytesToSize(obytes, buf1), upload->rangecount, Util_timestr(upload->range));
@@ -1589,7 +1589,7 @@ State_Type check_net(Service_T s) {
                                 opackets = Link_getPacketsOutPerSecond(s->inf->priv.net.stats);
                                 break;
                 }
-                if (Util_evalQExpression(upload->operator, opackets, upload->limit))
+                if (opackets >= 0 && Util_evalQExpression(upload->operator, opackets, upload->limit))
                         Event_post(s, Event_PacketOut, State_Failed, upload->action, "%supload packets %lld matches limit [upload packets %s %lld in last %d %s]", upload->range != Time_Second ? "total " : "", opackets, operatorshortnames[upload->operator], upload->limit, upload->rangecount, Util_timestr(upload->range));
                 else
                         Event_post(s, Event_PacketOut, State_Succeeded, upload->action, "%supload packets check succeeded [current upload packets %lld in last %d %s]", upload->range != Time_Second ? "total " : "", opackets, upload->rangecount, Util_timestr(upload->range));
@@ -1611,7 +1611,7 @@ State_Type check_net(Service_T s) {
                                 ibytes = Link_getBytesInPerSecond(s->inf->priv.net.stats);
                                 break;
                 }
-                if (Util_evalQExpression(download->operator, ibytes, download->limit))
+                if (ibytes >= 0 && Util_evalQExpression(download->operator, ibytes, download->limit))
                         Event_post(s, Event_ByteIn, State_Failed, download->action, "%sdownload %s matches limit [download rate %s %s in last %d %s]", download->range != Time_Second ? "total " : "", Str_bytesToSize(ibytes, buf1), operatorshortnames[download->operator], Str_bytesToSize(download->limit, buf2), download->rangecount, Util_timestr(download->range));
                 else
                         Event_post(s, Event_ByteIn, State_Succeeded, download->action, "%sdownload check succeeded [current download rate %s in last %d %s]", download->range != Time_Second ? "total " : "", Str_bytesToSize(ibytes, buf1), download->rangecount, Util_timestr(download->range));
@@ -1632,7 +1632,7 @@ State_Type check_net(Service_T s) {
                                 ipackets = Link_getPacketsInPerSecond(s->inf->priv.net.stats);
                                 break;
                 }
-                if (Util_evalQExpression(download->operator, ipackets, download->limit))
+                if (ipackets >= 0 && Util_evalQExpression(download->operator, ipackets, download->limit))
                         Event_post(s, Event_PacketIn, State_Failed, download->action, "%sdownload packets %lld matches limit [download packets %s %lld in last %d %s]", download->range != Time_Second ? "total " : "", ipackets, operatorshortnames[download->operator], download->limit, download->rangecount, Util_timestr(download->range));
                 else
                         Event_post(s, Event_PacketIn, State_Succeeded, download->action, "%sdownload packets check succeeded [current download packets %lld in last %d %s]", download->range != Time_Second ? "total " : "", ipackets, download->rangecount, Util_timestr(download->range));
