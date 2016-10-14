@@ -99,7 +99,7 @@
 #define STATUS2     "/_status2"
 #define SUMMARY     "/_summary"
 #define REPORT      "/_report"
-#define RUN         "/_runtime"
+#define RUNTIME     "/_runtime"
 #define VIEWLOG     "/_viewlog"
 #define DOACTION    "/_doaction"
 #define FAVICON     "/favicon.ico"
@@ -133,9 +133,11 @@ static void do_ping(HttpResponse);
 static void do_getid(HttpResponse);
 static void do_runtime(HttpRequest, HttpResponse);
 static void do_viewlog(HttpRequest, HttpResponse);
-static void handle_action(HttpRequest, HttpResponse);
-static void handle_do_action(HttpRequest, HttpResponse);
-static void handle_run(HttpRequest, HttpResponse);
+static void handle_service(HttpRequest, HttpResponse);
+static void handle_service_action(HttpRequest, HttpResponse);
+static void handle_doaction(HttpRequest, HttpResponse);
+static void handle_runtime(HttpRequest, HttpResponse);
+static void handle_runtime_action(HttpRequest, HttpResponse);
 static void is_monit_running(HttpResponse);
 static void do_service(HttpRequest, HttpResponse, Service_T);
 static void print_alerts(HttpResponse, Mail_T);
@@ -420,8 +422,10 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
  */
 static void doPost(HttpRequest req, HttpResponse res) {
         set_content_type(res, "text/html");
-        if (ACTION(RUN))
-                handle_run(req, res);
+        if (ACTION(RUNTIME))
+                handle_runtime_action(req, res);
+        else if (ACTION(VIEWLOG))
+                do_viewlog(req, res);
         else if (ACTION(STATUS))
                 print_status(req, res, 1);
         else if (ACTION(STATUS2))
@@ -431,9 +435,9 @@ static void doPost(HttpRequest req, HttpResponse res) {
         else if (ACTION(REPORT))
                 _printReport(req, res);
         else if (ACTION(DOACTION))
-                handle_do_action(req, res);
+                handle_doaction(req, res);
         else
-                handle_action(req, res);
+                handle_service_action(req, res);
 }
 
 
@@ -447,12 +451,10 @@ static void doGet(HttpRequest req, HttpResponse res) {
                 LOCK(Run.mutex)
                 do_home(res);
                 END_LOCK;
-        } else if (ACTION(RUN)) {
-                handle_run(req, res);
+        } else if (ACTION(RUNTIME)) {
+                handle_runtime(req, res);
         } else if (ACTION(TEST)) {
                 is_monit_running(res);
-        } else if (ACTION(VIEWLOG)) {
-                do_viewlog(req, res);
         } else if (ACTION(ABOUT)) {
                 do_about(res);
         } else if (ACTION(FAVICON)) {
@@ -461,18 +463,8 @@ static void doGet(HttpRequest req, HttpResponse res) {
                 do_ping(res);
         } else if (ACTION(GETID)) {
                 do_getid(res);
-        } else if (ACTION(STATUS)) {
-                print_status(req, res, 1);
-        } else if (ACTION(STATUS2)) {
-                print_status(req, res, 2);
-        } else if (ACTION(SUMMARY)) {
-                print_summary(req, res);
-        } else if (ACTION(REPORT)) {
-                _printReport(req, res);
-        } else if (ACTION(DOACTION)) {
-                handle_do_action(req, res);
         } else {
-                handle_action(req, res);
+                handle_service(req, res);
         }
 }
 
@@ -812,15 +804,33 @@ static void do_runtime(HttpRequest req, HttpResponse res) {
                 StringBuffer_append(res->outputbuffer,
                                     "<table id='buttons'><tr>");
                 StringBuffer_append(res->outputbuffer,
-                                    "<td style='color:red;'><form method=POST action='_runtime'>Stop Monit http server? "
-                                    "<input type=hidden name='action' value='stop'><input type=submit value='Go'></form></td>");
+                                    "<td style='color:red;'>"
+                                    "<form method=POST action='_runtime'>Stop Monit http server? "
+                                    "<input type=hidden name='securitytoken' value='%s'>"
+                                    "<input type=hidden name='action' value='stop'>"
+                                    "<input type=submit value='Go'>"
+                                    "</form>"
+                                    "</td>",
+                                    res->token);
                 StringBuffer_append(res->outputbuffer,
-                                    "<td><form method=POST action='_runtime'>Force validate now? <input type=hidden name='action' value='validate'>"
-                                    "<input type=submit value='Go'></form></td>");
+                                    "<td>"
+                                    "<form method=POST action='_runtime'>Force validate now? "
+                                    "<input type=hidden name='securitytoken' value='%s'>"
+                                    "<input type=hidden name='action' value='validate'>"
+                                    "<input type=submit value='Go'>"
+                                    "</form>"
+                                    "</td>",
+                                    res->token);
 
                 if ((Run.flags & Run_Log) && ! (Run.flags & Run_UseSyslog)) {
                         StringBuffer_append(res->outputbuffer,
-                                            "<td><form method=GET action='_viewlog'>View Monit logfile? <input type=submit value='Go'></form></td>");
+                                            "<td>"
+                                            "<form method=POST action='_viewlog'>View Monit logfile? "
+                                            "<input type=hidden name='securitytoken' value='%s'>"
+                                            "<input type=submit value='Go'>"
+                                            "</form>"
+                                            "</td>",
+                                            res->token);
                 }
                 StringBuffer_append(res->outputbuffer,
                                     "</tr></table>");
@@ -868,7 +878,18 @@ static void do_viewlog(HttpRequest req, HttpResponse res) {
 }
 
 
-static void handle_action(HttpRequest req, HttpResponse res) {
+static void handle_service(HttpRequest req, HttpResponse res) {
+        char *name = req->url;
+        Service_T s = Util_getService(++name);
+        if (! s) {
+                send_error(req, res, SC_NOT_FOUND, "There is no service named \"%s\"", name ? name : "");
+                return;
+        }
+        do_service(req, res, s);
+}
+
+
+static void handle_service_action(HttpRequest req, HttpResponse res) {
         char *name = req->url;
         Service_T s = Util_getService(++name);
         if (! s) {
@@ -900,12 +921,11 @@ static void handle_action(HttpRequest req, HttpResponse res) {
 }
 
 
-static void handle_do_action(HttpRequest req, HttpResponse res) {
+static void handle_doaction(HttpRequest req, HttpResponse res) {
         Service_T s;
         Action_Type doaction = Action_Ignored;
         const char *action = get_parameter(req, "action");
         const char *token = get_parameter(req, "token");
-
         if (action) {
                 if (is_readonly(req)) {
                         send_error(req, res, SC_FORBIDDEN, "You do not have sufficient privileges to access this page");
@@ -943,7 +963,14 @@ static void handle_do_action(HttpRequest req, HttpResponse res) {
 }
 
 
-static void handle_run(HttpRequest req, HttpResponse res) {
+static void handle_runtime(HttpRequest req, HttpResponse res) {
+        LOCK(Run.mutex)
+        do_runtime(req, res);
+        END_LOCK;
+}
+
+
+static void handle_runtime_action(HttpRequest req, HttpResponse res) {
         const char *action = get_parameter(req, "action");
         if (action) {
                 if (is_readonly(req)) {
@@ -960,9 +987,7 @@ static void handle_run(HttpRequest req, HttpResponse res) {
                         return;
                 }
         }
-        LOCK(Run.mutex)
-        do_runtime(req, res);
-        END_LOCK;
+        handle_runtime(req, res);
 }
 
 
@@ -1665,29 +1690,47 @@ static void print_buttons(HttpRequest req, HttpResponse res, Service_T s) {
         /* Start program */
         if (s->start)
                 StringBuffer_append(res->outputbuffer,
-                                    "<td><form method=POST action=%s>"
+                                    "<td>"
+                                    "<form method=POST action=%s>"
+                                    "<input type=hidden name='securitytoken' value='%s'>"
                                     "<input type=hidden value='start' name=action>"
-                                    "<input type=submit value='Start service'></form></td>", s->name);
+                                    "<input type=submit value='Start service'>"
+                                    "</form>"
+                                    "</td>", s->name, res->token);
         /* Stop program */
         if (s->stop)
                 StringBuffer_append(res->outputbuffer,
-                                    "<td><form method=POST action=%s>"
+                                    "<td>"
+                                    "<form method=POST action=%s>"
+                                    "<input type=hidden name='securitytoken' value='%s'>"
                                     "<input type=hidden value='stop' name=action>"
-                                    "<input type=submit value='Stop service'></form></td>", s->name);
+                                    "<input type=submit value='Stop service'>"
+                                    "</form>"
+                                    "</td>", s->name, res->token);
         /* Restart program */
         if ((s->start && s->stop) || s->restart)
                 StringBuffer_append(res->outputbuffer,
-                                    "<td><form method=POST action=%s>"
+                                    "<td>"
+                                    "<form method=POST action=%s>"
+                                    "<input type=hidden name='securitytoken' value='%s'>"
                                     "<input type=hidden value='restart' name=action>"
-                                    "<input type=submit value='Restart service'></form></td>", s->name);
+                                    "<input type=submit value='Restart service'>"
+                                    "</form>"
+                                    "</td>", s->name, res->token);
         /* (un)monitor */
         StringBuffer_append(res->outputbuffer,
-                            "<td><form method=POST action=%s>"
-                            "<input type=hidden value='%s' name=action>"
-                            "<input type=submit value='%s'></form></td></tr></table>",
-                            s->name,
-                            s->monitor ? "unmonitor" : "monitor",
-                            s->monitor ? "Disable monitoring" : "Enable monitoring");
+                                    "<td>"
+                                    "<form method=POST action=%s>"
+                                    "<input type=hidden name='securitytoken' value='%s'>"
+                                    "<input type=hidden value='%s' name=action>"
+                                    "<input type=submit value='%s'>"
+                                    "</form>"
+                                    "</td>",
+                                    s->name,
+                                    res->token,
+                                    s->monitor ? "unmonitor" : "monitor",
+                                    s->monitor ? "Disable monitoring" : "Enable monitoring");
+        StringBuffer_append(res->outputbuffer, "</tr></table>");
 }
 
 

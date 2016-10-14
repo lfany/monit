@@ -241,7 +241,7 @@ void send_error(HttpRequest req, HttpResponse res, int code, const char *msg, ..
  * @param name Header key name
  * @param value Header key value
  */
-void set_header(HttpResponse res, const char *name, const char *value) {
+void set_header(HttpResponse res, const char *name, const char *value, ...) {
         HttpHeader h = NULL;
 
         ASSERT(res);
@@ -249,7 +249,10 @@ void set_header(HttpResponse res, const char *name, const char *value) {
 
         NEW(h);
         h->name = Str_dup(name);
-        h->value = Str_dup(value);
+        va_list ap;
+        va_start(ap, value);
+        h->value = Str_vcat(value, ap);
+        va_end(ap);
         if (res->headers) {
                 HttpHeader n, p;
                 for (n = p = res->headers; p; n = p, p = p->next) {
@@ -285,7 +288,7 @@ void set_status(HttpResponse res, int code) {
  * @param mime Mime content type, e.g. text/html
  */
 void set_content_type(HttpResponse res, const char *mime) {
-        set_header(res, "Content-Type", mime);
+        set_header(res, "Content-Type", "%s", mime);
 }
 
 
@@ -442,6 +445,7 @@ static void do_service(Socket_T s) {
                 if (Run.httpd.flags & Httpd_Ssl)
                         set_header(res, "Strict-Transport-Security", "max-age=63072000; includeSubdomains; preload");
                 if (is_authenticated(req, res)) {
+                        set_header(res, "Set-Cookie", "securitytoken=%s; Max-Age=600; HttpOnly; SameSite=strict%s", res->token, Run.httpd.flags & Httpd_Ssl ? "; Secure" : "");
                         if (IS(req->method, METHOD_GET))
                                 Impl.doGet(req, res);
                         else if (IS(req->method, METHOD_POST))
@@ -574,6 +578,7 @@ static HttpResponse create_HttpResponse(Socket_T S) {
         res->is_committed = false;
         res->protocol = SERVER_PROTOCOL;
         res->status_msg = get_status_string(SC_OK);
+        Util_getToken(res->token);
         return res;
 }
 
@@ -724,6 +729,31 @@ static boolean_t is_authenticated(HttpRequest req, HttpResponse res) {
                         // Send just generic error message to the client to not disclose e.g. username existence in case of credentials harvesting attack
                         send_error(req, res, SC_UNAUTHORIZED, "You are not authorized to access monit. Either you supplied the wrong credentials (e.g. bad password), or your browser doesn't understand how to supply the credentials required");
                         set_header(res, "WWW-Authenticate", "Basic realm=\"monit\"");
+                        return false;
+                }
+        }
+        if (IS(req->method, METHOD_POST)) {
+                // Check CSRF double-submit cookie (https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet#Double_Submit_Cookie)
+                const char *cookie = get_header(req, "Cookie");
+                const char *token = get_parameter(req, "securitytoken");
+                if (! cookie) {
+                        LogError("HttpRequest: access denied -- client [%s]: missing CSRF token cookie\n", NVLSTR(Socket_getRemoteHost(req->S)));
+                        send_error(req, res, SC_FORBIDDEN, "Invalid CSRF Token");
+                        return false;
+                }
+                if (! token) {
+                        LogError("HttpRequest: access denied -- client [%s]: missing CSRF token in HTTP parameter\n", NVLSTR(Socket_getRemoteHost(req->S)));
+                        send_error(req, res, SC_FORBIDDEN, "Invalid CSRF Token");
+                        return false;
+                }
+                if (! Str_startsWith(cookie, "securitytoken=")) {
+                        LogError("HttpRequest: access denied -- client [%s]: no CSRF token in cookie\n", NVLSTR(Socket_getRemoteHost(req->S)));
+                        send_error(req, res, SC_FORBIDDEN, "Invalid CSRF Token");
+                        return false;
+                }
+                if (Str_compareConstantTime(cookie + 14, token)) {
+                        LogError("HttpRequest: access denied -- client [%s]: CSRF token mismatch\n", NVLSTR(Socket_getRemoteHost(req->S)));
+                        send_error(req, res, SC_FORBIDDEN, "Invalid CSRF Token");
                         return false;
                 }
         }

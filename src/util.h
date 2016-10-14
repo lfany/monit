@@ -77,6 +77,7 @@ int Util_handle0Escapes(char *buf);
  * @param digest buffer containing a MD digest
  * @param mdlen digest length
  * @param result buffer to write the result to. Must be at least 41 bytes long.
+ * @return pointer to result buffer
  */
 char *Util_digest2Bytes(unsigned char *digest, int mdlen, MD_T result);
 
@@ -163,6 +164,14 @@ void Util_printService(Service_T s);
  * Print all the services in the servicelist
  */
 void Util_printServiceList();
+
+
+/**
+ * Get a random token
+ * @param token buffer to store the MD digest
+ * @return pointer to token buffer
+ */
+char *Util_getToken(MD_T token);
 
 
 /**
