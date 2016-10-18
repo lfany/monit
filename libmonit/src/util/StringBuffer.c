@@ -281,25 +281,25 @@ const void *StringBuffer_toCompressed(T S, int level, size_t *length) {
         assert(length);
         assert(level >= 0 && level <= 9);
 #ifdef HAVE_LIBZ
-        int rv;
         z_stream zstream = {};
         zstream.next_in = S->buffer;
         zstream.avail_in = S->used;
-        if ((rv = deflateInit2(&zstream, level, Z_DEFLATED, 15 | 16, 8, Z_DEFAULT_STRATEGY)) == Z_OK) {
+        int status = deflateInit2(&zstream, level, Z_DEFLATED, 15 | 16, 8, Z_DEFAULT_STRATEGY);
+        if (status == Z_OK) {
                 unsigned long need = deflateBound(&zstream, S->used);
                 RESIZE(S->compressedBuffer, need);
                 zstream.next_out = S->compressedBuffer;
                 zstream.avail_out = need;
-                rv = deflate(&zstream, Z_FINISH);
+                status = deflate(&zstream, Z_FINISH);
                 deflateEnd(&zstream);
-                if (rv == Z_STREAM_END) {
+                if (status == Z_STREAM_END) {
                         *length = need - zstream.avail_out;
                         return (const void *)S->compressedBuffer;
                 }
         }
         *length = 0;
         FREE(S->compressedBuffer);
-        THROW(AssertException, "compression failed: %s", zError(rv));
+        THROW(AssertException, "compression failed: %s", zError(status));
 #else
         THROW(AssertException, "compression not supported");
 #endif
