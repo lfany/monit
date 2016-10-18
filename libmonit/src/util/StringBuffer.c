@@ -49,9 +49,6 @@
 /* ------------------------------------------------------------ Definitions */
 
 
-#define CHUNK 16384
-
-
 #define T StringBuffer_T
 struct T {
         int used;
