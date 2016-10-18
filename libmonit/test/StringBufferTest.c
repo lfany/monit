@@ -248,6 +248,7 @@ int main(void) {
         }
         printf("=> Test12: OK\n\n");
 
+#ifdef HAVE_LIBZ
         printf("=> Test13: compression\n");
         {
                 const char *input = "<aaaaaaaaaa>"
@@ -376,7 +377,7 @@ int main(void) {
                 assert(sb == NULL);
         }
         printf("=> Test15: OK\n\n");
-
+#endif
         printf("============> StringBuffer Tests: OK\n\n");
 
         return 0;
