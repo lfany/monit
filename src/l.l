@@ -785,11 +785,11 @@ group[ \t]+       {
                   }
 
   [/][^?#\r\n ]*  {
-                      yylval.url->path = Util_urlEncode(yytext);
+                      yylval.url->path = Util_urlEncode(yytext, false);
                   }
 
   [?][^#\r\n ]*   {
-                      yylval.url->query = Util_urlEncode(++yytext);
+                      yylval.url->query = Util_urlEncode(++yytext, false);
                   }
 
   [#][^\r\n ]*    {

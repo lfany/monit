@@ -1723,7 +1723,7 @@ status          : STATUS operator NUMBER {
                 ;
 
 request         : REQUEST PATH {
-                    portset.parameters.http.request = Util_urlEncode($2);
+                    portset.parameters.http.request = Util_urlEncode($2, false);
                     FREE($2);
                   }
                 ;

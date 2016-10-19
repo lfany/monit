@@ -154,6 +154,27 @@ static const unsigned char urlunsafe[256] = {
 };
 
 
+/* Unsafe URL characters for parameter value: [00-1F, 7F-FF] ?=&/<>\"#%}{|\\^[] ` */
+static const unsigned char urlunsafeparameter[256] = {
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,
+        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+};
+
+
 static const unsigned char b2x[][256] = {
         "00", "01", "02", "03", "04", "05", "06", "07",
         "08", "09", "0A", "0B", "0C", "0D", "0E", "0F",
@@ -1477,20 +1498,21 @@ boolean_t Util_isurlsafe(const char *url) {
 }
 
 
-char *Util_urlEncode(char *url) {
+char *Util_urlEncode(char *string, boolean_t isParameterValue) {
         char *escaped = NULL;
-        if (url) {
+        if (string) {
                 char *p;
                 int i, n;
-                for (n = i = 0; url[i]; i++)
-                        if (urlunsafe[(unsigned char)(url[i])])
+                const unsigned char *unsafe = isParameterValue ? urlunsafeparameter : urlunsafe;
+                for (n = i = 0; string[i]; i++)
+                        if (unsafe[(unsigned char)(string[i])])
                                 n += 2;
                 p = escaped = ALLOC(i + n + 1);
-                for (; *url; url++, p++) {
-                        if (urlunsafe[(unsigned char)(*p = *url)]) {
+                for (; *string; string++, p++) {
+                        if (unsafe[(unsigned char)(*p = *string)]) {
                                 *p++ = '%';
-                                *p++ = b2x[(unsigned char)(*url)][0];
-                                *p = b2x[(unsigned char)(*url)][1];
+                                *p++ = b2x[(unsigned char)(*string)][0];
+                                *p = b2x[(unsigned char)(*string)][1];
                         }
                 }
                 *p = 0;
