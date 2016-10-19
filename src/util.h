@@ -209,16 +209,6 @@ char *Util_urlDecode(char *url);
 
 
 /**
- * URL escape a service name so it can be safely transfeered over HTTP. In
- * particular any '/' chars in name is encoded. The caller must free the
- * returned string.
- * @param name a service name string to be URL encoded
- * @return the escaped string
- */
-char *Util_encodeServiceName(char *name);
-
-
-/**
  * @return a Basic Authentication Authorization string (RFC 2617),
  * NULL if username is not defined.
  */
