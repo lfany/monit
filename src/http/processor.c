@@ -827,7 +827,7 @@ static HttpParameter parse_parameters(char *query_string) {
                                 goto error;
                         NEW(p);
                         p->name = key;
-                        p->value = value;
+                        p->value = Util_urlDecode(value);
                         p->next = head;
                         head = p;
                         key = NULL;

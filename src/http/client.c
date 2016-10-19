@@ -75,7 +75,7 @@
 
 
 static void _argument(StringBuffer_T data, const char *name, const char *value) {
-        char *_value = Util_urlEncode((char *)value);
+        char *_value = Util_urlEncode((char *)value, true);
         StringBuffer_append(data, "%s%s=%s", StringBuffer_length(data) ? "&" : "", name, _value);
         FREE(_value);
 }

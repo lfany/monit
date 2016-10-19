@@ -46,6 +46,8 @@ Fixed: Issue #468: If the filesystem doesn't exist, Monit now triggers an "nonex
 
 Fixed: Issue #480: FreeBSD: Subtract ZFS ARC size from the system memory usage.
 
+Fixed: Issue #486: Fix handling of actions for services with [?&=/] characters in their name.
+
 Fixed: Network check on Solaris 10.
 
 Fixed: Monit GUI: Set the encoding to UTF-8 to support UTF-8 formatted "check program" output.

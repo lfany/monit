@@ -193,10 +193,11 @@ boolean_t Util_isurlsafe(const char *url);
 /**
  * Escape an url string converting unsafe characters to a hex (%xx)
  * representation.  The caller must free the returned string.
- * @param url an url string
+ * @param string a string to encode
+ * @param isParameterValue true if the string is url parameter value
  * @return the escaped string
  */
-char *Util_urlEncode(char *url);
+char *Util_urlEncode(char *string, boolean_t isParameterValue);
 
 
 /**
