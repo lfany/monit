@@ -133,7 +133,7 @@ struct ad_user {
 };
 
 
-/* Unsafe URL characters: <>\"#%{}|\\^[] ` */
+/* Unsafe URL characters: [00-1F, 7F-FF] <>\"#%}{|\\^[] ` */
 static const unsigned char urlunsafe[256] = {
         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -1515,18 +1515,6 @@ char *Util_urlDecode(char *url) {
                 url[x] = 0;
         }
         return url;
-}
-
-
-// NOTE: To be used to URL encode service names when ready
-char *Util_encodeServiceName(char *name) {
-        int i;
-        char *s;
-        ASSERT(name);
-        s = Util_urlEncode(name);
-        for (i = 0; s[i]; i++)
-                if (s[i] == '/') return Util_replaceString(&s, "/", "%2F");
-        return s;
 }
 
 
