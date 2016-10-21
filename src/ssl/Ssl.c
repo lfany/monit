@@ -326,12 +326,12 @@ static int _verifyClientCertificates(int preverify_ok, X509_STORE_CTX *ctx) {
 #endif
                 LogError("SSL: no matching certificate found -- %s\n", SSLERROR);
                 X509_STORE_CTX_set_error(ctx, X509_V_ERR_CERT_REJECTED);
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && ! defined(LIBRESSL_VERSION_NUMBER)
                 X509_OBJECT_free(found_cert);
 #endif
                 return 0;
         }
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && ! defined(LIBRESSL_VERSION_NUMBER)
         X509_OBJECT_free(found_cert);
 #endif
         return 1;

@@ -22,6 +22,9 @@ New: The cpu, memory, swap, inode and space tests now allow also decimal values 
 
 New: Issue #457: Update HOME environment variable when executing program as other user.
 
+Fixed: CSRF vulnerability (CVE-2016-7067). M/Monit users related note: M/Monit service actions now
+require M/Monit 3.6.0 or later due to CSRF support requirement.
+
 Fixed: Monit HTTP GUI: Listen on IPv6 interface if no address is specified (linux specific issue).
 
 Fixed: Monit HTTP GUI: Support CIDR mask 0 as explicit allow-all IP ACL (e.g. "allow 0.0.0.0/0").

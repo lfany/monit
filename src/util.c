@@ -1406,27 +1406,30 @@ void Util_printServiceList() {
 }
 
 
+char *Util_getToken(MD_T token) {
+        md5_context_t ctx;
+        char buf[STRLEN];
+        MD_T digest;
+        snprintf(buf, STRLEN, "%lu%d%lu", (unsigned long)Time_now(), getpid(), random());
+        md5_init(&ctx);
+        md5_append(&ctx, (const md5_byte_t *)buf, STRLEN - 1);
+        md5_finish(&ctx, (md5_byte_t *)digest);
+        Util_digest2Bytes((unsigned char *)digest, 16, token);
+        return token;
+}
+
+
 char *Util_monitId(char *idfile) {
-        FILE *file = NULL;
-
         ASSERT(idfile);
-
+        FILE *file = NULL;
         if (! File_exist(idfile)) {
-                md5_context_t ctx;
-                char buf[STRLEN];
-                MD_T digest;
+                // Generate the unique id
                 file = fopen(idfile, "w");
                 if (! file) {
                         LogError("Error opening the idfile '%s' -- %s\n", idfile, STRERROR);
                         return NULL;
                 }
-                /* Generate the unique id */
-                snprintf(buf, STRLEN, "%lu%d%lu", (unsigned long)Time_now(), getpid(), random());
-                md5_init(&ctx);
-                md5_append(&ctx, (const md5_byte_t *)buf, STRLEN - 1);
-                md5_finish(&ctx, (md5_byte_t *)digest);
-                Util_digest2Bytes((unsigned char *)digest, 16, Run.id);
-                fprintf(file, "%s", Run.id);
+                fprintf(file, "%s", Util_getToken(Run.id));
                 LogInfo(" New Monit id: %s\n Stored in '%s'\n", Run.id, idfile);
         } else {
                 if (! File_isFile(idfile)) {

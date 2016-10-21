@@ -138,14 +138,18 @@ static void _parseHttpResponse(Socket_T S) {
 static void _send(Socket_T S, const char *request, StringBuffer_T data) {
         _argument(data, "format", "text");
         char *_auth = _getBasicAuthHeader();
+        MD_T token;
+        StringBuffer_append(data, "%ssecuritytoken=%s", StringBuffer_length(data) > 0 ? "&" : "", Util_getToken(token));
         int rv = Socket_print(S,
                 "POST %s HTTP/1.0\r\n"
                 "Content-Type: application/x-www-form-urlencoded\r\n"
+                "Cookie: securitytoken=%s\r\n"
                 "Content-Length: %d\r\n"
                  "%s"
                  "\r\n"
                  "%s",
                 request,
+                token,
                 StringBuffer_length(data),
                 _auth ? _auth : "",
                 StringBuffer_toString(data));
