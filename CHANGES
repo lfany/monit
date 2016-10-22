@@ -4,6 +4,7 @@
 
 Version 5.21.0
 
+Fixed: Issue #488: Ping test may fail.
 
 
 Version 5.20.0
