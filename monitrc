@@ -110,7 +110,7 @@ set logfile syslog
 #     # and register without credentials     # Don't register credentials
 #
 #
-## Monit by default uses the following format for alerts if the the mail-format
+## Monit by default uses the following format for alerts if the mail-format
 ## statement is missing::
 ## --8<--
 ## set mail-format {
