@@ -102,9 +102,11 @@ set logfile syslog
 ## Though, if safety is a concern we recommend instead using https when
 ## communicating with M/Monit and send credentials encrypted. The password
 ## should be URL encoded if it contains URL-significant characters like
-## ":", "?", "@".
+## ":", "?", "@". Default timeout is 5 seconds, you can customize it by
+## adding the timeout option.
 #
 # set mmonit http://monit:monit@192.168.1.10:8080/collector
+#     # with timeout 30 seconds              # Default timeout is 5 seconds
 #     # and register without credentials     # Don't register credentials
 #
 #

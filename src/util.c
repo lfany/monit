@@ -854,13 +854,11 @@ void Util_printRunList() {
                                         printf(" and certificate checksum %s equal to '%s'", checksumnames[c->ssl.checksumType], c->ssl.checksum);
                         }
 #endif
-                        if (c->url->user)
-                                printf(" using credentials");
+                        if (Run.flags & Run_MmonitCredentials && c->url->user)
+                                printf(" with credentials");
                         if (c->next)
                                printf(",\n                    = ");
                 }
-                if (! (Run.flags & Run_MmonitCredentials))
-                        printf("\n                      register without credentials");
                 printf("\n");
         }
 

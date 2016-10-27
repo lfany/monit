@@ -706,8 +706,8 @@ static void do_runtime(HttpRequest req, HttpResponse res) {
                                         StringBuffer_append(res->outputbuffer, " and certificate checksum %s equal to '%s'", checksumnames[c->ssl.checksumType], c->ssl.checksum);
                         }
 #endif
-                        if (c->url->user)
-                                StringBuffer_append(res->outputbuffer, " using credentials");
+                        if (Run.flags & Run_MmonitCredentials && c->url->user)
+                                StringBuffer_append(res->outputbuffer, " with credentials");
                         if (c->next)
                                 StringBuffer_append(res->outputbuffer, "</td></tr><tr><td>&nbsp;</td><td>");
                 }

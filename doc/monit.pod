@@ -3233,6 +3233,8 @@ To send data to M/Monit, add the following statement to your Monit
 control file:
 
   SET MMONIT <url>
+        [TIMEOUT <number> SECONDS]
+        [REGISTER WITHOUT CREDENTIALS]
 
 Example:
 
@@ -3241,7 +3243,15 @@ Example:
 Monit will register itself in M/Monit and will start sending status and
 event messages to M/Monit. We recommend using I<https> as in the
 example above to ensure that the communication between Monit and
-M/Monit is secure
+M/Monit is secure.
+
+The default timeout is 5 seconds, you can customise the timeout
+using a I<TIMEOUT> option.
+
+When Monit registers itself in M/Monit, it sends by default credentials that
+can be used to perform service actions from M/Monit. You can disable credentials
+sending by I<REGISTER WITHOUT CREDENTIALS> option.
+
 
 
 =head1 CONFIGURATION EXAMPLES
