@@ -2690,27 +2690,27 @@ I/O, Monit will execute a specified action.
 TCP/UDP port test syntax:
 
  IF FAILED
-    [host]
-    <port>
-    [localaddress]
-    [ipversion]
-    [type]
-    [ssl [with options {...}]]
-    [certificate checksum]
-    [certificate valid days]
-    [protocol | <send|expect>, ...]
-    [timeout]
-    [retry]
+    [HOST string]
+    <PORT number>
+    [ADDRESS string]
+    [IPV4 | IPV6]
+    [TYPE <TCP|UDP>]
+    [<SSL|TLS> [with options {...}]
+    [CERTIFICATE CHECKSUM [MD5|SHA1] string]
+    [CERTIFICATE VALID for number DAYS]
+    [PROTOCOL protocol | <SEND|EXPECT> "string",...]
+    [TIMEOUT number SECONDS]
+    [RETRY number]
  THEN action
 
 Unix socket test syntax:
 
  IF FAILED
-    <unixsocket>
-    [type]
-    [protocol | <send|expect>, ...]
-    [timeout]
-    [retry]
+    <UNIXSOCKET path>
+    [TYPE <TCP|UDP>]
+    [PROTOCOL protocol | <SEND|EXPECT> "string",...]
+    [TIMEOUT number SECONDS]
+    [RETRY number]
  THEN action
 
 Examples:
@@ -2723,38 +2723,38 @@ Examples:
 
 Options:
 
-I<host: HOST hostname>. Optionally specify the host to connect to.
+I<HOST hostname>. Optionally specify the host to connect to.
 If the host is not given then localhost is assumed if this test
 is used inside a process entry. If this test is used inside a
 remote host entry then the entry's remote host is assumed.
 
-I<port: PORT number>. The port number to connect to
+I<PORT number>. The port number to connect to
 
-I<unixsocket: UNIXSOCKET path>. Specifies the path to a Unix
+I<UNIXSOCKET path>. Specifies the path to a Unix
 socket (local machine only).
 
-I<localaddress: ADDRESS string>. The source IP address to use.
+I<ADDRESS string>. The source IP address to use.
 
-I<ipversion: IPV4 | IPV6 >. Optionally specify the IP version Monit
+I<IPV4 | IPV6 >. Optionally specify the IP version Monit
 should use when trying to connect to the port. If not used, Monit will
 try to connect to the first available address (IPv4 or IPv6). If
 multiple addresses are available and connection to one address failed,
 Monit will try the next address and so on until a connection succeed or
 until there are no more addresses left to try.
 
-I<type: TYPE [TCP | UDP]>. Optionally specify the socket type Monit
+I<TYPE <TCP | UDP>]>. Optionally specify the socket type Monit
 should use when trying to connect to the port. The different socket
 types are: TCP or UDP, where TCP is a regular stream based socket, UDP,
 a datagram socket. The default socket type is TCP.
 
-I<ssl: [SSL | TLS] [with options {...}]>. Set SSL/TLS L<options|"SSL
+I<[SSL | TLS] [with options {...}]>. Set SSL/TLS L<options|"SSL
 OPTIONS"> and override global/default SSL options. You can set the
 SSL/TLS version to use, whether to verify certificates, trust
 self-signed certificates or set the SSL client certificates
 database-file for client certificate authentication.
 
 
-I<certificate checksum: CERTIFICATE CHECKSUM [MD5|SHA1] hash>. Verify
+I<CERTIFICATE CHECKSUM [MD5|SHA1] hash>. Verify
 the SSL server certificate by checking its checksum. You can use either
 MD5 or SHA1 checksum (if you don't specify the type, Monit will
 determine the digest based on the hash length). You can use the
@@ -2771,7 +2771,7 @@ Example:
      and certificate checksum = "1ED948A6F4258ACAB964227EF4EB19FCC453B0F8"
  then alert
 
-I<certificate expire days: CERTIFICATE VALID for number DAYS>. Send
+I<CERTIFICATE VALID for number DAYS>. Send
 an alert if the certificate will expire in the given number of days.
 This test is pretty useful to get a notification when it is time to
 renew your SSL certificate.
@@ -2784,7 +2784,7 @@ Example:
       and certificate valid > 30 days
   then alert
 
-I<protocol: PROTO(COL) protocol>. Optionally specify the protocol Monit
+I<PROTOCOL protocol>. Optionally specify the protocol Monit
 should speak when a connection is established. At the moment Monit
 knows how to speak:
  I<APACHE-STATUS>
@@ -2825,13 +2825,13 @@ If the target server's protocol is not found in this list, simply
 do not specify the protocol and Monit will use a default connection
 test.
 
-I<timeout: [WITH] TIMEOUT number SECONDS>. Optionally specifies the
+I<TIMEOUT number SECONDS>. Optionally specifies the
 connect and read timeout for the connection. If Monit cannot
 connect to the server within this time it will assume that the
 connection failed and execute the specified action. The default
 connect timeout is 5 seconds.
 
-I<retry: RETRY number>. Optionally specifies the number of consecutive
+I<RETRY number>. Optionally specifies the number of consecutive
 retries within the same testing cycle in the case that the
 connection failed. The default is fail on first error.
 
