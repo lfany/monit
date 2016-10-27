@@ -165,6 +165,7 @@ static boolean_t _retry(int socket, int *timeout, int (*callback)(int socket, ti
                 if (stop >= start && (*timeout -= stop - start) > 0) // Reduce timeout with guard against backward clock jumps
                         return true;
         }
+        errno = ETIMEDOUT;
         return false;
 }
 
