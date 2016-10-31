@@ -318,9 +318,7 @@ static void do_init() {
  * monit daemon receives the SIGHUP signal.
  */
 static void do_reinit() {
-        LogInfo("Awakened by the SIGHUP signal\n"
-                "Reinitializing Monit - Control file '%s'\n",
-                Run.files.control);
+        LogInfo("Reinitializing Monit -- control file '%s'\n", Run.files.control);
 
         /* Wait non-blocking for any children that has exited. Since we
          reinitialize any information about children we have setup to wait
