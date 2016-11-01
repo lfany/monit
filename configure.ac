@@ -564,6 +564,7 @@ elif test "$architecture" = "Darwin"
 then
    ARCH="DARWIN"
    CFLAGS="$CFLAGS -DREENTRANT -no-cpp-precomp -DNEED_SOCKLEN_T_DEFINED"
+   LDFLAGS="$LDFLAGS -Wl,-search_paths_first"
    test_kvm="true"
    LIBS="$LIBS -framework System -multiply_defined suppress"
 elif test "$architecture" = "AIX"
