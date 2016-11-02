@@ -6,6 +6,8 @@ Version 5.21.0
 
 Fixed: Issue #488: Ping test may fail.
 
+Fixed: Issue #495: position independent CSRF cookie value.
+
 Fixed: If the connection timed out, Monit reported incorrect error: "Resource temporarily unavailable".
 
 

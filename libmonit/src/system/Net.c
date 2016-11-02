@@ -111,7 +111,6 @@ ssize_t Net_read(int socket, void *buffer, size_t size, time_t timeout) {
                 } while (n == -1 && errno == EINTR);
                 if (n == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
                         if ((timeout == 0) || (Net_canRead(socket, timeout) == false))
-                                errno = ETIMEDOUT;
                                 return 0;
                         do {
                                 n = read(socket, buffer, size);
