@@ -8,6 +8,8 @@ Fixed: Issue #488: Ping test may fail.
 
 Fixed: Issue #495: position independent CSRF cookie value.
 
+Fixed: Issue #496: Allow overriding the Accept HTTP header
+
 Fixed: If the connection timed out, Monit reported incorrect error: "Resource temporarily unavailable".
 
 

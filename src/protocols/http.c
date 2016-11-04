@@ -239,17 +239,19 @@ void check_http(Socket_T socket) {
         //FIXME: add decompression support to InputStream and switch here to it + set Accept-Encoding to gzip, so the server can send body compressed (if we test checksum/content)
         StringBuffer_append(sb,
                             "%s %s HTTP/1.1\r\n"
-                            "Accept: */*\r\n"
                             "Connection: close\r\n"
                             "%s",
                             ((P->url_request && P->url_request->regex) || P->parameters.http.checksum) ? "GET" : "HEAD",
                             P->parameters.http.request ? P->parameters.http.request : "/",
                             auth ? auth : "");
         FREE(auth);
+        // Set default header values unless defined
         if (! _hasHeader(P->parameters.http.headers, "Host"))
                 StringBuffer_append(sb, "Host: %s\r\n", Util_getHTTPHostHeader(socket, (char[STRLEN]){}, STRLEN));
         if (! _hasHeader(P->parameters.http.headers, "User-Agent"))
                 StringBuffer_append(sb, "User-Agent: Monit/%s\r\n", VERSION);
+        if (! _hasHeader(P->parameters.http.headers, "Accept"))
+                StringBuffer_append(sb, "Accept: */*\r\n");
         // Add headers if we have them
         if (P->parameters.http.headers) {
                 for (list_t p = P->parameters.http.headers->head; p; p = p->next) {
