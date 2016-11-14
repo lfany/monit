@@ -898,7 +898,7 @@ then
         if test -z "$ssllibdir"; then
             AC_MSG_RESULT([Not found])
             dnl Let the compiler find the library using default paths
-            AC_CHECK_LIB([ssl], [SSL_library_init], [], [AC_MSG_ERROR([Could not find SSL library, please use --with-ssl-lib-dir option or disabled the SSL support using --without-ssl])])
+            AC_CHECK_LIB([ssl], [SSL_new], [], [AC_MSG_ERROR([Could not find SSL library, please use --with-ssl-lib-dir option or disabled the SSL support using --without-ssl])])
             AC_CHECK_LIB([crypto],[CRYPTO_new_ex_data], [], [AC_MSG_ERROR([Could not find SSL library, please use --with-ssl-lib-dir option or disabled the SSL support using --without-ssl])])
         else
             AC_MSG_RESULT([$ssllibdir])
