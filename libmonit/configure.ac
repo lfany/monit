@@ -62,31 +62,6 @@ AC_ARG_ENABLE(profiling,
     ]
 )
 
-AC_ARG_ENABLE([openssl],
-        AS_HELP_STRING([--enable-openssl(=<path>)], 
-                [Link Monit with openssl. An optional path argument may
-                be given to specify the top-level directory to search for
-                openssl to link with]),
-     [
-        openssl="true"
-        if test "x$enableval" = "xyes"; then
-		AC_CHECK_LIB([ssl], [SSL_new], [], [AC_MSG_ERROR([libssl not found])])
-		AC_CHECK_LIB([crypto], [SHA1_Init], [], [AC_MSG_ERROR([libcrypto not found])])
-	else
-                AC_MSG_CHECKING([for openssl in $enableval])
-                LDFLAGS="-L$enableval/lib -lssl -lcrypto $LDFLAGS "
-                CPPFLAGS="-I$enableval/include $CPPFLAGS"
-                if test -r "$enableval/lib/libssl.a" -a -r "$enableval/lib/libcrypto.a"; then
-                        AC_MSG_RESULT([ok])
-                else
-                       AC_MSG_ERROR([openssl not found in $enableval])
-                fi
-        fi
-     ],[
-        openssl="false"
-     ]
-)
-
 AC_ARG_WITH([zlib],
         AS_HELP_STRING([--with-zlib(=<path>)],
                 [Link Monit with zlib. An optional path argument may
@@ -382,11 +357,6 @@ if test "xfalse" = "x$profile"; then
 echo "|   Profiling:                                    DISABLED   |"
 else
 echo "|   Profiling:                                    ENABLED    |"
-fi
-if test "xtrue" = "x$openssl"; then
-echo "|   Openssl:                                      ENABLED    |"
-else
-echo "|   Openssl:                                      DISABLED   |"
 fi
 if test "xfalse" = "x$zlib"; then
 echo "|   Compression:                                  DISABLED   |"
