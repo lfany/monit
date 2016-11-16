@@ -200,7 +200,7 @@ static State_Type _check(Service_T s) {
         Monitor_Mode original = s->mode;
         s->mode = Monitor_Passive;
         rv = s->check(s);
-        if (s->type == Service_Program) {
+        if (s->type == Service_Program && s->program->P) {
                 // check program executes the program and needs to be called again to collect the exit value and evaluate the status
                 int64_t timeout = s->program->timeout * USEC_PER_MSEC;
                 do {

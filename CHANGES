@@ -10,6 +10,9 @@ Fixed: Issue #495: position independent CSRF cookie value.
 
 Fixed: Issue #496: Allow overriding the Accept HTTP header
 
+Fixed: Issue #501: check program may fail when parent service is not monitored every cycle and multiple
+services depend on it.
+
 Fixed: If the connection timed out, Monit reported incorrect error: "Resource temporarily unavailable".
 
 
