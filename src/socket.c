@@ -225,7 +225,7 @@ static boolean_t _doConnect(int s, const struct sockaddr *addr, socklen_t addrle
 }
 
 
-T _createIpSocket(const char *host, const struct sockaddr *addr, socklen_t addrlen, const struct sockaddr *localaddr, socklen_t localaddrlen, int family, int type, int protocol, SslOptions_T *options, int timeout) {
+T _createIpSocket(const char *host, const struct sockaddr *addr, socklen_t addrlen, const struct sockaddr *localaddr, socklen_t localaddrlen, int family, int type, int protocol, SslOptions_T options, int timeout) {
         ASSERT(host);
         char error[STRLEN];
         int s = socket(family, type, protocol);
@@ -318,12 +318,12 @@ struct addrinfo *_resolve(const char *hostname, int port, Socket_Type type, Sock
 
 
 T Socket_new(const char *host, int port, Socket_Type type, Socket_Family family, Ssl_Flags flags, int timeout) {
-        SslOptions_T options = {.flags = flags};
+        struct SslOptions_T options = {.flags = flags};
         return Socket_create(host, port, type, family, &options, timeout);
 }
 
 
-T Socket_create(const char *host, int port, Socket_Type type, Socket_Family family, SslOptions_T *options, int timeout) {
+T Socket_create(const char *host, int port, Socket_Type type, Socket_Family family, SslOptions_T options, int timeout) {
         ASSERT(host);
         ASSERT(timeout > 0);
         volatile T S = NULL;
@@ -648,7 +648,7 @@ void Socket_test(void *P) {
 }
 
 
-void Socket_enableSsl(T S, SslOptions_T *options, const char *name)  {
+void Socket_enableSsl(T S, SslOptions_T options, const char *name)  {
         assert(S);
 #ifdef HAVE_OPENSSL
         if ((S->ssl = Ssl_new(options))) {

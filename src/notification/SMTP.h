@@ -133,7 +133,7 @@ void SMTP_helo(T S, const char *name);
  * @param options The SSL options.
  * @exception AssertException if S is NULL, IOException if failed
  */
-void SMTP_starttls(T S, SslOptions_T *options);
+void SMTP_starttls(T S, SslOptions_T options);
 
 
 /**

@@ -216,7 +216,7 @@ void SMTP_helo(T S, const char *name) {
 }
 
 
-void SMTP_starttls(T S, SslOptions_T *options) {
+void SMTP_starttls(T S, SslOptions_T options) {
         ASSERT(S);
         if (S->flags & MTA_StartTLS) {
                 _send(S, "STARTTLS\r\n");

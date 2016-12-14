@@ -492,7 +492,7 @@ typedef struct myrequest {
 /** Defines an event notification and status receiver object */
 typedef struct mymmonit {
         URL_T url;                                             /**< URL definition */
-        SslOptions_T ssl;                                      /**< SSL definition */
+        struct SslOptions_T ssl;                               /**< SSL definition */
         int timeout;                /**< The timeout to wait for connection or i/o */
         MmonitCompress_Type compress;                        /**< Compression flag */
 
@@ -523,7 +523,7 @@ typedef struct mymailserver {
         int   port;                                               /**< Server port */
         char *username;                               /** < Username for SMTP_AUTH */
         char *password;                               /** < Password for SMTP_AUTH */
-        SslOptions_T ssl;                                      /**< SSL definition */
+        struct SslOptions_T ssl;                               /**< SSL definition */
         Socket_T socket;                                     /**< Connected socket */
 
         /** For internal use */
@@ -595,7 +595,7 @@ typedef struct myport {
                         char *pathname;                  /**< Unix socket pathname */
                 } unix;
                 struct {
-                        SslOptions_T ssl;                      /**< SSL definition */
+                        struct SslOptions_T ssl;               /**< SSL definition */
                         int port;                                 /**< Port number */
                 } net;
         } target;
@@ -1130,7 +1130,7 @@ struct myrun {
         char *mygroup;                              /**< Group Name of the Service */
         MD_T id;                                              /**< Unique monit id */
         Limits_T limits;                                       /**< Default limits */
-        SslOptions_T ssl;                                 /**< Default SSL options */
+        struct SslOptions_T ssl;                          /**< Default SSL options */
         int  polltime;        /**< In deamon mode, the sleeptime (sec) between run */
         int  startdelay;                    /**< the sleeptime (sec) after startup */
         int  facility;              /** The facility to use when running openlog() */
@@ -1148,7 +1148,7 @@ struct myrun {
                         struct {
                                 int  port;
                                 char *address;
-                                SslOptions_T ssl;
+                                struct SslOptions_T ssl;
                         } net;
                         struct {
                                 char *path;

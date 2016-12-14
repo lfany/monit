@@ -127,7 +127,7 @@ struct T {
         Hash_Type checksumType;
         int socket;
         int minimumValidDays;
-        SslOptions_T *options;
+        SslOptions_T options;
         SSL *handler;
         SSL_CTX *ctx;
         X509 *certificate;
@@ -139,7 +139,7 @@ struct T {
 struct SslServer_T {
         int socket;
         SSL_CTX *ctx;
-        SslOptions_T *options;
+        SslOptions_T options;
 };
 
 
@@ -194,7 +194,7 @@ static const char *_optionsClientPEMFile(const char *clientpemfile) {
 }
 
 
-static boolean_t _setVersion(SSL_CTX *ctx, SslOptions_T *options) {
+static boolean_t _setVersion(SSL_CTX *ctx, SslOptions_T options) {
         long version = SSL_OP_NO_SSL_MASK;
         switch (_optionsVersion(options->version)) {
                 case SSL_V2:
@@ -532,7 +532,7 @@ void Ssl_setFipsMode(boolean_t enabled) {
 }
 
 
-T Ssl_new(SslOptions_T *options) {
+T Ssl_new(SslOptions_T options) {
         ASSERT(options);
         T C;
         NEW(C);
@@ -739,7 +739,7 @@ void Ssl_setCertificateChecksum(T C, short type, const char *checksum) {
 }
 
 
-char *Ssl_printOptions(SslOptions_T *options, char *b, int size) {
+char *Ssl_printOptions(SslOptions_T options, char *b, int size) {
         ASSERT(b);
         ASSERT(size > 0);
         *b = 0;
@@ -769,7 +769,7 @@ char *Ssl_printOptions(SslOptions_T *options, char *b, int size) {
 /* -------------------------------------------------------------- SSL Server */
 
 
-SslServer_T SslServer_new(int socket, SslOptions_T *options) {
+SslServer_T SslServer_new(int socket, SslOptions_T options) {
         ASSERT(socket >= 0);
         ASSERT(options);
         SslServer_T S;

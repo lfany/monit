@@ -301,7 +301,7 @@ static void  setsyslog(char *);
 static command_t copycommand(command_t);
 static int verifyMaxForward(int);
 static void _setPEM(char **store, char *path, const char *description, boolean_t isFile);
-static void _setSSLOptions(SslOptions_T *options);
+static void _setSSLOptions(SslOptions_T options);
 
 %}
 
@@ -4701,7 +4701,7 @@ static void _setPEM(char **store, char *path, const char *description, boolean_t
 }
 
 
-static void _setSSLOptions(SslOptions_T *options) {
+static void _setSSLOptions(SslOptions_T options) {
         options->allowSelfSigned = sslset.allowSelfSigned;
         options->CACertificateFile = sslset.CACertificateFile;
         options->CACertificatePath = sslset.CACertificatePath;

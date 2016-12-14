@@ -39,7 +39,7 @@ typedef struct T *T;
  * @param options SSL options
  * @return a new SSL server object or NULL if failed
  */
-T SslServer_new(int socket, SslOptions_T *options);
+T SslServer_new(int socket, SslOptions_T options);
 
 
 /**

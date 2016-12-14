@@ -59,7 +59,7 @@ typedef struct SslOptions_T {
         char *ciphers;                               /**< Allowed SSL ciphers list */
         char *CACertificateFile;             /**< Path to CA certificates PEM file */
         char *CACertificatePath;            /**< Path to CA certificates directory */
-} SslOptions_T;
+} *SslOptions_T;
 
 
 #define T Ssl_T
@@ -102,7 +102,7 @@ void Ssl_setFipsMode(boolean_t enabled);
  * @param options SSL options
  * @return a new SSL connection object or NULL if failed
  */
-T Ssl_new(SslOptions_T *options);
+T Ssl_new(SslOptions_T options);
 
 
 /**
@@ -177,7 +177,7 @@ void Ssl_setCertificateChecksum(T C, short type, const char *checksum);
  * @param size The size of the buffer b
  * @return Buffer with string represantation of SSL options
  */
-char *Ssl_printOptions(SslOptions_T *options, char *b, int size);
+char *Ssl_printOptions(SslOptions_T options, char *b, int size);
 
 
 #undef T

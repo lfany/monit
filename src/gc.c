@@ -75,7 +75,7 @@ static void _gcath(Auth_T *);
 static void _gc_mmonit(Mmonit_T *);
 static void _gc_url(URL_T *);
 static void _gc_request(Request_T *);
-static void _gcssloptions(SslOptions_T *o);
+static void _gcssloptions(SslOptions_T o);
 
 
 /**
@@ -158,7 +158,7 @@ void gc_event(Event_T *e) {
 /* ----------------------------------------------------------------- Private */
 
 
-static void _gcssloptions(SslOptions_T *o) {
+static void _gcssloptions(SslOptions_T o) {
         FREE(o->checksum);
         FREE(o->pemfile);
         FREE(o->clientpemfile);
