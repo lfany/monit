@@ -224,9 +224,7 @@ typedef enum {
         Httpd_Disabled                    = 0x0,
         Httpd_Net                         = 0x1,  // IP
         Httpd_Unix                        = 0x2,  // Unix socket
-        Httpd_Ssl                         = 0x4,  // SSL enabled
-        Httpd_Signature                   = 0x8,  // Server Signature enabled
-        Httpd_AllowSelfSignedCertificates = 0x10  // Server Signature enabled
+        Httpd_Signature                   = 0x4   // Server Signature enabled
 } __attribute__((__packed__)) Httpd_Flags;
 
 
@@ -1150,10 +1148,7 @@ struct myrun {
                         struct {
                                 int  port;
                                 char *address;
-                                struct {
-                                        char *pem;
-                                        char *clientpem;
-                                } ssl;
+                                SslOptions_T ssl;
                         } net;
                         struct {
                                 char *path;

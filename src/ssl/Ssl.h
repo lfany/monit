@@ -54,7 +54,9 @@ typedef struct SslOptions_T {
         short checksumType;                                     /**< Checksum type */
         int minimumValidDays;         /**< Minimum valid days left for certificate */
         char *checksum;      /**< The expected md5 sum of the server's certificate */
+        char *pemfile;                            /**< Optional server certificate */
         char *clientpemfile;                      /**< Optional client certificate */
+        char *ciphers;                               /**< Allowed SSL ciphers list */
         char *CACertificateFile;             /**< Path to CA certificates PEM file */
         char *CACertificatePath;            /**< Path to CA certificates directory */
 } SslOptions_T;
@@ -65,9 +67,9 @@ typedef struct T *T;
 
 
 /*
- * The list of all ciphers suites in order of strength except those containing anonymous DH ciphers, low bit-size ciphers, export-crippled ciphersm the MD5 hash algorithm and weak DES and RC4 ciphers.
+ * The list of all ciphers suites in order of strength except those containing anonymous DH ciphers, low bit-size ciphers, export-crippled ciphersm the MD5 hash algorithm and weak DES, RC4 and 3DES ciphers.
  */
-#define CIPHER_LIST "ALL:!DES:!RC4:!aNULL:!LOW:!EXP:!IDEA:!MD5:@STRENGTH"
+#define CIPHER_LIST "ALL:!DES:!RC4:!aNULL:!LOW:!EXP:!IDEA:!MD5:!3DES:@STRENGTH"
 
 
 /**
@@ -97,13 +99,10 @@ void Ssl_setFipsMode(boolean_t enabled);
 
 /**
  * Create a new SSL connection object
- * @param version An SSL version to use
- * @param CACertificateFile Optional path to CA certificates PEM encoded file
- * @param CACertificatePath Optional path to CA certificates directory
- * @param clientpem Optional path to client certificate PEM file
+ * @param options SSL options
  * @return a new SSL connection object or NULL if failed
  */
-T Ssl_new(Ssl_Version version, const char *CACertificateFile, const char *CACertificatePath, const char *clientpem);
+T Ssl_new(SslOptions_T *options);
 
 
 /**
@@ -152,22 +151,6 @@ int Ssl_write(T C, void *b, int size, int timeout);
  * @return Number of bytes read or -1 if failed
  */
 int Ssl_read(T C, void *b, int size, int timeout);
-
-
-/**
- * Set whether SSL server certificates should be verified.
- * @param C An SSL connection object
- * @param verify Boolean flag (true = verify, false = don't verify)
- */
-void Ssl_setVerifyCertificates(T C, boolean_t verify);
-
-
-/**
- * Set whether self-signed certificates should be allowed (rejected by default)
- * @param C An SSL connection object
- * @param allow Boolean flag (true = allow, false = reject)
- */
-void Ssl_setAllowSelfSignedCertificates(T C, boolean_t allow);
 
 
 /**

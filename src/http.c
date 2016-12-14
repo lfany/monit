@@ -91,7 +91,7 @@ static volatile boolean_t running = false;
  */
 boolean_t can_http() {
         if ((Run.httpd.flags & Httpd_Net || Run.httpd.flags & Httpd_Unix) && (Run.flags & Run_Daemon)) {
-                if (! Engine_hasAllow() && ! Run.httpd.credentials && ! ((Run.httpd.flags & Httpd_Ssl) && (Run.httpd.flags & Httpd_Net) && Run.httpd.socket.net.ssl.clientpem)) {
+                if (! Engine_hasAllow() && ! Run.httpd.credentials && ! ((Run.httpd.socket.net.ssl.flags & SSL_Enabled) && (Run.httpd.flags & Httpd_Net) && Run.httpd.socket.net.ssl.clientpemfile)) {
                         LogError("%s: monit httpd not started since no connections are allowed\n", prog);
                         return false;
 

@@ -35,12 +35,11 @@ typedef struct T *T;
 
 /**
  * Initialize an SSL server connection
- * @param pemfile A server PEM file
- * @param clientpemfile A PEM file for certificate based authentication or NULL if not used
  * @param socket A socket
+ * @param options SSL options
  * @return a new SSL server object or NULL if failed
  */
-T SslServer_new(char *pemfile, char *clientpemfile, int socket);
+T SslServer_new(int socket, SslOptions_T *options);
 
 
 /**

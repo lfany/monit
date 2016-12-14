@@ -399,9 +399,9 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                 }
                 for (Port_T p = s->portlist; p; p = p->next) {
                         if (p->is_available == Connection_Failed) {
-                                _formatStatus("port response time", Event_Connection, type, res, s, true, "FAILED to [%s]:%d%s type %s/%s %sprotocol %s", p->hostname, p->target.net.port, Util_portRequestDescription(p), Util_portTypeDescription(p), Util_portIpDescription(p), p->target.net.ssl.flags ? "using SSL/TLS " : "", p->protocol->name);
+                                _formatStatus("port response time", Event_Connection, type, res, s, true, "FAILED to [%s]:%d%s type %s/%s %sprotocol %s", p->hostname, p->target.net.port, Util_portRequestDescription(p), Util_portTypeDescription(p), Util_portIpDescription(p), p->target.net.ssl.flags ? "using TLS " : "", p->protocol->name);
                         } else {
-                                _formatStatus("port response time", Event_Null, type, res, s, p->is_available != Connection_Init, "%s to %s:%d%s type %s/%s %s protocol %s", Str_milliToTime(p->response, (char[23]){}), p->hostname, p->target.net.port, Util_portRequestDescription(p), Util_portTypeDescription(p), Util_portIpDescription(p), p->target.net.ssl.flags ? "using SSL/TLS " : "", p->protocol->name);
+                                _formatStatus("port response time", Event_Null, type, res, s, p->is_available != Connection_Init, "%s to %s:%d%s type %s/%s %s protocol %s", Str_milliToTime(p->response, (char[23]){}), p->hostname, p->target.net.port, Util_portRequestDescription(p), Util_portTypeDescription(p), Util_portIpDescription(p), p->target.net.ssl.flags ? "using TLS " : "", p->protocol->name);
                         }
                 }
                 for (Port_T p = s->socketlist; p; p = p->next) {
@@ -698,7 +698,7 @@ static void do_runtime(HttpRequest req, HttpResponse res) {
                         StringBuffer_append(res->outputbuffer, "%s with timeout %s", c->url->url, Str_milliToTime(c->timeout, (char[23]){}));
 #ifdef HAVE_OPENSSL
                         if (c->ssl.flags) {
-                                StringBuffer_append(res->outputbuffer, " using SSL/TLS");
+                                StringBuffer_append(res->outputbuffer, " using TLS");
                                 const char *options = Ssl_printOptions(&c->ssl, (char[STRLEN]){}, STRLEN);
                                 if (options && *options)
                                         StringBuffer_append(res->outputbuffer, " with options {%s}", options);
@@ -719,7 +719,7 @@ static void do_runtime(HttpRequest req, HttpResponse res) {
                         StringBuffer_append(res->outputbuffer, "%s:%d", mta->host, mta->port);
 #ifdef HAVE_OPENSSL
                         if (mta->ssl.flags) {
-                                StringBuffer_append(res->outputbuffer, " using SSL/TLS");
+                                StringBuffer_append(res->outputbuffer, " using TLS");
                                 const char *options = Ssl_printOptions(&mta->ssl, (char[STRLEN]){}, STRLEN);
                                 if (options && *options)
                                         StringBuffer_append(res->outputbuffer, " with options {%s}", options);
@@ -772,37 +772,20 @@ static void do_runtime(HttpRequest req, HttpResponse res) {
                                     Run.httpd.socket.net.address ? Run.httpd.socket.net.address : "Any/All");
                 StringBuffer_append(res->outputbuffer,
                                     "<tr><td>httpd portnumber</td><td>%d</td></tr>", Run.httpd.socket.net.port);
-        } else if (Run.httpd.flags & Httpd_Unix) {
+#ifdef HAVE_OPENSSL
+                const char *options = Ssl_printOptions(&(Run.httpd.socket.net.ssl), (char[STRLEN]){}, STRLEN);
+                if (options && *options)
+                        StringBuffer_append(res->outputbuffer,
+                                    "<tr><td>httpd encryption</td><td>%s</td></tr>", options);
+#endif
+        }
+        if (Run.httpd.flags & Httpd_Unix)
                 StringBuffer_append(res->outputbuffer,
                                     "<tr><td>httpd unix socket</td><td>%s</td></tr>",
                                     Run.httpd.socket.unix.path);
-        }
         StringBuffer_append(res->outputbuffer,
                             "<tr><td>httpd signature</td><td>%s</td></tr>",
                             Run.httpd.flags & Httpd_Signature ? "True" : "False");
-        StringBuffer_append(res->outputbuffer,
-                            "<tr><td>Use ssl encryption</td><td>%s</td></tr>",
-                            Run.httpd.flags & Httpd_Ssl ? "True" : "False");
-        if (Run.httpd.flags & Httpd_Ssl) {
-                StringBuffer_append(res->outputbuffer,
-                                    "<tr><td>PEM key/certificate file</td><td>%s</td></tr>",
-                                    Run.httpd.socket.net.ssl.pem);
-                if (Run.httpd.socket.net.ssl.clientpem != NULL) {
-                        StringBuffer_append(res->outputbuffer,
-                                            "<tr><td>Client PEM key/certification"
-                                            "</td><td>%s</td></tr>", "Enabled");
-                        StringBuffer_append(res->outputbuffer,
-                                            "<tr><td>Client PEM key/certificate file"
-                                            "</td><td>%s</td></tr>", Run.httpd.socket.net.ssl.clientpem);
-                } else {
-                        StringBuffer_append(res->outputbuffer,
-                                            "<tr><td>Client PEM key/certification"
-                                            "</td><td>%s</td></tr>", "Disabled");
-                }
-                StringBuffer_append(res->outputbuffer,
-                                    "<tr><td>Allow self certified certificates "
-                                    "</td><td>%s</td></tr>", Run.httpd.flags & Httpd_AllowSelfSignedCertificates ? "True" : "False");
-        }
         StringBuffer_append(res->outputbuffer,
                             "<tr><td>httpd auth. style</td><td>%s</td></tr>",
                             Run.httpd.credentials && Engine_hasAllow() ? "Basic Authentication and Host/Net allow list" : Run.httpd.credentials ? "Basic Authentication" : Engine_hasAllow() ? "Host/Net allow list" : "No authentication");
@@ -1774,7 +1757,7 @@ static void print_service_rules_port(HttpResponse res, Service_T s) {
                         StringBuffer_append(buf, " and retry %d times", p->retry);
 #ifdef HAVE_OPENSSL
                 if (p->target.net.ssl.flags) {
-                        StringBuffer_append(buf, " using SSL/TLS");
+                        StringBuffer_append(buf, " using TLS");
                         const char *options = Ssl_printOptions(&p->target.net.ssl, (char[STRLEN]){}, STRLEN);
                         if (options && *options)
                                 StringBuffer_append(buf, " with options {%s}", options);

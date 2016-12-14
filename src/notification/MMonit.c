@@ -156,7 +156,7 @@ Handler_Type MMonit_send(Event_T E) {
                 return Handler_Succeeded;
         StringBuffer_T sb = StringBuffer_create(256);
         for (Mmonit_T C = Run.mmonits; C; C = C->next) {
-                Socket_T  socket = Socket_create(C->url->hostname, C->url->port, Socket_Tcp, Socket_Ip, C->ssl, C->timeout);
+                Socket_T  socket = Socket_create(C->url->hostname, C->url->port, Socket_Tcp, Socket_Ip, &(C->ssl), C->timeout);
                 if (! socket) {
                         LogError("M/Monit: cannot open a connection to %s\n", C->url->url);
                         goto error;

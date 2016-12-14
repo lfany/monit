@@ -75,6 +75,7 @@ static void _gcath(Auth_T *);
 static void _gc_mmonit(Mmonit_T *);
 static void _gc_url(URL_T *);
 static void _gc_request(Request_T *);
+static void _gcssloptions(SslOptions_T *o);
 
 
 /**
@@ -107,8 +108,7 @@ void gc() {
         FREE(Run.mygroup);
         if (Run.httpd.flags & Httpd_Net) {
                 FREE(Run.httpd.socket.net.address);
-                FREE(Run.httpd.socket.net.ssl.pem);
-                FREE(Run.httpd.socket.net.ssl.clientpem);
+                _gcssloptions(&(Run.httpd.socket.net.ssl));
         }
         if (Run.httpd.flags & Httpd_Unix)
                 FREE(Run.httpd.socket.unix.path);
@@ -160,7 +160,9 @@ void gc_event(Event_T *e) {
 
 static void _gcssloptions(SslOptions_T *o) {
         FREE(o->checksum);
+        FREE(o->pemfile);
         FREE(o->clientpemfile);
+        FREE(o->ciphers);
         FREE(o->CACertificateFile);
         FREE(o->CACertificatePath);
 }

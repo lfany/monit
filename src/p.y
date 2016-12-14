@@ -300,6 +300,8 @@ static void  check_depend();
 static void  setsyslog(char *);
 static command_t copycommand(command_t);
 static int verifyMaxForward(int);
+static void _setPEM(char **store, char *path, const char *description, boolean_t isFile);
+static void _setSSLOptions(SslOptions_T *options);
 
 %}
 
@@ -311,10 +313,10 @@ static int verifyMaxForward(int);
         char *string;
 }
 
-%token IF ELSE THEN OR FAILED
+%token IF ELSE THEN FAILED
 %token SET LOGFILE FACILITY DAEMON SYSLOG MAILSERVER HTTPD ALLOW REJECTOPT ADDRESS INIT TERMINAL BATCH
 %token READONLY CLEARTEXT MD5HASH SHA1HASH CRYPT DELAY
-%token PEMFILE ENABLE DISABLE SSL CLIENTPEMFILE ALLOWSELFCERTIFICATION SELFSIGNED VERIFY CERTIFICATE CACERTIFICATEFILE CACERTIFICATEPATH VALID
+%token PEMFILE ENABLE DISABLE SSL CIPHER CLIENTPEMFILE ALLOWSELFCERTIFICATION SELFSIGNED VERIFY CERTIFICATE CACERTIFICATEFILE CACERTIFICATEPATH VALID
 %token INTERFACE LINK PACKET BYTEIN BYTEOUT PACKETIN PACKETOUT SPEED SATURATION UPLOAD DOWNLOAD TOTAL
 %token IDFILE STATEFILE SEND EXPECT CYCLE COUNT REMINDER REPEAT
 %token LIMITS SENDEXPECTBUFFER EXPECTBUFFER FILECONTENTBUFFER HTTPCONTENTBUFFER PROGRAMOUTPUT NETWORKTIMEOUT PROGRAMTIMEOUT STARTTIMEOUT STOPTIMEOUT RESTARTTIMEOUT
@@ -324,7 +326,7 @@ static int verifyMaxForward(int);
 %token TIMEOUT RETRY RESTART CHECKSUM EVERY NOTEVERY
 %token DEFAULT HTTP HTTPS APACHESTATUS FTP SMTP SMTPS POP POPS IMAP IMAPS CLAMAV NNTP NTP3 MYSQL DNS WEBSOCKET
 %token SSH DWP LDAP2 LDAP3 RDATE RSYNC TNS PGSQL POSTFIXPOLICY SIP LMTP GPS RADIUS MEMCACHE REDIS MONGODB SIEVE
-%token <string> STRING PATH MAILADDR MAILFROM MAILSENDER MAILREPLYTO MAILSUBJECT
+%token <string> STRING PATH MAILADDR MAILFROM MAILREPLYTO MAILSUBJECT
 %token <string> MAILBODY SERVICENAME STRINGNAME
 %token <number> NUMBER PERCENT LOGLIMIT CLOSELIMIT DNSLIMIT KEEPALIVELIMIT
 %token <number> REPLYLIMIT REQUESTLIMIT STARTLIMIT WAITLIMIT GRACEFULLIMIT
@@ -770,19 +772,7 @@ credentials     : /* EMPTY */
                 ;
 
 setssl          : SET SSL '{' ssloptionlist '}' {
-                        Run.ssl.flags = SSL_Enabled;
-                        Run.ssl.verify = sslset.verify;
-                        Run.ssl.allowSelfSigned = sslset.allowSelfSigned;
-                        Run.ssl.version = sslset.version;
-                        Run.ssl.minimumValidDays = sslset.minimumValidDays;
-                        Run.ssl.checksumType = sslset.checksumType;
-                        Run.ssl.checksum = sslset.checksum;
-                        Run.ssl.clientpemfile = sslset.clientpemfile;
-                        Run.ssl.CACertificateFile = sslset.CACertificateFile;
-                        Run.ssl.CACertificatePath = sslset.CACertificatePath;
-                        if (Run.ssl.allowSelfSigned == true)
-                                Run.httpd.flags |= Httpd_AllowSelfSignedCertificates;
-                        reset_sslset();
+                        _setSSLOptions(&(Run.ssl));
                   }
                 ;
 
@@ -815,37 +805,21 @@ ssloption       : VERIFY ':' ENABLE {
                 | VERSIONOPT ':' sslversion {
                         sslset.flags = SSL_Enabled;
                   }
+                | CIPHER ':' STRING {
+                        FREE(sslset.ciphers);
+                        sslset.ciphers = $<string>3;
+                  }
+                | PEMFILE ':' PATH {
+                        _setPEM(&(sslset.pemfile), $3, "SSL server PEM file", true);
+                  }
                 | CLIENTPEMFILE ':' PATH {
-                        sslset.flags = SSL_Enabled;
-                        sslset.clientpemfile = $3;
-                        if (! File_exist(sslset.clientpemfile))
-                                yyerror2("SSL client PEM file doesn't exist");
-                        else if (! File_isFile(sslset.clientpemfile))
-                                yyerror2("SSL client PEM file is not a file");
-                        else if (! File_isReadable(sslset.clientpemfile))
-                                yyerror2("Cannot read SSL client PEM file");
+                        _setPEM(&(sslset.clientpemfile), $3, "SSL client PEM file", true);
                   }
                 | CACERTIFICATEFILE ':' PATH {
-                        if (sslset.CACertificateFile)
-                                yyerror2("Duplicate SSL CA certificates file doesn't exist");
-                        sslset.flags = SSL_Enabled;
-                        sslset.CACertificateFile = $3;
-                        if (! File_exist(sslset.CACertificateFile))
-                                yyerror2("SSL CA certificates file doesn't exist");
-                        else if (! File_isFile(sslset.CACertificateFile))
-                                yyerror2("SSL CA certificates file is not a file");
-                        else if (! File_isReadable(sslset.CACertificateFile))
-                                yyerror2("Cannot read CA certificates file");
+                        _setPEM(&(sslset.CACertificateFile), $3, "SSL CA certificates file", true);
                   }
                 | CACERTIFICATEPATH ':' PATH {
-                        sslset.flags = SSL_Enabled;
-                        sslset.CACertificatePath = $3;
-                        if (! File_exist(sslset.CACertificatePath))
-                                yyerror2("SSL CA certificates directory doesn't exist");
-                        else if (! File_isDirectory(sslset.CACertificatePath))
-                                yyerror2("SSL CA certificates path is not directory");
-                        else if (! File_isReadable(sslset.CACertificatePath))
-                                yyerror2("Cannot read CA certificates directory");
+                        _setPEM(&(sslset.CACertificatePath), $3, "SSL CA certificates directory", false);
                   }
                 ;
 
@@ -1002,14 +976,31 @@ mailserveropt   : username {
                 | certmd5
                 ;
 
-sethttpd        : SET HTTPD httpdlist
+sethttpd        : SET HTTPD httpdlist {
+                        if (sslset.flags & SSL_Enabled) {
+#ifdef HAVE_OPENSSL
+                                if (! sslset.pemfile) {
+                                        yyerror("SSL server PEM file is required (please use ssl pemfile option)");
+                                } else if (! file_checkStat(sslset.pemfile, "SSL server PEM file", S_IRWXU)) {
+                                        yyerror("SSL server PEM file permissions check failed");
+                                } else  {
+                                        _setSSLOptions(&(Run.httpd.socket.net.ssl));
+                                }
+#else
+                                yyerror("SSL is not supported");
+#endif
+                        }
+                  }
                 ;
 
 httpdlist       : /* EMPTY */
                 | httpdlist httpdoption
                 ;
 
-httpdoption     : sslserver
+httpdoption     : ssl
+                | pemfile
+                | clientpemfile
+                | allowselfcert
                 | signature
                 | bindaddress
                 | allow
@@ -1017,37 +1008,23 @@ httpdoption     : sslserver
                 | httpdsocket
                 ;
 
-sslserver       : ssldisable optssllist {
-                        Run.httpd.flags &= ~Httpd_Ssl;
-                  }
-                | sslenable optssllist {
-                        Run.httpd.flags |= Httpd_Ssl;
-#ifdef HAVE_OPENSSL
-                        if (! Run.httpd.socket.net.ssl.pem)
-                                yyerror("SSL server PEM file is required (pemfile option)");
-                        else if (! file_checkStat(Run.httpd.socket.net.ssl.pem, "SSL server PEM file", S_IRWXU))
-                                yyerror("SSL server PEM file permissions check failed");
-#else
-                        yyerror("SSL is not supported");
-#endif
+/* deprecated by "ssl" options since monit 5.21 (kept for backward compatibility) */
+pemfile         : PEMFILE PATH {
+                        _setPEM(&(sslset.pemfile), $2, "SSL server PEM file", true);
                   }
                 ;
 
-optssllist      : /* EMPTY */
-                | optssllist optssl
+/* deprecated by "ssl" options since monit 5.21 (kept for backward compatibility) */
+clientpemfile   : CLIENTPEMFILE PATH {
+                        _setPEM(&(sslset.clientpemfile), $2, "SSL client PEM file", true);
+                  }
                 ;
 
-optssl          : pemfile
-                | clientpemfile
-                | allowselfcert
-                ;
-
-sslenable       : SSL ENABLE
-                | ENABLE SSL
-                ;
-
-ssldisable      : SSL DISABLE
-                | DISABLE SSL
+/* deprecated by "ssl" options since monit 5.21 (kept for backward compatibility) */
+allowselfcert   : ALLOWSELFCERTIFICATION {
+                        sslset.flags = SSL_Enabled;
+                        sslset.allowSelfSigned = true;
+                  }
                 ;
 
 httpdport       : PORT NUMBER {
@@ -1062,14 +1039,6 @@ httpdsocket     : UNIXSOCKET PATH {
                   }
                 ;
 
-signature       : sigenable  {
-                        Run.httpd.flags |= Httpd_Signature;
-                  }
-                | sigdisable {
-                        Run.httpd.flags &= ~Httpd_Signature;
-                  }
-                ;
-
 sigenable       : SIGNATURE ENABLE
                 | ENABLE SIGNATURE
                 ;
@@ -1078,25 +1047,16 @@ sigdisable      : SIGNATURE DISABLE
                 | DISABLE SIGNATURE
                 ;
 
+signature       : sigenable  {
+                        Run.httpd.flags |= Httpd_Signature;
+                  }
+                | sigdisable {
+                        Run.httpd.flags &= ~Httpd_Signature;
+                  }
+                ;
+
 bindaddress     : ADDRESS STRING {
                         Run.httpd.socket.net.address = $2;
-                  }
-                ;
-
-pemfile         : PEMFILE PATH {
-                        Run.httpd.socket.net.ssl.pem = $2;
-                  }
-                ;
-
-clientpemfile   : CLIENTPEMFILE PATH {
-                        Run.httpd.socket.net.ssl.clientpem = $2;
-                        if (! file_checkStat(Run.httpd.socket.net.ssl.clientpem, "SSL client PEM file", S_IRWXU | S_IRGRP | S_IROTH))
-                                yyerror2("SSL client PEM file has too loose permissions");
-                  }
-                ;
-
-allowselfcert   : ALLOWSELFCERTIFICATION {
-                        Run.httpd.flags |= Httpd_AllowSelfSignedCertificates;
                   }
                 ;
 
@@ -2728,86 +2688,69 @@ reminder        : /* EMPTY */           { mailset.reminder = 0; }
  * This routine is automatically called by the lexer!
  */
 void yyerror(const char *s, ...) {
-        va_list ap;
-        char *msg = NULL;
-
         ASSERT(s);
-
-        va_start(ap,s);
+        char *msg = NULL;
+        va_list ap;
+        va_start(ap, s);
         msg = Str_vcat(s, ap);
         va_end(ap);
-
         LogError("%s:%i: %s '%s'\n", currentfile, lineno, msg, yytext);
         cfg_errflag++;
-
         FREE(msg);
-
 }
+
 
 /**
  * Syntactical warning routine
  */
 void yywarning(const char *s, ...) {
-        va_list ap;
-        char *msg = NULL;
-
         ASSERT(s);
-
-        va_start(ap,s);
+        char *msg = NULL;
+        va_list ap;
+        va_start(ap, s);
         msg = Str_vcat(s, ap);
         va_end(ap);
-
         LogWarning("%s:%i: %s '%s'\n", currentfile, lineno, msg, yytext);
-
         FREE(msg);
-
 }
+
 
 /**
  * Argument error routine
  */
 void yyerror2(const char *s, ...) {
-        va_list ap;
-        char *msg = NULL;
-
         ASSERT(s);
-
-        va_start(ap,s);
+        char *msg = NULL;
+        va_list ap;
+        va_start(ap, s);
         msg = Str_vcat(s, ap);
         va_end(ap);
-
         LogError("%s:%i: %s '%s'\n", argcurrentfile, arglineno, msg, argyytext);
         cfg_errflag++;
-
         FREE(msg);
-
 }
+
 
 /**
  * Argument warning routine
  */
 void yywarning2(const char *s, ...) {
-        va_list ap;
-        char *msg = NULL;
-
         ASSERT(s);
-
-        va_start(ap,s);
+        char *msg = NULL;
+        va_list ap;
+        va_start(ap, s);
         msg = Str_vcat(s, ap);
         va_end(ap);
-
         LogWarning("%s:%i: %s '%s'\n", argcurrentfile, arglineno, msg, argyytext);
-
         FREE(msg);
-
 }
+
 
 /*
  * The Parser hook - start parsing the control file
  * Returns true if parsing succeeded, otherwise false
  */
 boolean_t parse(char *controlfile) {
-
         ASSERT(controlfile);
 
         servicelist = tail = current = NULL;
@@ -3231,18 +3174,8 @@ static void addport(Port_T *list, Port_T port) {
                 if (sslset.flags) {
 #ifdef HAVE_OPENSSL
                         if (sslset.flags && (p->target.net.port == 25 || p->target.net.port == 587))
-                                p->target.net.ssl.flags = SSL_StartTLS;
-                        else
-                                p->target.net.ssl.flags = sslset.flags;
-                        p->target.net.ssl.verify = sslset.verify;
-                        p->target.net.ssl.allowSelfSigned = sslset.allowSelfSigned;
-                        p->target.net.ssl.minimumValidDays = sslset.minimumValidDays;
-                        p->target.net.ssl.version = sslset.version;
-                        p->target.net.ssl.checksumType = sslset.checksumType;
-                        p->target.net.ssl.checksum = sslset.checksum;
-                        p->target.net.ssl.clientpemfile = sslset.clientpemfile;
-                        p->target.net.ssl.CACertificateFile = sslset.CACertificateFile;
-                        p->target.net.ssl.CACertificatePath = sslset.CACertificatePath;
+                                sslset.flags = SSL_StartTLS;
+                        _setSSLOptions(&(p->target.net.ssl));
 #else
                         yyerror("SSL check cannot be activated -- SSL disabled");
 #endif
@@ -3992,16 +3925,7 @@ static void addmmonit(Mmonit_T mmonit) {
         NEW(c);
         c->url = mmonit->url;
         c->compress = MmonitCompress_Init;
-        c->ssl.flags = sslset.flags;
-        c->ssl.verify = sslset.verify;
-        c->ssl.allowSelfSigned = sslset.allowSelfSigned;
-        c->ssl.minimumValidDays = sslset.minimumValidDays;
-        c->ssl.version = sslset.version;
-        c->ssl.checksumType = sslset.checksumType;
-        c->ssl.checksum = sslset.checksum;
-        c->ssl.clientpemfile = sslset.clientpemfile;
-        c->ssl.CACertificateFile = sslset.CACertificateFile;
-        c->ssl.CACertificatePath = sslset.CACertificatePath;
+        _setSSLOptions(&(c->ssl));
         if (IS(c->url->protocol, "https")) {
 #ifdef HAVE_OPENSSL
                 c->ssl.flags = SSL_Enabled;
@@ -4042,18 +3966,7 @@ static void addmailserver(MailServer_T mailserver) {
 
         if (sslset.flags && (mailserver->port == 25 || mailserver->port == 587))
                 s->ssl.flags = SSL_StartTLS;
-        else
-                s->ssl.flags = sslset.flags;
-        s->ssl.verify = sslset.verify;
-        s->ssl.allowSelfSigned = sslset.allowSelfSigned;
-        s->ssl.minimumValidDays = sslset.minimumValidDays;
-        s->ssl.version = sslset.version;
-        s->ssl.checksumType = sslset.checksumType;
-        s->ssl.checksum = sslset.checksum;
-        s->ssl.clientpemfile = sslset.clientpemfile;
-        s->ssl.CACertificateFile = sslset.CACertificateFile;
-        s->ssl.CACertificatePath = sslset.CACertificatePath;
-        reset_sslset();
+        _setSSLOptions(&(s->ssl));
 
         s->next = NULL;
 
@@ -4769,5 +4682,38 @@ static command_t copycommand(command_t source) {
         copy->arg[copy->length] = NULL;
 
         return copy;
+}
+
+
+static void _setPEM(char **store, char *path, const char *description, boolean_t isFile) {
+        if (*store) {
+                yyerror2("Duplicate %s", description);
+        } else if (! File_exist(path)) {
+                yyerror2("%s doesn't exist", description);
+        } else if (! (isFile ? File_isFile(path) : File_isDirectory(path))) {
+                yyerror2("%s is not a %s", description, isFile ? "file" : "directory");
+        } else if (! File_isReadable(path)) {
+                yyerror2("Cannot read %s", description);
+        } else {
+                sslset.flags = SSL_Enabled;
+                *store = path;
+        }
+}
+
+
+static void _setSSLOptions(SslOptions_T *options) {
+        options->allowSelfSigned = sslset.allowSelfSigned;
+        options->CACertificateFile = sslset.CACertificateFile;
+        options->CACertificatePath = sslset.CACertificatePath;
+        options->checksum = sslset.checksum;
+        options->checksumType = sslset.checksumType;
+        options->ciphers = sslset.ciphers;
+        options->clientpemfile = sslset.clientpemfile;
+        options->flags = sslset.flags;
+        options->minimumValidDays = sslset.minimumValidDays;
+        options->pemfile = sslset.pemfile;
+        options->verify = sslset.verify;
+        options->version = sslset.version;
+        reset_sslset();
 }
 

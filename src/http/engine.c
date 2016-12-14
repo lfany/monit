@@ -429,8 +429,8 @@ static void _createTcpServer(Socket_Family family, char error[STRLEN]) {
         myServerSockets[myServerSocketsCount].fd = create_server_socket_tcp(Run.httpd.socket.net.address, Run.httpd.socket.net.port, family, 1024, error);
         if (myServerSockets[myServerSocketsCount].fd != -1) {
 #ifdef HAVE_OPENSSL
-                if (Run.httpd.flags & Httpd_Ssl) {
-                        if (! (data[myServerSocketsCount].ssl = SslServer_new(Run.httpd.socket.net.ssl.pem, Run.httpd.socket.net.ssl.clientpem, myServerSockets[myServerSocketsCount].fd))) {
+                if (Run.httpd.socket.net.ssl.flags & SSL_Enabled) {
+                        if (! (data[myServerSocketsCount].ssl = SslServer_new(myServerSockets[myServerSocketsCount].fd, &(Run.httpd.socket.net.ssl)))) {
                                 strncpy(error, "Could not initialize SSL engine", STRLEN);
                                 Net_close(myServerSockets[myServerSocketsCount].fd);
                                 return;

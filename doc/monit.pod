@@ -606,6 +606,8 @@ will apply to all SSL connections made through Monit:
       VERSION: <AUTO | SSLV2 | SSLV3 | TLSV1 | TLSV11 | TLSV12>
       VERIFY: <ENABLE | DISABLE>
       SELFSIGNED: <ALLOW | REJECT>
+      CIPHERS: <string>
+      PEMFILE: <path>
       CLIENTPEMFILE: <path>
       CACERTIFICATEFILE: <path>
       CACERTIFICATEPATH: <path>
@@ -623,7 +625,15 @@ we recommend enabling it, otherwise there is no guarantee that Monit
 speaks with the server you think it speaks with.
 
 I<SELFSIGNED> self-signed certificates are rejected by default. Use
-this option to allow self-signed certificates.
+this option to allow self-signed certificates (not recommended for
+production).
+
+I<CIPHERS> override the default SSL/TLS ciphers. The default settings
+is "ALL:!DES:!RC4:!aNULL:!LOW:!EXP:!IDEA:!MD5:@STRENGTH"
+
+I<PEMFILE> set the path to the SSL server certificate
+"database-file" in PEM format. This options has effect only for the
+monit HTTP interface.
 
 I<CLIENTPEMFILE> set the path to the SSL client certificate
 "database-file" in PEM format. If an SSL server requires client
@@ -680,6 +690,14 @@ Here is an example of setting both global and local SSL options:
             then alert
 
 
+=head1 FIPS MODE
+
+To enable FIPS mode (provided your OpenSSL library supports it), add this
+statement to Monit control file:
+
+  SET FIPS
+
+
 =head1 MONIT HTTPD
 
 If specified in the control file, Monit will start with HTTP support.
@@ -696,24 +714,7 @@ the HTTP interface. We strongly recommend having HTTP support enabled.
 If security is a concern, bind the HTTP interface to local host only or
 use Unix Socket so Monit is not accessible from the outside.
 
-Syntax for TCP port:
-
-  SET HTTPD PORT <number> [ADDRESS <hostname | IP-address>]
-      [SSL <ENABLE | DISABLE>]
-      [PEMFILE <path>]
-      [CLIENTPEMFILE <path>]
-      [ALLOWSELFCERTIFICATION]
-      [SIGNATURE <ENABLE | DISABLE>]
-      ALLOW <user:password | IP-address | IP-range>+
-
-Example:
-
- set httpd port 2812
-     allow username:password
-
-You can now use L<http://localhost:2812/|http://localhost:2812/> to
-access Monit's web interface from a browser, after you have entered
-username and password as credentials.
+=head2 UNIX SOCKET
 
 Syntax for Unix Socket:
 
@@ -725,71 +726,38 @@ Example:
  set httpd unixsocket /var/run/monit.sock
      allow username:password
 
-=head2 Options
 
 B<UNIXSOCKET> set the path to the Unix Socket Monit should bind to
 and listen on.
 
+=head2 TCP PORT
+
+Syntax for TCP port:
+
+  SET HTTPD PORT <number>
+      [ADDRESS <hostname | IP-address>]
+      [[with] SSL {pemfile: <path>}]
+      ALLOW <user:password | IP-address | IP-range>+
+
 B<PORT> set the port Monit should bind to and listen on. Monit is
-usually setup on port 2812.
+usually setup on port 2812. Example:
+
+ set httpd port 2812
+     allow username:password
+
+You can now use L<http://localhost:2812/|http://localhost:2812/> to
+access Monit's web interface from a browser, after you have entered
+username and password as credentials.
 
 B<ADDRESS> make Monit listen on a specific interface only. For example
 if you I<don't> want to expose Monit's web interface to the network,
 bind it to localhost only. Monit will accept connections on any address
-by default (if ADDRESS option is missing).
-
-For example to limit the web interface to localhost only:
+by default (if ADDRESS option is missing):
 
  set httpd
      port 2812
      use address 127.0.0.1
      allow username:password
-
-B<SSL> enable TLS for Monit's web interface. The I<PEMFILE> option
-holds both the server's private key and certificate. This file should
-be stored in a safe place on the filesystem and should have strict
-permissions, no more than 0700.
-
-For example:
-
- set httpd
-     port 2812
-     ssl enable
-     pemfile /etc/certs/monit.pem
-     allow myuser:mypassword
-
-You can now use L<https://localhost:2812/|https://localhost:2812/> to
-access the Monit web server over a TLS encrypted connection.
-
-OpenSSL FIPS is supported. To enable FIPS mode (provided your OpenSSL
-library supports it), add this statement to Monit control file:
-
- SET FIPS
-
-B<CLIENTPEMFILE> client certificate based authentication. A connecting
-client has to provide a certificate known to Monit in order to connect.
-This file also needs to have all necessary CA certificates. By default
-self-signed client certificates are B<not> allowed. If you want to use
-a self signed certificate from a client it has to be allowed explicitly
-with the B<ALLOWSELFCERTIFICATION> statement.
-
-For example:
-
- set httpd
-     port 2812
-     ssl enable
-     pemfile /etc/certs/monit.pem
-     clientpemfile /etc/certs/monit-client.pem
-
-B<SIGNATURE> can be used to hide Monit version from the
-HTTP response header and error pages. For example:
-
-  set httpd
-    port 2812
-    signature disable
-    allow myuser:mypassword
-
-=head2 IP version
 
 Monit HTTP over TCP supports both IP version 4 and 6. Support is
 transparent and does not require any special configuration. If the bind
@@ -816,6 +784,52 @@ over IP version 4, specify a IPv4 address:
     use address 62.109.39.247
     allow ...
 
+=head3 SSL settings
+
+B<SSL> enable SSL/TLS for Monit's web interface.  See L<options|"SSL OPTIONS">
+for full list of SSL options.
+
+I<PEMFILE> option sets path to the PEM formatted file, which contains the
+server's private key and certificate. This file should be stored in a safe
+place on the filesystem and should have strict permissions, no more than 0700.
+
+For example:
+
+ set httpd
+     port 2812
+     with SSL {
+        pemfile: /etc/ssl/certs/monit.pem
+     }
+     allow myuser:mypassword
+
+You can now use L<https://localhost:2812/|https://localhost:2812/> to
+access the Monit web server over a TLS encrypted connection.
+
+B<CLIENTPEMFILE> option enables the client certificate based authentication.
+A connecting client has to provide a certificate known to Monit in order
+to connect.  This file also needs to have all necessary CA certificates.
+By default self-signed client certificates are B<not> allowed. If you want
+to use a self signed certificate from a client it has to be allowed explicitly
+with the B<SELFSIGNED: ALLOW> option.
+
+For example:
+
+ set httpd
+     port 2812
+     with SSL {
+         pemfile:       /etc/ssl/certs/monit.pem
+         clientpemfile: /etc/ssl/certs/monit-client.pem
+     }
+
+=head2 Monit version signature
+
+B<SIGNATURE> can be used to hide Monit version from the
+HTTP response header and error pages. For example:
+
+  set httpd
+    port 2812
+    signature disable
+    allow myuser:mypassword
 
 =head2 Authentication
 
@@ -838,9 +852,9 @@ employ HTTPS client certificates to verify the authenticity of a
 connecting client. Clients must posses a Public Key Certificate known
 by Monit. The client must connect to Monit over SSL and Monit ask the
 client to send its certificate. Upon receiving the certificate Monit
-compares the certificate to certificates located in the
-I<CLIENTPEMFILE> file. Access is granted if the client certificate is
-in this file. See I<CLIENTPEMFILE> above for details.
+compares the certificate to certificates located in the I<CLIENTPEMFILE>
+SSL option. Access is granted if the client certificate is in this file.
+See L<SSL|"SSL settings"> settings for details.
 
 =head3 Host and network allow list
 

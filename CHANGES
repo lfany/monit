@@ -4,6 +4,24 @@
 
 Version 5.21.0
 
+New: The Monit HTTP interface now allows to set the SSL/TLS version as well. The
+syntax now follows the generic SSL/TLS options settings, which was introduced in
+Monit 5.15, example:
+    set httpd port 2812
+        with ssl {
+           pemfile: /etc/ssl/certs/monit.pem
+           version: TLSv12
+        }
+        allow admin:monit
+
+New: The SSL 3DES ciphers are disabled by default now (vulnerable to Sweet32 attacks).
+
+New: Issue #509: Added support to override the SSL/TLS ciphers list and enabled
+server-side ciphers preference. Example (using monit's default ciphers string):
+    set ssl {
+        ciphers: "ALL:!DES:!3DES:!RC4:!aNULL:!LOW:!EXP:!IDEA:!MD5:@STRENGTH"
+    }
+
 Fixed: Issue #488: Ping test may fail.
 
 Fixed: Issue #495: position independent CSRF cookie value.
@@ -12,6 +30,8 @@ Fixed: Issue #496: Allow overriding the Accept HTTP header
 
 Fixed: Issue #501: check program may fail when parent service is not monitored every cycle and multiple
 services depend on it.
+
+Fixed: Issue #510: The "set ssl" options defaults had no effect on the Monit HTTPD interface.
 
 Fixed: If the connection timed out, Monit reported incorrect error: "Resource temporarily unavailable".
 

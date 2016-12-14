@@ -181,6 +181,8 @@ in                {/* EMPTY */}
 last              {/* EMPTY */}
 capacity          {/* EMPTY */}
 option(s)?        {/* EMPTY */}
+ssl[ \t]+disable  {/* EMPTY */}
+disable[ \t]+ssl  {/* EMPTY */}
 
 {startarg}        { BEGIN(ARGUMENT_COND); return START; }
 {stoparg}         { BEGIN(ARGUMENT_COND); return STOP; }
@@ -199,8 +201,10 @@ option(s)?        {/* EMPTY */}
 if                { return IF; }
 then              { return THEN; }
 failed            { return FAILED; }
-ssl               { return SSL; }
 tls               { return SSL; }
+ssl               { return SSL; }
+ssl[ \t]+enable   { return SSL; }
+enable[ ]+ssl     { return SSL; }
 enable            { return ENABLE; }
 disable           { return DISABLE; }
 verify            { return VERIFY; }
@@ -341,6 +345,7 @@ sslv3             { return SSLV3; }
 tlsv1             { return TLSV1; }
 tlsv11            { return TLSV11; }
 tlsv12            { return TLSV12; }
+cipher(s)?        { return CIPHER; }
 auto              { return AUTO; }
 sslauto           { return SSLAUTO; }
 inode(s)?         { return INODE; }

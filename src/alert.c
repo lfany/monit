@@ -188,7 +188,7 @@ static MailServer_T _connectMTA() {
         for (mta = Run.mailservers; mta; mta = mta->next) {
                 DEBUG("Trying to send mail via %s:%i\n", mta->host, mta->port);
                 if (mta->ssl.flags == SSL_Enabled)
-                        mta->socket = Socket_create(mta->host, mta->port, Socket_Tcp, Socket_Ip, mta->ssl, Run.mailserver_timeout);
+                        mta->socket = Socket_create(mta->host, mta->port, Socket_Tcp, Socket_Ip, &(mta->ssl), Run.mailserver_timeout);
                 else
                         mta->socket = Socket_new(mta->host, mta->port, Socket_Tcp, Socket_Ip, false, Run.mailserver_timeout);
                 if (mta->socket)
@@ -215,7 +215,7 @@ static boolean_t _send(List_T list) {
                         SMTP_greeting(smtp);
                         SMTP_helo(smtp, Run.mail_hostname ? Run.mail_hostname : Run.system->name);
                         if (mta->ssl.flags == SSL_StartTLS)
-                                SMTP_starttls(smtp, mta->ssl);
+                                SMTP_starttls(smtp, &(mta->ssl));
                         if (mta->username && mta->password)
                                 SMTP_auth(smtp, mta->username, mta->password);
                         char now[STRLEN];

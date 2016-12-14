@@ -79,11 +79,11 @@ T Socket_new(const char *host, int port, Socket_Type type, Socket_Family family,
  * @param port The port number to connect to
  * @param type The socket type to use
  * @param family The socket family to use
- * @param ssl Options for SSL
+ * @param options SSL options
  * @param timeout The timeout value in milliseconds
  * @return The connected Socket or NULL if an error occurred
  */
-T Socket_create(const char *host, int port, Socket_Type type, Socket_Family family, SslOptions_T ssl, int timeout);
+T Socket_create(const char *host, int port, Socket_Type type, Socket_Family family, SslOptions_T *options, int timeout);
 
 
 /**
@@ -215,11 +215,11 @@ void Socket_test(void *P);
 /**
  * Enables SSL on a connected socket.
  * @param S A connected Socket_T object
- * @param ssl Options for ssl
+ * @param options SSL options
  * @param name An optional server name for SNI TLS extension
  * @exception IOException or AssertException if failed
  */
-void Socket_enableSsl(T S, SslOptions_T ssl, const char *name);
+void Socket_enableSsl(T S, SslOptions_T *options, const char *name);
 
 
 /**
