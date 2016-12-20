@@ -202,7 +202,13 @@ static Hash_Type _optionsChecksumType(checksumType) {
 
 
 static boolean_t _setVersion(SSL_CTX *ctx, SslOptions_T options) {
-        long version = SSL_OP_NO_SSL_MASK;
+        long version = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1;
+#if defined HAVE_TLSV1_1
+        version |= SSL_OP_NO_TLSv1_1;
+#endif
+#if defined HAVE_TLSV1_2
+        version |= SSL_OP_NO_TLSv1_2;
+#endif
         switch (_optionsVersion(options->version)) {
                 case SSL_V2:
 #if defined OPENSSL_NO_SSL2 || ! defined HAVE_SSLV2
@@ -256,8 +262,12 @@ static boolean_t _setVersion(SSL_CTX *ctx, SslOptions_T options) {
                 default:
                         // Enable TLS protocols by default
                         version &= ~SSL_OP_NO_TLSv1;
+#if defined HAVE_TLSV1_1
                         version &= ~SSL_OP_NO_TLSv1_1;
+#endif
+#if defined HAVE_TLSV1_2
                         version &= ~SSL_OP_NO_TLSv1_2;
+#endif
                         break;
         }
         SSL_CTX_set_options(ctx, version);
