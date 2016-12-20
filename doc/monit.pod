@@ -1913,7 +1913,13 @@ systems total) or as an amount (Byte, kB, MB, GB).
 
 Process only resource tests:
 
-CPU is the CPU usage of the process itself (percent).
+CPU is the CPU usage of the process itself (percent). Monit calculates
+the CPU usage based on number of threads vs. available CPU cores. If the
+process has one thread, the 100% CPU usage equals to 100% utilization
+of one CPU core. If it has 2 threads, 100% CPU usage is reported when it
+uses 2 CPU cores on 100%, etc. If the process has more threads then the
+machine's available CPU cores, then the 100% CPU usage corresponds to
+utilization of all available CPU cores.
 
 TOTAL CPU is the total CPU usage of the process and its children
 in (percent). You will want to use TOTAL CPU typically for
