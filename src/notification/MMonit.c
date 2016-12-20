@@ -73,7 +73,7 @@ static boolean_t _send(Socket_T socket, Mmonit_T C, StringBuffer_T sb) {
         char *auth = Util_getBasicAuthHeader(C->url->user, C->url->password);
         const void *body = NULL;
         size_t bodyLength = 0;
-        if (C->compress == MmonitCompress_Yes) {
+        if (C->compress == MmonitCompress_Yes && StringBuffer_length(sb) > 0) {
                 body = StringBuffer_toCompressed(sb, 6, &bodyLength);
         } else {
                 body = StringBuffer_toString(sb);

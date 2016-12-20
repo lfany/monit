@@ -284,17 +284,12 @@ int main(void) {
         printf("=> Test14: empty string compression\n");
         {
                 const char *input = "";
-                const char output[] = {0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                       0x00, 0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                       0x00, 0x00, 0x00, 0x00};
                 sb = StringBuffer_new(input);
                 assert(StringBuffer_length(sb) == 0);
                 size_t compressedLength;
                 const void *compressed = StringBuffer_toCompressed(sb, 6, &compressedLength);
-                for (int i = 0; i < compressedLength; i++)
-                        assert(output[i] == *(unsigned char *)(compressed + i));
-                assert(compressed);
-                assert(compressedLength == 20);
+                assert(compressed = NULL);
+                assert(compressedLength == 0);
                 StringBuffer_free(&sb);
                 assert(sb == NULL);
         }

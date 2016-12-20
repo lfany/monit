@@ -278,25 +278,27 @@ const void *StringBuffer_toCompressed(T S, int level, size_t *length) {
         assert(length);
         assert(level >= 0 && level <= 9);
 #ifdef HAVE_LIBZ
-        z_stream zstream = {};
-        zstream.next_in = S->buffer;
-        zstream.avail_in = S->used;
-        int status = deflateInit2(&zstream, level, Z_DEFLATED, 15 | 16, 8, Z_DEFAULT_STRATEGY);
-        if (status == Z_OK) {
-                unsigned long need = deflateBound(&zstream, S->used);
-                RESIZE(S->compressedBuffer, need);
-                zstream.next_out = S->compressedBuffer;
-                zstream.avail_out = need;
-                status = deflate(&zstream, Z_FINISH);
-                deflateEnd(&zstream);
-                if (status == Z_STREAM_END) {
-                        *length = need - zstream.avail_out;
-                        return (const void *)S->compressedBuffer;
-                }
-        }
         *length = 0;
-        FREE(S->compressedBuffer);
-        THROW(AssertException, "compression failed: %s", zError(status));
+        if (S->used > 0) {
+                z_stream zstream = {};
+                zstream.next_in = S->buffer;
+                zstream.avail_in = S->used;
+                int status = deflateInit2(&zstream, level, Z_DEFLATED, 15 | 16, 8, Z_DEFAULT_STRATEGY);
+                if (status == Z_OK) {
+                        unsigned long need = deflateBound(&zstream, S->used);
+                        RESIZE(S->compressedBuffer, need);
+                        zstream.next_out = S->compressedBuffer;
+                        zstream.avail_out = need;
+                        status = deflate(&zstream, Z_FINISH);
+                        deflateEnd(&zstream);
+                        if (status == Z_STREAM_END) {
+                                *length = need - zstream.avail_out;
+                                return (const void *)S->compressedBuffer;
+                        }
+                }
+                FREE(S->compressedBuffer);
+                THROW(AssertException, "compression failed: %s", zError(status));
+        }
 #else
         THROW(AssertException, "compression not supported");
 #endif
