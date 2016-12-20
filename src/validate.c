@@ -167,6 +167,14 @@ retry:
         } else {
                 Event_post(s, Event_Connection, State_Succeeded, p->action, "connection succeeded to %s", Util_portDescription(p, buf, sizeof(buf)));
         }
+        if (p->target.net.ssl.options.flags && p->target.net.ssl.certificate.minimumDays > 0) {
+                if (p->target.net.ssl.certificate.validDays < p->target.net.ssl.certificate.minimumDays) {
+                        Event_post(s, Event_Timestamp, State_Failed, p->action, "certificate expiry in %d days matches check limit [valid > %d days]", p->target.net.ssl.certificate.validDays, p->target.net.ssl.certificate.minimumDays);
+                        rv = State_Failed;
+                } else {
+                        Event_post(s, Event_Timestamp, State_Succeeded, p->action, "certificate valid days test succeeded [valid for %d days]", p->target.net.ssl.certificate.validDays);
+                }
+        }
         return rv;
 }
 

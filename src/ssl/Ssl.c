@@ -124,14 +124,11 @@
 #define T Ssl_T
 struct T {
         boolean_t accepted;
-        Hash_Type checksumType;
         int socket;
-        int minimumValidDays;
         SslOptions_T options;
         SSL *handler;
         SSL_CTX *ctx;
         X509 *certificate;
-        MD_T checksum;
         char error[128];
 };
 
@@ -191,6 +188,16 @@ static const char *_optionsServerPEMFile(const char *pemfile) {
 
 static const char *_optionsClientPEMFile(const char *clientpemfile) {
         return clientpemfile ? clientpemfile : Run.ssl.clientpemfile ? Run.ssl.clientpemfile: NULL;
+}
+
+
+static const char *_optionsChecksum(const char *checksum) {
+        return STR_DEF(checksum) ? checksum : STR_DEF(Run.ssl.checksum) ? Run.ssl.checksum : NULL;
+}
+
+
+static Hash_Type _optionsChecksumType(checksumType) {
+        return checksumType ? checksumType : Run.ssl.checksumType ? Run.ssl.checksumType : Hash_Unknown;
 }
 
 
@@ -285,55 +292,12 @@ static void _mutexLock(int mode, int n, const char *file, int line) {
 #endif
 
 
-static int _checkExpiration(T C, X509_STORE_CTX *ctx, X509 *certificate) {
-        if (C->options->minimumValidDays > 0) {
-                // If we have warn-X-days-before-expire condition, check the certificate validity (already expired certificates are catched in preverify => we don't need to handle them here).
-                int deltadays = 0;
-#ifdef HAVE_ASN1_TIME_DIFF
-                int deltaseconds;
-                if (! ASN1_TIME_diff(&deltadays, &deltaseconds, NULL, X509_get_notAfter(certificate))) {
-                        X509_STORE_CTX_set_error(ctx, X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD);
-                        snprintf(C->error, sizeof(C->error), "invalid time format (in certificate's notAfter field)");
-                        return 0;
-                }
-#else
-                ASN1_GENERALIZEDTIME *t = ASN1_TIME_to_generalizedtime(X509_get_notAfter(certificate), NULL);
-                if (! t) {
-                        X509_STORE_CTX_set_error(ctx, X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD);
-                        snprintf(C->error, sizeof(C->error), "invalid time format (in certificate's notAfter field)");
-                        return 0;
-                }
-                TRY
-                {
-                        deltadays = (double)(Time_toTimestamp((const char *)t->data) - Time_now()) / 86400.;
-                }
-                ELSE
-                {
-                        X509_STORE_CTX_set_error(ctx, X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD);
-                        snprintf(C->error, sizeof(C->error), "invalid time format (in certificate's notAfter field) -- %s", t->data);
-                }
-                FINALLY
-                {
-                        ASN1_STRING_free(t);
-                }
-                END_TRY;
-#endif
-                if (deltadays < C->options->minimumValidDays) {
-                        X509_STORE_CTX_set_error(ctx, X509_V_ERR_APPLICATION_VERIFICATION);
-                        snprintf(C->error, sizeof(C->error), "certificate expire in %d days matches check limit [valid > %d days]", deltadays, C->options->minimumValidDays);
-                        return 0;
-                }
-        }
-        return 1;
-}
-
-
 static int _checkChecksum(T C, X509_STORE_CTX *ctx, X509 *certificate) {
-        if (X509_STORE_CTX_get_error_depth(ctx) == 0 && *C->checksum) {
-                unsigned int len, i = 0;
-                unsigned char checksum[EVP_MAX_MD_SIZE];
+        Hash_Type checksumType = _optionsChecksumType(C->options->checksumType);
+        const char *checksum = _optionsChecksum(C->options->checksum);
+        if (checksumType != Hash_Unknown && STR_DEF(checksum) && X509_STORE_CTX_get_error_depth(ctx) == 0) {
                 const EVP_MD *hash = NULL;
-                switch (C->checksumType) {
+                switch (checksumType) {
                         case Hash_Md5:
                                 if (Run.flags & Run_FipsEnabled) {
                                         X509_STORE_CTX_set_error(ctx, X509_V_ERR_APPLICATION_VERIFICATION);
@@ -348,13 +312,15 @@ static int _checkChecksum(T C, X509_STORE_CTX *ctx, X509 *certificate) {
                                 break;
                         default:
                                 X509_STORE_CTX_set_error(ctx, X509_V_ERR_APPLICATION_VERIFICATION);
-                                snprintf(C->error, sizeof(C->error), "Invalid SSL certificate checksum type (0x%x)", C->checksumType);
+                                snprintf(C->error, sizeof(C->error), "Invalid SSL certificate checksum type (0x%x)", checksumType);
                                 return 0;
                 }
-                X509_digest(certificate, hash, checksum, &len);
-                while ((i < len) && (C->checksum[2 * i] != '\0') && (C->checksum[2 * i + 1] != '\0')) {
-                        unsigned char c = (C->checksum[2 * i] > 57 ? C->checksum[2 * i] - 87 : C->checksum[2 * i] - 48) * 0x10 + (C->checksum[2 * i + 1] > 57 ? C->checksum[2 * i + 1] - 87 : C->checksum[2 * i + 1] - 48);
-                        if (c != checksum[i]) {
+                unsigned int len, i = 0;
+                unsigned char realChecksum[EVP_MAX_MD_SIZE];
+                X509_digest(certificate, hash, realChecksum, &len);
+                while ((i < len) && (checksum[2 * i] != '\0') && (checksum[2 * i + 1] != '\0')) {
+                        unsigned char c = (checksum[2 * i] > 57 ? checksum[2 * i] - 87 : checksum[2 * i] - 48) * 0x10 + (checksum[2 * i + 1] > 57 ? checksum[2 * i + 1] - 87 : checksum[2 * i + 1] - 48);
+                        if (c != realChecksum[i]) {
                                 X509_STORE_CTX_set_error(ctx, X509_V_ERR_APPLICATION_VERIFICATION);
                                 snprintf(C->error, sizeof(C->error), "SSL server certificate checksum failed");
                                 return 0;
@@ -387,9 +353,8 @@ static int _verifyServerCertificates(int preverify_ok, X509_STORE_CTX *ctx) {
                                 break;
                 }
         } else {
-                X509 *certificate = X509_STORE_CTX_get_current_cert(ctx);
-                if (certificate) {
-                        return (_checkExpiration(C, ctx, certificate) && _checkChecksum(C, ctx, certificate));
+                if ((C->certificate = X509_STORE_CTX_get_current_cert(ctx))) {
+                        return _checkChecksum(C, ctx, C->certificate);
                 } else {
                         X509_STORE_CTX_set_error(ctx, X509_V_ERR_APPLICATION_VERIFICATION);
                         snprintf(C->error, sizeof(C->error), "cannot get SSL server certificate");
@@ -721,21 +686,36 @@ int Ssl_read(T C, void *b, int size, int timeout) {
 }
 
 
-void Ssl_setCertificateMinimumValidDays(T C, int days) {
+int Ssl_getCertificateValidDays(T C) {
         ASSERT(C);
-        C->minimumValidDays = days;
-}
-
-
-void Ssl_setCertificateChecksum(T C, short type, const char *checksum) {
-        ASSERT(C);
-        if (checksum) {
-                C->checksumType = type;
-                snprintf(C->checksum, sizeof(C->checksum), "%s", checksum);
-        } else {
-                C->checksumType = Hash_Unknown;
-                *C->checksum = 0;
+        ASSERT(C->certificate);
+        // Certificates which expired already are catched in preverify => we don't need to handle them here
+        int deltadays = 0;
+#ifdef HAVE_ASN1_TIME_DIFF
+        int deltaseconds;
+        if (! ASN1_TIME_diff(&deltadays, &deltaseconds, NULL, X509_get_notAfter(C->certificate))) {
+                THROW(IOException, "invalid time format in certificate's notAfter field");
         }
+#else
+        ASN1_GENERALIZEDTIME *t = ASN1_TIME_to_generalizedtime(X509_get_notAfter(certificate), NULL);
+        if (! t) {
+                THROW(IOException, "invalid time format (in certificate's notAfter field)");
+        }
+        TRY
+        {
+                deltadays = (double)(Time_toTimestamp((const char *)t->data) - Time_now()) / 86400.;
+        }
+        ELSE
+        {
+                THROW(IOException, "invalid time format in certificate's notAfter field -- %s", t->data);
+        }
+        FINALLY
+        {
+                ASN1_STRING_free(t);
+        }
+        END_TRY;
+#endif
+        return deltadays;
 }
 
 

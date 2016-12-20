@@ -22,6 +22,9 @@ server-side ciphers preference. Example (using monit's default ciphers string):
         ciphers: "ALL:!DES:!3DES:!RC4:!aNULL:!LOW:!EXP:!IDEA:!MD5:@STRENGTH"
     }
 
+New: The certificate minimum valid days test now triggers the timestamp event instead
+of connection event.
+
 Fixed: Issue #488: Ping test may fail.
 
 Fixed: Issue #495: position independent CSRF cookie value.

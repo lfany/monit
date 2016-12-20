@@ -825,7 +825,7 @@ ssloption       : VERIFY ':' ENABLE {
 
 sslexpire       : CERTIFICATE VALID expireoperator NUMBER DAY {
                         sslset.flags = SSL_Enabled;
-                        sslset.minimumValidDays = $<number>4;
+                        portset.target.net.ssl.certificate.minimumDays = $<number>4;
                   }
                 ;
 
@@ -3173,9 +3173,10 @@ static void addport(Port_T *list, Port_T port) {
                 p->target.net.port = port->target.net.port;
                 if (sslset.flags) {
 #ifdef HAVE_OPENSSL
+                        p->target.net.ssl.certificate.minimumDays = port->target.net.ssl.certificate.minimumDays;
                         if (sslset.flags && (p->target.net.port == 25 || p->target.net.port == 587))
                                 sslset.flags = SSL_StartTLS;
-                        _setSSLOptions(&(p->target.net.ssl));
+                        _setSSLOptions(&(p->target.net.ssl.options));
 #else
                         yyerror("SSL check cannot be activated -- SSL disabled");
 #endif
@@ -4290,7 +4291,7 @@ static void setsyslog(char *facility) {
  */
 static void reset_sslset() {
         memset(&sslset, 0, sizeof(struct SslOptions_T));
-        sslset.version = sslset.verify = sslset.allowSelfSigned = sslset.minimumValidDays = -1;
+        sslset.version = sslset.verify = sslset.allowSelfSigned = -1;
 }
 
 
@@ -4710,7 +4711,6 @@ static void _setSSLOptions(SslOptions_T options) {
         options->ciphers = sslset.ciphers;
         options->clientpemfile = sslset.clientpemfile;
         options->flags = sslset.flags;
-        options->minimumValidDays = sslset.minimumValidDays;
         options->pemfile = sslset.pemfile;
         options->verify = sslset.verify;
         options->version = sslset.version;

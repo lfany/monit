@@ -375,14 +375,21 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                             "<request><![CDATA[%s]]></request>"
                                             "<protocol>%s</protocol>"
                                             "<type>%s</type>"
-                                            "<responsetime>%.6f</responsetime>"
-                                            "</port>",
+                                            "<responsetime>%.6f</responsetime>",
                                             p->hostname ? p->hostname : "",
                                             p->target.net.port,
                                             Util_portRequestDescription(p),
                                             p->protocol->name ? p->protocol->name : "",
                                             Util_portTypeDescription(p),
                                             p->is_available == Connection_Ok ? p->response / 1000. : -1.); // We send the response time in [s] for backward compatibility (with microseconds precision)
+                        if (p->target.net.ssl.options.flags)
+                                StringBuffer_append(B,
+                                            "<certificate>"
+                                            "<valid>%d</valid>"
+                                            "</certificate>",
+                                            p->target.net.ssl.certificate.validDays);
+                        StringBuffer_append(B,
+                                            "</port>");
                 }
                 for (Port_T p = S->socketlist; p; p = p->next) {
                         StringBuffer_append(B,

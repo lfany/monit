@@ -1104,15 +1104,15 @@ void Util_printService(Service_T s) {
                 if (o->retry > 1)
                         StringBuffer_append(buf2, " and retry %d times", o->retry);
 #ifdef HAVE_OPENSSL
-                if (o->target.net.ssl.flags) {
+                if (o->target.net.ssl.options.flags) {
                         StringBuffer_append(buf2, " using TLS");
-                        const char *options = Ssl_printOptions(&o->target.net.ssl, (char[STRLEN]){}, STRLEN);
+                        const char *options = Ssl_printOptions(&o->target.net.ssl.options, (char[STRLEN]){}, STRLEN);
                         if (options && *options)
                                 StringBuffer_append(buf2, " with options {%s}", options);
-                        if (o->target.net.ssl.minimumValidDays > 0)
-                                StringBuffer_append(buf2, " and certificate expires in more than %d days", o->target.net.ssl.minimumValidDays);
-                        if (o->target.net.ssl.checksum)
-                                StringBuffer_append(buf2, " and certificate checksum %s equal to '%s'", checksumnames[o->target.net.ssl.checksumType], o->target.net.ssl.checksum);
+                        if (o->target.net.ssl.certificate.minimumDays > 0)
+                                StringBuffer_append(buf2, " and certificate expires in more than %d days", o->target.net.ssl.certificate.minimumDays);
+                        if (o->target.net.ssl.options.checksum)
+                                StringBuffer_append(buf2, " and certificate checksum %s equal to '%s'", checksumnames[o->target.net.ssl.options.checksumType], o->target.net.ssl.options.checksum);
                 }
 #endif
                 StringBuffer_clear(buf);
@@ -1949,7 +1949,7 @@ const char *Util_portRequestDescription(Port_T p) {
 
 char *Util_portDescription(Port_T p, char *buf, int bufsize) {
         if (p->family == Socket_Ip || p->family == Socket_Ip4 || p->family == Socket_Ip6) {
-                snprintf(buf, bufsize, "[%s]:%d%s [%s/%s%s]", p->hostname, p->target.net.port, Util_portRequestDescription(p), Util_portTypeDescription(p), Util_portIpDescription(p), p->target.net.ssl.flags ? " SSL" : "");
+                snprintf(buf, bufsize, "[%s]:%d%s [%s/%s%s]", p->hostname, p->target.net.port, Util_portRequestDescription(p), Util_portTypeDescription(p), Util_portIpDescription(p), p->target.net.ssl.options.flags ? " TLS" : "");
         } else if (p->family == Socket_Unix) {
                 snprintf(buf, bufsize, "%s", p->target.unix.pathname);
         } else {

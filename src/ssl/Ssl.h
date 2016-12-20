@@ -52,8 +52,7 @@ typedef struct SslOptions_T {
         short allowSelfSigned;     /**< true if self signed certificate is allowed */
         short version;                  /**< The SSL version to use for connection */
         short checksumType;                                     /**< Checksum type */
-        int minimumValidDays;         /**< Minimum valid days left for certificate */
-        char *checksum;      /**< The expected md5 sum of the server's certificate */
+        char *checksum;     /**< The expected checksum of the server's certificate */
         char *pemfile;                            /**< Optional server certificate */
         char *clientpemfile;                      /**< Optional client certificate */
         char *ciphers;                               /**< Allowed SSL ciphers list */
@@ -154,20 +153,12 @@ int Ssl_read(T C, void *b, int size, int timeout);
 
 
 /**
- * Set minimum days the certificate must be valid.
+ * Get days the certificate remains valid.
  * @param C An SSL connection object
- * @param days Minimum number of valid days
+ * @return Number of valid days
+ * @exception IOException if failed
  */
-void Ssl_setCertificateMinimumValidDays(T C, int days);
-
-
-/**
- * Check a peer certificate with a given checksum
- * @param C An SSL connection object
- * @param checksum Expected checksum in string format
- * @param type Checksum type
- */
-void Ssl_setCertificateChecksum(T C, short type, const char *checksum);
+int Ssl_getCertificateValidDays(T C);
 
 
 /**

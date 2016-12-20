@@ -595,8 +595,14 @@ typedef struct myport {
                         char *pathname;                  /**< Unix socket pathname */
                 } unix;
                 struct {
-                        struct SslOptions_T ssl;               /**< SSL definition */
                         int port;                                 /**< Port number */
+                        struct {
+                                struct SslOptions_T options;
+                                struct {
+                                        int validDays;
+                                        int minimumDays;
+                                } certificate;
+                        } ssl;
                 } net;
         } target;
         Outgoing_T outgoing;                                 /**< Outgoing address */

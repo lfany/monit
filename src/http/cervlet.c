@@ -399,9 +399,12 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                 }
                 for (Port_T p = s->portlist; p; p = p->next) {
                         if (p->is_available == Connection_Failed) {
-                                _formatStatus("port response time", Event_Connection, type, res, s, true, "FAILED to [%s]:%d%s type %s/%s %sprotocol %s", p->hostname, p->target.net.port, Util_portRequestDescription(p), Util_portTypeDescription(p), Util_portIpDescription(p), p->target.net.ssl.flags ? "using TLS " : "", p->protocol->name);
+                                _formatStatus("port response time", Event_Connection, type, res, s, true, "FAILED to [%s]:%d%s type %s/%s %sprotocol %s", p->hostname, p->target.net.port, Util_portRequestDescription(p), Util_portTypeDescription(p), Util_portIpDescription(p), p->target.net.ssl.options.flags ? "using TLS " : "", p->protocol->name);
                         } else {
-                                _formatStatus("port response time", Event_Null, type, res, s, p->is_available != Connection_Init, "%s to %s:%d%s type %s/%s %s protocol %s", Str_milliToTime(p->response, (char[23]){}), p->hostname, p->target.net.port, Util_portRequestDescription(p), Util_portTypeDescription(p), Util_portIpDescription(p), p->target.net.ssl.flags ? "using TLS " : "", p->protocol->name);
+                                char buf[STRLEN] = {};
+                                if (p->target.net.ssl.options.flags)
+                                        snprintf(buf, sizeof(buf), "using TLS (certificate valid for %d days) ", p->target.net.ssl.certificate.validDays);
+                                _formatStatus("port response time", p->target.net.ssl.certificate.validDays < p->target.net.ssl.certificate.minimumDays ? Event_Timestamp : Event_Null, type, res, s, p->is_available != Connection_Init, "%s to %s:%d%s type %s/%s %sprotocol %s", Str_milliToTime(p->response, (char[23]){}), p->hostname, p->target.net.port, Util_portRequestDescription(p), Util_portTypeDescription(p), Util_portIpDescription(p), buf, p->protocol->name);
                         }
                 }
                 for (Port_T p = s->socketlist; p; p = p->next) {
@@ -1756,15 +1759,15 @@ static void print_service_rules_port(HttpResponse res, Service_T s) {
                 if (p->retry > 1)
                         StringBuffer_append(buf, " and retry %d times", p->retry);
 #ifdef HAVE_OPENSSL
-                if (p->target.net.ssl.flags) {
+                if (p->target.net.ssl.options.flags) {
                         StringBuffer_append(buf, " using TLS");
-                        const char *options = Ssl_printOptions(&p->target.net.ssl, (char[STRLEN]){}, STRLEN);
+                        const char *options = Ssl_printOptions(&p->target.net.ssl.options, (char[STRLEN]){}, STRLEN);
                         if (options && *options)
                                 StringBuffer_append(buf, " with options {%s}", options);
-                        if (p->target.net.ssl.minimumValidDays > 0)
-                                StringBuffer_append(buf, " and certificate expires in more than %d days", p->target.net.ssl.minimumValidDays);
-                        if (p->target.net.ssl.checksum)
-                                StringBuffer_append(buf, " and certificate checksum %s equal to '%s'", checksumnames[p->target.net.ssl.checksumType], p->target.net.ssl.checksum);
+                        if (p->target.net.ssl.certificate.minimumDays > 0)
+                                StringBuffer_append(buf, " and certificate expires in more than %d days", p->target.net.ssl.certificate.minimumDays);
+                        if (p->target.net.ssl.options.checksum)
+                                StringBuffer_append(buf, " and certificate checksum %s equal to '%s'", checksumnames[p->target.net.ssl.options.checksumType], p->target.net.ssl.options.checksum);
                 }
 #endif
                 Util_printRule(res->outputbuffer, p->action, "%s", StringBuffer_toString(buf));

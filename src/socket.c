@@ -584,10 +584,14 @@ static void _testIp(Port_T p) {
                                 volatile T S = NULL;
                                 TRY
                                 {
-                                        S = _createIpSocket(p->hostname, r->ai_addr, r->ai_addrlen, localaddr, p->outgoing.addrlen, r->ai_family, r->ai_socktype, r->ai_protocol, &(p->target.net.ssl), p->timeout);
+                                        S = _createIpSocket(p->hostname, r->ai_addr, r->ai_addrlen, localaddr, p->outgoing.addrlen, r->ai_family, r->ai_socktype, r->ai_protocol, &(p->target.net.ssl.options), p->timeout);
                                         S->Port = p;
+#ifdef HAVE_OPENSSL
+                                        p->target.net.ssl.certificate.validDays = Ssl_getCertificateValidDays(S->ssl);
+#endif
                                         p->protocol->check(S);
                                         is_available = Connection_Ok;
+
                                 }
                                 ELSE
                                 {
@@ -651,20 +655,8 @@ void Socket_test(void *P) {
 void Socket_enableSsl(T S, SslOptions_T options, const char *name)  {
         assert(S);
 #ifdef HAVE_OPENSSL
-        if ((S->ssl = Ssl_new(options))) {
-                // Set SSL options with fallback to global SSL options
-                if (options->minimumValidDays > 0)
-                        Ssl_setCertificateMinimumValidDays(S->ssl, options->minimumValidDays);
-                else if (Run.ssl.minimumValidDays > 0)
-                        Ssl_setCertificateMinimumValidDays(S->ssl, Run.ssl.minimumValidDays);
-
-                if (options->checksum)
-                        Ssl_setCertificateChecksum(S->ssl, options->checksumType, options->checksum);
-                else if (Run.ssl.checksum)
-                        Ssl_setCertificateChecksum(S->ssl, Run.ssl.checksumType, Run.ssl.checksum);
-
+        if ((S->ssl = Ssl_new(options)))
                 Ssl_connect(S->ssl, S->socket, S->timeout, name);
-        }
 #endif
 }
 

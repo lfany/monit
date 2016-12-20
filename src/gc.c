@@ -352,7 +352,7 @@ static void _gcportlist(Port_T *p) {
         if ((*p)->family == Socket_Unix)
                 FREE((*p)->target.unix.pathname);
         else
-                _gcssloptions(&((*p)->target.net.ssl));
+                _gcssloptions(&((*p)->target.net.ssl.options));
         FREE((*p)->hostname);
         FREE((*p)->outgoing.ip);
         if ((*p)->protocol->check == check_http) {
