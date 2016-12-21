@@ -1578,7 +1578,10 @@ static void do_home_host(HttpResponse res) {
                                                 StringBuffer_append(res->outputbuffer, "<span class='red-text'>[%s] at port %d</span>", port->protocol->name, port->target.net.port);
                                                 break;
                                         default:
-                                                StringBuffer_append(res->outputbuffer, "<span>[%s] at port %d</span>", port->protocol->name, port->target.net.port);
+                                                if (port->target.net.ssl.certificate.validDays < port->target.net.ssl.certificate.minimumDays)
+                                                        StringBuffer_append(res->outputbuffer, "<span class='red-text'>[%s] at port %d</span>", port->protocol->name, port->target.net.port);
+                                                else
+                                                        StringBuffer_append(res->outputbuffer, "<span>[%s] at port %d</span>", port->protocol->name, port->target.net.port);
                                                 break;
                                 }
                         }

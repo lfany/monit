@@ -27,7 +27,7 @@ of connection event.
 
 Fixed: Issue #488: Ping test may fail.
 
-Fixed: Issue #495: position independent CSRF cookie value.
+Fixed: Issue #495: Position independent CSRF cookie value.
 
 Fixed: Issue #496: Allow overriding the Accept HTTP header
 
