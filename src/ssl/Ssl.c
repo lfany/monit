@@ -573,8 +573,31 @@ void Ssl_free(T *C) {
 
 void Ssl_close(T C) {
         ASSERT(C);
-        SSL_set_shutdown(C->handler, SSL_RECEIVED_SHUTDOWN);
-        SSL_shutdown(C->handler);
+        boolean_t retry = false;
+        int timeout = Run.limits.networkTimeout;
+        do {
+                int rv = SSL_shutdown(C->handler);
+                if (rv == 0) {
+                        // close notify sent
+                        retry = _retry(C->socket, &timeout, Net_canRead);
+                        continue;
+                } else if (rv == 1) {
+                        // shutdown finished
+                        break;
+                } else if (rv < 0) {
+                        switch (SSL_get_error(C->handler, rv)) {
+                                case SSL_ERROR_WANT_READ:
+                                        retry = _retry(C->socket, &timeout, Net_canRead);
+                                        break;
+                                case SSL_ERROR_WANT_WRITE:
+                                        retry = _retry(C->socket, &timeout, Net_canWrite);
+                                        break;
+                                default:
+                                        retry = false;
+                                        break;
+                        }
+                }
+        } while (retry);
         Net_shutdown(C->socket, SHUT_RDWR);
         Net_close(C->socket);
 }

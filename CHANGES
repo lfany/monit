@@ -38,6 +38,8 @@ Fixed: Issue #510: The "set ssl" options defaults had no effect on the Monit HTT
 
 Fixed: Issue #515: The compression may fail of response body is empty and zlib version <= 1.2.3.
 
+Fixed: Monit HTTP GUI: Safari may fail to load the page if SSL is enabled.
+
 Fixed: If the connection timed out, Monit reported incorrect error: "Resource temporarily unavailable".
 
 
