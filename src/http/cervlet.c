@@ -533,7 +533,7 @@ static void do_head(HttpResponse res, const char *path, const char *name, int re
                             " .short {overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 350px;}"\
                             " #wrap {min-height: 100%%;} "\
                             " #main {overflow:auto; padding-bottom:50px;} "\
-                            " /*Opera Fix*/body:before {content:\"\";height:100%%;float:left;width:0;margin-top:-32767px;/} "\
+                            " /*Opera Fix*/body:before {content:\"\";height:100%%;float:left;width:0;margin-top:-32767px;} "\
                             " #footer {position: relative;margin-top: -50px; height: 50px; clear:both; font-size:11px;color:#777;text-align:center;} "\
                             " #footer a {color:#333;} #footer a:hover {text-decoration: none;} "\
                             " #nav {background:#ddd;font:normal normal normal 14px/0px 'HelveticaNeue', Helvetica;} "\
