@@ -573,6 +573,7 @@ void Ssl_free(T *C) {
 
 void Ssl_close(T C) {
         ASSERT(C);
+        SSL_set_shutdown(C->handler, SSL_RECEIVED_SHUTDOWN);
         SSL_shutdown(C->handler);
         Net_shutdown(C->socket, SHUT_RDWR);
         Net_close(C->socket);
