@@ -196,7 +196,7 @@ static const char *_optionsChecksum(const char *checksum) {
 }
 
 
-static Hash_Type _optionsChecksumType(checksumType) {
+static Hash_Type _optionsChecksumType(Hash_Type checksumType) {
         return checksumType ? checksumType : Run.ssl.checksumType ? Run.ssl.checksumType : Hash_Unknown;
 }
 
@@ -721,35 +721,36 @@ int Ssl_read(T C, void *b, int size, int timeout) {
 
 
 int Ssl_getCertificateValidDays(T C) {
-        ASSERT(C);
-        ASSERT(C->certificate);
-        // Certificates which expired already are catched in preverify => we don't need to handle them here
-        int deltadays = 0;
+        if (C && C->certificate) {
+                // Certificates which expired already are catched in preverify => we don't need to handle them here
+                int deltadays = 0;
 #ifdef HAVE_ASN1_TIME_DIFF
-        int deltaseconds;
-        if (! ASN1_TIME_diff(&deltadays, &deltaseconds, NULL, X509_get_notAfter(C->certificate))) {
-                THROW(IOException, "invalid time format in certificate's notAfter field");
-        }
+                int deltaseconds;
+                if (! ASN1_TIME_diff(&deltadays, &deltaseconds, NULL, X509_get_notAfter(C->certificate))) {
+                        THROW(IOException, "invalid time format in certificate's notAfter field");
+                }
 #else
-        ASN1_GENERALIZEDTIME *t = ASN1_TIME_to_generalizedtime(X509_get_notAfter(certificate), NULL);
-        if (! t) {
-                THROW(IOException, "invalid time format (in certificate's notAfter field)");
-        }
-        TRY
-        {
-                deltadays = (double)(Time_toTimestamp((const char *)t->data) - Time_now()) / 86400.;
-        }
-        ELSE
-        {
-                THROW(IOException, "invalid time format in certificate's notAfter field -- %s", t->data);
-        }
-        FINALLY
-        {
-                ASN1_STRING_free(t);
-        }
-        END_TRY;
+                ASN1_GENERALIZEDTIME *t = ASN1_TIME_to_generalizedtime(X509_get_notAfter(certificate), NULL);
+                if (! t) {
+                        THROW(IOException, "invalid time format (in certificate's notAfter field)");
+                }
+                TRY
+                {
+                        deltadays = (double)(Time_toTimestamp((const char *)t->data) - Time_now()) / 86400.;
+                }
+                ELSE
+                {
+                        THROW(IOException, "invalid time format in certificate's notAfter field -- %s", t->data);
+                }
+                FINALLY
+                {
+                        ASN1_STRING_free(t);
+                }
+                END_TRY;
 #endif
-        return deltadays;
+                return deltadays;
+        }
+        return 0;
 }
 
 
