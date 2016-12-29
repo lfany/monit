@@ -730,7 +730,7 @@ int Ssl_getCertificateValidDays(T C) {
                         THROW(IOException, "invalid time format in certificate's notAfter field");
                 }
 #else
-                ASN1_GENERALIZEDTIME *t = ASN1_TIME_to_generalizedtime(X509_get_notAfter(certificate), NULL);
+                ASN1_GENERALIZEDTIME *t = ASN1_TIME_to_generalizedtime(X509_get_notAfter(C->certificate), NULL);
                 if (! t) {
                         THROW(IOException, "invalid time format (in certificate's notAfter field)");
                 }
