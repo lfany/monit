@@ -1680,8 +1680,8 @@ void Util_resetInfo(Service_T s) {
                         s->inf->priv.filesystem.mode = -1;
                         s->inf->priv.filesystem.uid = -1;
                         s->inf->priv.filesystem.gid = -1;
-                        _resetIOStatistics(&(s->inf->priv.filesystem.statistics.read));
-                        _resetIOStatistics(&(s->inf->priv.filesystem.statistics.write));
+                        _resetIOStatistics(&(s->inf->priv.filesystem.read));
+                        _resetIOStatistics(&(s->inf->priv.filesystem.write));
                         break;
                 case Service_File:
                         // persistent: st_inode, readpos

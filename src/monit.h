@@ -960,10 +960,8 @@ typedef struct myinfo {
                         int uid;                                              /**< Owner's uid */
                         int gid;                                              /**< Owner's gid */
                         int mode;                                              /**< Permission */
-                        struct {
-                                struct IOStatistics_T read;               /**< Read statistics */
-                                struct IOStatistics_T write;             /**< Write statistics */
-                        } statistics;
+                        struct IOStatistics_T read;                       /**< Read statistics */
+                        struct IOStatistics_T write;                     /**< Write statistics */
                 } filesystem;
 
                 struct {

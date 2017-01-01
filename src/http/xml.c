@@ -155,6 +155,22 @@ static void document_foot(StringBuffer_T B) {
 }
 
 
+static void _ioStatistics(StringBuffer_T B, const char *name, IOStatistics_T statistics) {
+        double deltaOperations = Statistics_delta(&(statistics->operations));
+        StringBuffer_append(B,
+                "<%s>"
+                "<bytes>%.0lf</bytes>"
+                "<operations>%.3f</operations>"
+                "<servicetime>%.3f</servicetime>"
+                "</%s>",
+                name,
+                Statistics_deltaNormalize(&(statistics->sectors)) * 512,
+                Statistics_deltaNormalize(&(statistics->operations)),
+                deltaOperations > 0. ? Statistics_delta(&(statistics->time)) / deltaOperations : 0.,
+                name);
+}
+
+
 /**
  * Prints a service status into the given buffer.
  * @param S Service object
@@ -262,6 +278,8 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                                 S->inf->priv.filesystem.inode_total,
                                                 S->inf->priv.filesystem.f_files);
                                 }
+                                _ioStatistics(B, "read", &(S->inf->priv.filesystem.read));
+                                _ioStatistics(B, "write", &(S->inf->priv.filesystem.write));
                                 break;
 
                         case Service_Net:

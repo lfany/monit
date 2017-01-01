@@ -67,8 +67,8 @@
 static boolean_t _getPerformance(char *mntpoint, Info_T inf) {
         char path[PATH_MAX];
         //char name[STRLEN];
-        //snprintf(path, sizeof(path), "/sys/block/%s/%s/stat", name, partition); //FIXME: make dynamic and drop the bellow hardcoded test code
-        snprintf(path, sizeof(path), "/sys/block/sda/sda1/stat"); //FIXME: drop
+        //snprintf(path, sizeof(path), "/sys/block/%s/%s/stat", name, partition); //FIXME: make dynamic and drop the bellow hardcoded test code 
+        snprintf(path, sizeof(path), "/sys/block/sda/sda1/stat"); //FIXME: drop 
         FILE *f = fopen(path, "r");
         if (f) {
                 uint64_t now = Time_milli();
@@ -79,12 +79,12 @@ static boolean_t _getPerformance(char *mntpoint, Info_T inf) {
                         LogError("filesystem statistic error: cannot parse %s -- %s\n", path, STRERROR);
                         return false;
                 }
-                Statistics_update(&(inf->priv.filesystem.statistics.read.time), now, readTime);
-                Statistics_update(&(inf->priv.filesystem.statistics.read.sectors), now, readSectors);
-                Statistics_update(&(inf->priv.filesystem.statistics.read.operations), now, readOperations);
-                Statistics_update(&(inf->priv.filesystem.statistics.write.time), now, writeTime);
-                Statistics_update(&(inf->priv.filesystem.statistics.write.sectors), now, writeSectors);
-                Statistics_update(&(inf->priv.filesystem.statistics.write.operations), now, writeOperations);
+                Statistics_update(&(inf->priv.filesystem.read.time), now, readTime);
+                Statistics_update(&(inf->priv.filesystem.read.sectors), now, readSectors);
+                Statistics_update(&(inf->priv.filesystem.read.operations), now, readOperations);
+                Statistics_update(&(inf->priv.filesystem.write.time), now, writeTime);
+                Statistics_update(&(inf->priv.filesystem.write.sectors), now, writeSectors);
+                Statistics_update(&(inf->priv.filesystem.write.operations), now, writeOperations);
                 fclose(f);
         } else {
                 LogError("filesystem statistic error: cannot read %s -- %s\n", path, STRERROR);

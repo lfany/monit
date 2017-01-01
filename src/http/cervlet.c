@@ -279,11 +279,11 @@ static void _formatStatus(const char *name, Event_Type errorType, Output_Type ty
 
 
 static void _printIOStatistics(Output_Type type, HttpResponse res, Service_T s, IOStatistics_T io, const char *name) {
-        uint64_t deltaOperations = Statistics_delta(&(io->operations));
+        double deltaOperations = Statistics_delta(&(io->operations));
         _formatStatus(name, Event_Null, type, res, s, true, "%s/s [%.1f %ss/s] [avg. service time %.3f ms/%s]",
                 Str_bytesToSize(Statistics_deltaNormalize(&(io->sectors)) * 512, (char[10]){}),
                 Statistics_deltaNormalize(&(io->operations)), name,
-                deltaOperations > 0. ? Statistics_delta(&(io->time)) / (double)deltaOperations : 0., name);
+                deltaOperations > 0. ? Statistics_delta(&(io->time)) / deltaOperations : 0., name);
 }
 
 
@@ -372,8 +372,8 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                         _formatStatus("inodes total", Event_Null, type, res, s, true, "%lld", s->inf->priv.filesystem.f_files);
                                         _formatStatus("inodes free", Event_Resource, type, res, s, true, "%lld [%.1f%%]", s->inf->priv.filesystem.f_filesfree, (float)100 * (float)s->inf->priv.filesystem.f_filesfree / (float)s->inf->priv.filesystem.f_files);
                                 }
-                                _printIOStatistics(type, res, s, &(s->inf->priv.filesystem.statistics.read), "read");
-                                _printIOStatistics(type, res, s, &(s->inf->priv.filesystem.statistics.write), "write");
+                                _printIOStatistics(type, res, s, &(s->inf->priv.filesystem.read), "read");
+                                _printIOStatistics(type, res, s, &(s->inf->priv.filesystem.write), "write");
                                 break;
 
                         case Service_Process:
@@ -1347,6 +1347,8 @@ static void do_home_filesystem(HttpResponse res) {
                                             "<th align='left'>Status</th>"
                                             "<th align='right'>Space usage</th>"
                                             "<th align='right'>Inodes usage</th>"
+                                            "<th align='right'>Read</th>"
+                                            "<th align='right'>Write</th>"
                                             "</tr>");
                         header = false;
                 }
@@ -1359,6 +1361,8 @@ static void do_home_filesystem(HttpResponse res) {
                                     get_service_status(HTML, s, buf, sizeof(buf)));
                 if (! Util_hasServiceStatus(s)) {
                         StringBuffer_append(res->outputbuffer,
+                                            "<td align='right'>- [-]</td>"
+                                            "<td align='right'>- [-]</td>"
                                             "<td align='right'>- [-]</td>"
                                             "<td align='right'>- [-]</td>");
                 } else {
@@ -1375,6 +1379,11 @@ static void do_home_filesystem(HttpResponse res) {
                                 StringBuffer_append(res->outputbuffer,
                                                     "<td align='right'>not supported by filesystem</td>");
                         }
+                        StringBuffer_append(res->outputbuffer,
+                                            "<td align='right'>%s/s</td>"
+                                            "<td align='right'>%s/s</td>",
+                                            Str_bytesToSize(Statistics_deltaNormalize(&(s->inf->priv.filesystem.read.sectors)) * 512, (char[10]){}),
+                                            Str_bytesToSize(Statistics_deltaNormalize(&(s->inf->priv.filesystem.write.sectors)) * 512, (char[10]){}));
                 }
                 StringBuffer_append(res->outputbuffer, "</tr>");
                 on = ! on;
