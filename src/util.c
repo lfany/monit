@@ -1655,6 +1655,13 @@ boolean_t Util_checkCredentials(char *uname, char *outside) {
 }
 
 
+static void _resetIOStatistics(IOStatistics_T S) {
+        Statistics_reset(&(S->operations), 0ULL);
+        Statistics_reset(&(S->sectors), 0ULL);
+        Statistics_reset(&(S->time), 0ULL);
+}
+
+
 void Util_resetInfo(Service_T s) {
         switch (s->type) {
                 case Service_Filesystem:
@@ -1673,6 +1680,8 @@ void Util_resetInfo(Service_T s) {
                         s->inf->priv.filesystem.mode = -1;
                         s->inf->priv.filesystem.uid = -1;
                         s->inf->priv.filesystem.gid = -1;
+                        _resetIOStatistics(&(s->inf->priv.filesystem.statistics.read));
+                        _resetIOStatistics(&(s->inf->priv.filesystem.statistics.write));
                         break;
                 case Service_File:
                         // persistent: st_inode, readpos

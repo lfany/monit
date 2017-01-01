@@ -278,6 +278,16 @@ static void _formatStatus(const char *name, Event_Type errorType, Output_Type ty
 }
 
 
+static void _printIOStatistics(Output_Type type, HttpResponse res, Service_T s, IOStatistics_T io, const char *name) {
+        uint64_t deltaOperations = Statistics_delta(&(io->operations));
+        _formatStatus(name, Event_Null, type, res, s, true, "%s/s [%.1f %ss/s] [avg. service time %.3f ms/%s]",
+                Str_bytesToSize(Statistics_deltaNormalize(&(io->sectors)) * 512, (char[10]){}),
+                Statistics_deltaNormalize(&(io->operations)), name,
+                deltaOperations > 0. ? Statistics_delta(&(io->time)) / (double)deltaOperations : 0., name);
+}
+
+
+
 static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
         if (Util_hasServiceStatus(s)) {
                 switch (s->type) {
@@ -362,6 +372,8 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                         _formatStatus("inodes total", Event_Null, type, res, s, true, "%lld", s->inf->priv.filesystem.f_files);
                                         _formatStatus("inodes free", Event_Resource, type, res, s, true, "%lld [%.1f%%]", s->inf->priv.filesystem.f_filesfree, (float)100 * (float)s->inf->priv.filesystem.f_filesfree / (float)s->inf->priv.filesystem.f_files);
                                 }
+                                _printIOStatistics(type, res, s, &(s->inf->priv.filesystem.statistics.read), "read");
+                                _printIOStatistics(type, res, s, &(s->inf->priv.filesystem.statistics.write), "write");
                                 break;
 
                         case Service_Process:

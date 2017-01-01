@@ -57,18 +57,73 @@
 #include "monit.h"
 #include "device_sysdep.h"
 
+// libmonit
+#include "system/Time.h"
+
+
+/* ----------------------------------------------------------------- Private */
+
+
+static boolean_t _getPerformance(char *mntpoint, Info_T inf) {
+        char path[PATH_MAX];
+        //char name[STRLEN];
+        //snprintf(path, sizeof(path), "/sys/block/%s/%s/stat", name, partition); //FIXME: make dynamic and drop the bellow hardcoded test code
+        snprintf(path, sizeof(path), "/sys/block/sda/sda1/stat"); //FIXME: drop
+        FILE *f = fopen(path, "r");
+        if (f) {
+                uint64_t now = Time_milli();
+                uint64_t readOperations = 0ULL, readSectors = 0ULL, readTime = 0ULL;
+                uint64_t writeOperations = 0ULL, writeSectors = 0ULL, writeTime = 0ULL;
+                if (fscanf(f, "%"PRIu64" %*u %"PRIu64" %"PRIu64" %"PRIu64" %*u %"PRIu64" %"PRIu64" %*u %*u %*u", &readOperations, &readSectors, &readTime, &writeOperations, &writeSectors, &writeTime) != 6) {
+                        fclose(f);
+                        LogError("filesystem statistic error: cannot parse %s -- %s\n", path, STRERROR);
+                        return false;
+                }
+                Statistics_update(&(inf->priv.filesystem.statistics.read.time), now, readTime);
+                Statistics_update(&(inf->priv.filesystem.statistics.read.sectors), now, readSectors);
+                Statistics_update(&(inf->priv.filesystem.statistics.read.operations), now, readOperations);
+                Statistics_update(&(inf->priv.filesystem.statistics.write.time), now, writeTime);
+                Statistics_update(&(inf->priv.filesystem.statistics.write.sectors), now, writeSectors);
+                Statistics_update(&(inf->priv.filesystem.statistics.write.operations), now, writeOperations);
+                fclose(f);
+        } else {
+                LogError("filesystem statistic error: cannot read %s -- %s\n", path, STRERROR);
+                return false;
+        }
+        return true;
+}
+
+
+static boolean_t _getUsage(char *mntpoint, Info_T inf) {
+        struct statvfs usage;
+        if (statvfs(mntpoint, &usage) != 0) {
+                LogError("Error getting usage statistics for filesystem '%s' -- %s\n", mntpoint, STRERROR);
+                return false;
+        }
+        inf->priv.filesystem.f_bsize =           usage.f_frsize;
+        inf->priv.filesystem.f_blocks =          usage.f_blocks;
+        inf->priv.filesystem.f_blocksfree =      usage.f_bavail;
+        inf->priv.filesystem.f_blocksfreetotal = usage.f_bfree;
+        inf->priv.filesystem.f_files =           usage.f_files;
+        inf->priv.filesystem.f_filesfree =       usage.f_ffree;
+        inf->priv.filesystem._flags =            inf->priv.filesystem.flags;
+        inf->priv.filesystem.flags =             usage.f_flag;
+        return true;
+}
+
+
+/* ------------------------------------------------------------------ Public */
+
 
 char *device_mountpoint_sysdep(char *dev, char *buf, int buflen) {
-        FILE *mntfd;
-        struct mntent *mnt;
-
         ASSERT(dev);
-
-        if ((mntfd = setmntent("/etc/mtab", "r")) == NULL) {
+        FILE *mntfd = setmntent("/etc/mtab", "r");
+        if (! mntfd) {
                 LogError("Cannot open /etc/mtab file\n");
                 return NULL;
         }
-        while ((mnt = getmntent(mntfd)) != NULL) {
+        struct mntent *mnt = getmntent(mntfd);
+        while (mnt) {
                 /* Try to compare the the filesystem as is, if failed, try to use the symbolic link target */
                 if (IS(dev, mnt->mnt_fsname) || (realpath(mnt->mnt_fsname, buf) && IS(dev, buf))) {
                         snprintf(buf, buflen, "%s", mnt->mnt_dir);
@@ -83,22 +138,8 @@ char *device_mountpoint_sysdep(char *dev, char *buf, int buflen) {
 
 
 boolean_t filesystem_usage_sysdep(char *mntpoint, Info_T inf) {
-        struct statvfs usage;
-
+        ASSERT(mntpoint);
         ASSERT(inf);
-
-        if (statvfs(mntpoint, &usage) != 0) {
-                LogError("Error getting usage statistics for filesystem '%s' -- %s\n", mntpoint, STRERROR);
-                return false;
-        }
-        inf->priv.filesystem.f_bsize =           usage.f_frsize;
-        inf->priv.filesystem.f_blocks =          usage.f_blocks;
-        inf->priv.filesystem.f_blocksfree =      usage.f_bavail;
-        inf->priv.filesystem.f_blocksfreetotal = usage.f_bfree;
-        inf->priv.filesystem.f_files =           usage.f_files;
-        inf->priv.filesystem.f_filesfree =       usage.f_ffree;
-        inf->priv.filesystem._flags =            inf->priv.filesystem.flags;
-        inf->priv.filesystem.flags =             usage.f_flag;
-        return true;
+        return (_getUsage(mntpoint, inf) && _getPerformance(mntpoint, inf)) ? true : false;
 }
 

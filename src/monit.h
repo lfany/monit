@@ -129,6 +129,7 @@ typedef enum {
 #include "util/Str.h"
 #include "util/StringBuffer.h"
 #include "system/Link.h"
+#include "statistics/Statistics.h"
 #include "thread/Thread.h"
 
 
@@ -933,6 +934,13 @@ typedef struct myfilesystem {
 } *Filesystem_T;
 
 
+typedef struct IOStatistics_T {
+        struct Statistics_T operations;        /**< Number of operations completed */
+        struct Statistics_T sectors;  /**< Number of sectors handled by operations */
+        struct Statistics_T time;               /**< Time spend by operations [ms] */
+} *IOStatistics_T;
+
+
 /** Defines service data */
 typedef struct myinfo {
         union {
@@ -952,6 +960,10 @@ typedef struct myinfo {
                         int uid;                                              /**< Owner's uid */
                         int gid;                                              /**< Owner's gid */
                         int mode;                                              /**< Permission */
+                        struct {
+                                struct IOStatistics_T read;               /**< Read statistics */
+                                struct IOStatistics_T write;             /**< Write statistics */
+                        } statistics;
                 } filesystem;
 
                 struct {
