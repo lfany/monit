@@ -30,6 +30,8 @@
 		52D796A113A6CE560014CED2 /* Str.c in Sources */ = {isa = PBXBuildFile; fileRef = 52D7967813A6CE560014CED2 /* Str.c */; };
 		52D796A313A6CE560014CED2 /* StringBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 52D7967A13A6CE560014CED2 /* StringBuffer.c */; };
 		52FDD6B1189C205E008E3D5E /* CommandTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 52936F7713A5212700FC4089 /* CommandTest.c */; };
+		93EAFCB81E1BFAC800B31673 /* Statistics.c in Sources */ = {isa = PBXBuildFile; fileRef = 93EAFCB31E1BFAC800B31673 /* Statistics.c */; };
+		93EAFCB91E1BFAC800B31673 /* Statistics.h in Headers */ = {isa = PBXBuildFile; fileRef = 93EAFCB41E1BFAC800B31673 /* Statistics.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -161,6 +163,8 @@
 		52D7967913A6CE560014CED2 /* Str.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = Str.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		52D7967A13A6CE560014CED2 /* StringBuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = StringBuffer.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		52D7967B13A6CE560014CED2 /* StringBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = StringBuffer.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		93EAFCB31E1BFAC800B31673 /* Statistics.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Statistics.c; sourceTree = "<group>"; };
+		93EAFCB41E1BFAC800B31673 /* Statistics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Statistics.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -342,6 +346,7 @@
 				52D7964B13A6CE560014CED2 /* Bootstrap.h */,
 				52D7964D13A6CE560014CED2 /* exceptions */,
 				52D7965713A6CE560014CED2 /* io */,
+				93EAFCAF1E1BFAC800B31673 /* statistics */,
 				52D7966213A6CE560014CED2 /* system */,
 				52D7966F13A6CE560014CED2 /* thread */,
 				52D7967413A6CE560014CED2 /* util */,
@@ -422,6 +427,15 @@
 			path = util;
 			sourceTree = "<group>";
 		};
+		93EAFCAF1E1BFAC800B31673 /* statistics */ = {
+			isa = PBXGroup;
+			children = (
+				93EAFCB31E1BFAC800B31673 /* Statistics.c */,
+				93EAFCB41E1BFAC800B31673 /* Statistics.h */,
+			);
+			path = statistics;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -429,6 +443,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				93EAFCB91E1BFAC800B31673 /* Statistics.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -564,6 +579,7 @@
 				52D7968D13A6CE560014CED2 /* InputStream.c in Sources */,
 				52D7968F13A6CE560014CED2 /* OutputStream.c in Sources */,
 				52D7969113A6CE560014CED2 /* Command.c in Sources */,
+				93EAFCB81E1BFAC800B31673 /* Statistics.c in Sources */,
 				52D7969313A6CE560014CED2 /* Mem.c in Sources */,
 				52D7969513A6CE560014CED2 /* Net.c in Sources */,
 				52A710B9196C920800379D67 /* Link.c in Sources */,
