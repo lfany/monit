@@ -372,8 +372,10 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                         _formatStatus("inodes total", Event_Null, type, res, s, true, "%lld", s->inf->priv.filesystem.f_files);
                                         _formatStatus("inodes free", Event_Resource, type, res, s, true, "%lld [%.1f%%]", s->inf->priv.filesystem.f_filesfree, (float)100 * (float)s->inf->priv.filesystem.f_filesfree / (float)s->inf->priv.filesystem.f_files);
                                 }
-                                _printIOStatistics(type, res, s, &(s->inf->priv.filesystem.read), "read");
-                                _printIOStatistics(type, res, s, &(s->inf->priv.filesystem.write), "write");
+                                if (s->inf->priv.filesystem.hasIOStatistics) {
+                                        _printIOStatistics(type, res, s, &(s->inf->priv.filesystem.read), "read");
+                                        _printIOStatistics(type, res, s, &(s->inf->priv.filesystem.write), "write");
+                                }
                                 break;
 
                         case Service_Process:

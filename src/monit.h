@@ -962,6 +962,7 @@ typedef struct myinfo {
                         int mode;                                              /**< Permission */
                         struct IOStatistics_T read;                       /**< Read statistics */
                         struct IOStatistics_T write;                     /**< Write statistics */
+                        boolean_t hasIOStatistics;    /**< true if IO statistics are available */
                 } filesystem;
 
                 struct {

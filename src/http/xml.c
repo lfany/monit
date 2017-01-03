@@ -278,8 +278,10 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                                 S->inf->priv.filesystem.inode_total,
                                                 S->inf->priv.filesystem.f_files);
                                 }
-                                _ioStatistics(B, "read", &(S->inf->priv.filesystem.read));
-                                _ioStatistics(B, "write", &(S->inf->priv.filesystem.write));
+                                if (S->inf->priv.filesystem.hasIOStatistics) {
+                                        _ioStatistics(B, "read", &(S->inf->priv.filesystem.read));
+                                        _ioStatistics(B, "write", &(S->inf->priv.filesystem.write));
+                                }
                                 break;
 
                         case Service_Net:
