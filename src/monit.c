@@ -858,7 +858,7 @@ static void version() {
         printf("out");
 #endif
         printf(" large files\n");
-        printf("Copyright (C) 2001-2016 Tildeslash Ltd. All Rights Reserved.\n");
+        printf("Copyright (C) 2001-2017 Tildeslash Ltd. All Rights Reserved.\n");
 }
 
 
