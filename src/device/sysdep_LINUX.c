@@ -109,10 +109,10 @@ static boolean_t _getPerformance(char *mountpoint, Info_T inf) {
                                 return false;
                         }
                         Statistics_update(&(inf->priv.filesystem.read.time), now, readTime);
-                        Statistics_update(&(inf->priv.filesystem.read.sectors), now, readSectors);
+                        Statistics_update(&(inf->priv.filesystem.read.bytes), now, readSectors * 512);
                         Statistics_update(&(inf->priv.filesystem.read.operations), now, readOperations);
                         Statistics_update(&(inf->priv.filesystem.write.time), now, writeTime);
-                        Statistics_update(&(inf->priv.filesystem.write.sectors), now, writeSectors);
+                        Statistics_update(&(inf->priv.filesystem.write.bytes), now, writeSectors * 512);
                         Statistics_update(&(inf->priv.filesystem.write.operations), now, writeOperations);
                         fclose(f);
                 } else {
@@ -173,6 +173,6 @@ char *device_mountpoint_sysdep(char *dev, char *buf, int buflen) {
 boolean_t filesystem_usage_sysdep(char *mountpoint, Info_T inf) {
         ASSERT(mountpoint);
         ASSERT(inf);
-        return (_getUsage(mountpoint, inf) && _getPerformance(mountpoint, inf)) ? true : false;
+        return (_getUsage(mountpoint, inf) && _getPerformance(mountpoint, inf));
 }
 

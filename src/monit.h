@@ -936,7 +936,7 @@ typedef struct myfilesystem {
 
 typedef struct IOStatistics_T {
         struct Statistics_T operations;        /**< Number of operations completed */
-        struct Statistics_T sectors;  /**< Number of sectors handled by operations */
+        struct Statistics_T bytes;      /**< Number of bytes handled by operations */
         struct Statistics_T time;               /**< Time spend by operations [ms] */
 } *IOStatistics_T;
 

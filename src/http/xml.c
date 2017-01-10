@@ -164,7 +164,7 @@ static void _ioStatistics(StringBuffer_T B, const char *name, IOStatistics_T sta
                 "<servicetime>%.3f</servicetime>"
                 "</%s>",
                 name,
-                Statistics_deltaNormalize(&(statistics->sectors)) * 512,
+                Statistics_deltaNormalize(&(statistics->bytes)),
                 Statistics_deltaNormalize(&(statistics->operations)),
                 deltaOperations > 0. ? Statistics_delta(&(statistics->time)) / deltaOperations : 0.,
                 name);

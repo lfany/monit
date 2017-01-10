@@ -1657,7 +1657,7 @@ boolean_t Util_checkCredentials(char *uname, char *outside) {
 
 static void _resetIOStatistics(IOStatistics_T S) {
         Statistics_reset(&(S->operations), 0ULL);
-        Statistics_reset(&(S->sectors), 0ULL);
+        Statistics_reset(&(S->bytes), 0ULL);
         Statistics_reset(&(S->time), 0ULL);
 }
 

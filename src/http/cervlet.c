@@ -281,7 +281,7 @@ static void _formatStatus(const char *name, Event_Type errorType, Output_Type ty
 static void _printIOStatistics(Output_Type type, HttpResponse res, Service_T s, IOStatistics_T io, const char *name) {
         double deltaOperations = Statistics_delta(&(io->operations));
         _formatStatus(name, Event_Null, type, res, s, true, "%s/s [%.1f %ss/s] [avg. service time %.3f ms/%s]",
-                Str_bytesToSize(Statistics_deltaNormalize(&(io->sectors)) * 512, (char[10]){}),
+                Str_bytesToSize(Statistics_deltaNormalize(&(io->bytes)), (char[10]){}),
                 Statistics_deltaNormalize(&(io->operations)), name,
                 deltaOperations > 0. ? Statistics_delta(&(io->time)) / deltaOperations : 0., name);
 }
@@ -1384,8 +1384,8 @@ static void do_home_filesystem(HttpResponse res) {
                         StringBuffer_append(res->outputbuffer,
                                             "<td align='right'>%s/s</td>"
                                             "<td align='right'>%s/s</td>",
-                                            Str_bytesToSize(Statistics_deltaNormalize(&(s->inf->priv.filesystem.read.sectors)) * 512, (char[10]){}),
-                                            Str_bytesToSize(Statistics_deltaNormalize(&(s->inf->priv.filesystem.write.sectors)) * 512, (char[10]){}));
+                                            Str_bytesToSize(Statistics_deltaNormalize(&(s->inf->priv.filesystem.read.bytes)), (char[10]){}),
+                                            Str_bytesToSize(Statistics_deltaNormalize(&(s->inf->priv.filesystem.write.bytes)), (char[10]){}));
                 }
                 StringBuffer_append(res->outputbuffer, "</tr>");
                 on = ! on;

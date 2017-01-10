@@ -88,6 +88,7 @@ AC_CHECK_HEADERS([ \
 	ctype.h \
 	crypt.h \
 	dirent.h \
+	DiskArbitration/DiskArbitration.h \
 	errno.h \
 	execinfo.h \
 	fcntl.h \
@@ -95,6 +96,7 @@ AC_CHECK_HEADERS([ \
 	glob.h \
 	grp.h \
 	ifaddrs.h \
+	IOKit/storage/IOBlockStorageDriver.h \
 	kinfo.h \
 	kvm.h \
 	paths.h \
@@ -566,7 +568,7 @@ then
    CFLAGS="$CFLAGS -DREENTRANT -no-cpp-precomp -DNEED_SOCKLEN_T_DEFINED"
    LDFLAGS="$LDFLAGS -Wl,-search_paths_first"
    test_kvm="true"
-   LIBS="$LIBS -framework System -multiply_defined suppress"
+   LIBS="$LIBS -framework System -framework CoreFoundation -framework DiskArbitration -framework IOKit -multiply_defined suppress"
 elif test "$architecture" = "AIX"
 then
    ARCH="AIX"
