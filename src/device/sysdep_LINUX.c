@@ -92,7 +92,7 @@ error:
 }
 
 
-static boolean_t _getPerformance(char *mountpoint, Info_T inf) {
+static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
         char filesystem[PATH_MAX];
         if (_getDevice(mountpoint, filesystem)) {
                 inf->priv.filesystem.hasIOStatistics = true;
@@ -126,7 +126,7 @@ static boolean_t _getPerformance(char *mountpoint, Info_T inf) {
 }
 
 
-static boolean_t _getUsage(char *mountpoint, Info_T inf) {
+static boolean_t _getDiskUsage(char *mountpoint, Info_T inf) {
         struct statvfs usage;
         if (statvfs(mountpoint, &usage) != 0) {
                 LogError("Error getting usage statistics for filesystem '%s' -- %s\n", mountpoint, STRERROR);
@@ -173,6 +173,6 @@ char *device_mountpoint_sysdep(char *dev, char *buf, int buflen) {
 boolean_t filesystem_usage_sysdep(char *mountpoint, Info_T inf) {
         ASSERT(mountpoint);
         ASSERT(inf);
-        return (_getUsage(mountpoint, inf) && _getPerformance(mountpoint, inf));
+        return (_getDiskUsage(mountpoint, inf) && _getDiskActivity(mountpoint, inf));
 }
 

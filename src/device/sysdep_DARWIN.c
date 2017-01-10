@@ -69,7 +69,7 @@
 #include "system/Time.h"
 
 
-static boolean_t _getPerformance(char *mountpoint, Info_T inf) {
+static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
         int rv = false;
         DASessionRef session = DASessionCreate(NULL);
         if (session) {
@@ -136,7 +136,7 @@ static boolean_t _getPerformance(char *mountpoint, Info_T inf) {
 }
 
 
-static boolean_t _getUsage(char *mountpoint, Info_T inf) {
+static boolean_t _getDiskUsage(char *mountpoint, Info_T inf) {
         ASSERT(inf);
         struct statfs usage;
         if (statfs(mountpoint, &usage) != 0) {
@@ -183,6 +183,6 @@ char *device_mountpoint_sysdep(char *dev, char *buf, int buflen) {
 boolean_t filesystem_usage_sysdep(char *mountpoint, Info_T inf) {
         ASSERT(mountpoint);
         ASSERT(inf);
-        return (_getUsage(mountpoint, inf) && _getPerformance(mountpoint, inf));
+        return (_getDiskUsage(mountpoint, inf) && _getDiskActivity(mountpoint, inf));
 }
 
