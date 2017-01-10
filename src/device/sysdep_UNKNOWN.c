@@ -33,13 +33,21 @@
 #include "monit.h"
 #include "device_sysdep.h"
 
+
+/* ------------------------------------------------------------------ Public */
+
+
 char *device_mountpoint_sysdep(char *dev, char *buf, int buflen) {
+        ASSERT(dev);
+        ASSERT(buf);
         LogError("Unsupported mounted filesystem information method\n");
         return NULL;
 }
 
 
-boolean_t filesystem_usage_sysdep(Info_T inf) {
+boolean_t filesystem_usage_sysdep(char *mountpoint, Info_T inf) {
+        ASSERT(mountpoint);
+        ASSERT(inf);
         LogError("Unsupported filesystem data collection method\n");
         return false;
 }

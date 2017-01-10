@@ -137,7 +137,6 @@ static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
 
 
 static boolean_t _getDiskUsage(char *mountpoint, Info_T inf) {
-        ASSERT(inf);
         struct statfs usage;
         if (statfs(mountpoint, &usage) != 0) {
                 LogError("Error getting usage statistics for filesystem '%s' -- %s\n", mountpoint, STRERROR);
@@ -160,6 +159,7 @@ static boolean_t _getDiskUsage(char *mountpoint, Info_T inf) {
 
 char *device_mountpoint_sysdep(char *dev, char *buf, int buflen) {
         ASSERT(dev);
+        ASSERT(buf);
         int countfs = getfsstat(NULL, 0, MNT_NOWAIT);
         if (countfs != -1) {
                 struct statfs *statfs = CALLOC(countfs, sizeof(struct statfs));

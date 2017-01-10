@@ -58,16 +58,44 @@
 #include "device_sysdep.h"
 
 
+
+/* ----------------------------------------------------------------- Private */
+
+
+static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
+        //FIXME
+        return true;
+}
+
+
+static boolean_t _getDiskUsage(char *mountpoint, Info_T inf) {
+        struct statfs usage;
+        if (statfs(mountpoint, &usage) != 0) {
+                LogError("Error getting usage statistics for filesystem '%s' -- %s\n", mountpoint, STRERROR);
+                return false;
+        }
+        inf->priv.filesystem.f_bsize =           usage.f_bsize;
+        inf->priv.filesystem.f_blocks =          usage.f_blocks;
+        inf->priv.filesystem.f_blocksfree =      usage.f_bavail;
+        inf->priv.filesystem.f_blocksfreetotal = usage.f_bfree;
+        inf->priv.filesystem.f_files =           usage.f_files;
+        inf->priv.filesystem.f_filesfree =       usage.f_ffree;
+        return true;
+}
+
+
+/* ------------------------------------------------------------------ Public */
+
+
 char *device_mountpoint_sysdep(char *dev, char *buf, int buflen) {
-        struct mntent *mnt;
-        FILE          *mntfd;
-
         ASSERT(dev);
-
-        if ((mntfd = setmntent("/etc/mnttab", "r")) == NULL) {
+        ASSERT(buf);
+        FILE *mntfd = setmntent("/etc/mnttab", "r");
+        if (! mntfd) {
                 LogError("Cannot open /etc/mnttab file\n");
                 return NULL;
         }
+        struct mntent *mnt;
         while ((mnt = getmntent(mntfd)) != NULL) {
                 if (IS(dev, mnt->mnt_fsname)) {
                         endmntent(mntfd);
@@ -80,21 +108,9 @@ char *device_mountpoint_sysdep(char *dev, char *buf, int buflen) {
 }
 
 
-boolean_t filesystem_usage_sysdep(char *mntpoint, Info_T inf) {
-        struct statfs usage;
-
+boolean_t filesystem_usage_sysdep(char *mountpoint, Info_T inf) {
+        ASSERT(mountpoint);
         ASSERT(inf);
-
-        if (statfs(mntpoint, &usage) != 0) {
-                LogError("Error getting usage statistics for filesystem '%s' -- %s\n", mntpoint, STRERROR);
-                return false;
-        }
-        inf->priv.filesystem.f_bsize =           usage.f_bsize;
-        inf->priv.filesystem.f_blocks =          usage.f_blocks;
-        inf->priv.filesystem.f_blocksfree =      usage.f_bavail;
-        inf->priv.filesystem.f_blocksfreetotal = usage.f_bfree;
-        inf->priv.filesystem.f_files =           usage.f_files;
-        inf->priv.filesystem.f_filesfree =       usage.f_ffree;
-        return true;
+        return (_getDiskUsage(mountpoint, inf) && _getDiskActivity(mountpoint, inf));
 }
 
