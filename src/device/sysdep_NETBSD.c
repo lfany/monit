@@ -73,8 +73,8 @@ static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
 
 static boolean_t _getDiskUsage(char *mountpoint, Info_T inf) {
         struct statvfs usage;
-        if (statvfs(mntpoint, &usage) != 0) {
-                LogError("Error getting usage statistics for filesystem '%s' -- %s\n", mntpoint, STRERROR);
+        if (statvfs(mountpoint, &usage) != 0) {
+                LogError("Error getting usage statistics for filesystem '%s' -- %s\n", mountpoint, STRERROR);
                 return false;
         }
         inf->priv.filesystem.f_bsize =           usage.f_frsize;
