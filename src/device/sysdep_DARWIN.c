@@ -130,6 +130,7 @@ static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
                         CFRelease(disk);
                 }
                 CFRelease(url);
+                CFRelease(session);
         }
         inf->priv.filesystem.hasIOStatistics = rv;
         return rv;
