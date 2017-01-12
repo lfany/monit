@@ -402,8 +402,8 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                         _formatStatus("memory", Event_Resource, type, res, s, s->inf->priv.process.mem_percent >= 0, "%.1f%% [%s]", s->inf->priv.process.mem_percent, Str_bytesToSize(s->inf->priv.process.mem, (char[10]){}));
                                         _formatStatus("memory total", Event_Resource, type, res, s, s->inf->priv.process.total_mem_percent >= 0, "%.1f%% [%s]", s->inf->priv.process.total_mem_percent, Str_bytesToSize(s->inf->priv.process.total_mem, (char[10]){}));
                                 }
-                                _printIOStatistics(type, res, s, &(s->inf->priv.process.read), "read");
-                                _printIOStatistics(type, res, s, &(s->inf->priv.process.write), "write");
+                                _printIOStatistics(type, res, s, &(s->inf->priv.process.read), "disk read");
+                                _printIOStatistics(type, res, s, &(s->inf->priv.process.write), "disk write");
                                 break;
 
                         case Service_Program:
