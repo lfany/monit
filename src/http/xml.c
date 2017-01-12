@@ -156,18 +156,30 @@ static void document_foot(StringBuffer_T B) {
 
 
 static void _ioStatistics(StringBuffer_T B, const char *name, IOStatistics_T statistics) {
-        double deltaOperations = Statistics_delta(&(statistics->operations));
-        StringBuffer_append(B,
-                "<%s>"
-                "<bytes>%.0lf</bytes>"
-                "<operations>%.3f</operations>"
-                "<servicetime>%.3f</servicetime>"
-                "</%s>",
-                name,
-                Statistics_deltaNormalize(&(statistics->bytes)),
-                Statistics_deltaNormalize(&(statistics->operations)),
-                deltaOperations > 0. ? Statistics_delta(&(statistics->time)) / deltaOperations : 0.,
-                name);
+        StringBuffer_append(B, "<%s>", name);
+        if (Statistics_initialized(&(statistics->bytes))) {
+                StringBuffer_append(B,
+                        "<bytes>"
+                        "<count>%.0lf</count>" // bytes per second
+                        "<total>%llu</total>"  // bytes since boot
+                        "</bytes>",
+                        Statistics_deltaNormalize(&(statistics->bytes)),
+                        Statistics_raw(&(statistics->bytes)));
+        }
+        if (Statistics_initialized(&(statistics->operations))) {
+                double deltaOperations = Statistics_delta(&(statistics->operations));
+                StringBuffer_append(B,
+                        "<operations>"
+                        "<count>%.0lf</count>" // operations per second
+                        "<total>%llu</total>", // operations since boot
+                        Statistics_deltaNormalize(&(statistics->operations)),
+                        Statistics_raw(&(statistics->operations)));
+                if (Statistics_initialized(&(statistics->time)))
+                        StringBuffer_append(B, "<servicetime>%.3f</servicetime>", deltaOperations > 0. ? Statistics_delta(&(statistics->time)) / deltaOperations : 0.);
+                StringBuffer_append(B,
+                        "</operations>");
+        }
+        StringBuffer_append(B, "</%s>", name);
 }
 
 

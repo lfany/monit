@@ -40,6 +40,7 @@
 
 
 typedef struct T {
+        boolean_t initialized;
 #ifndef __LP64__
         uint64_t raw;
 #endif
@@ -65,11 +66,26 @@ void Statistics_update(T S, uint64_t time, uint64_t value);
 
 
 /**
- * Reset Statistics object data to the given value.
+ * Reset Statistics object
  * @param S A Statistics object
- * @param value A value to which the object should be set
  */
-void Statistics_reset(T S, uint64_t value);
+void Statistics_reset(T S);
+
+
+/**
+ * Return true if the counter was initialized, otherwise false
+ * @param S A Statistics object
+ * @return true if the counter was initialized, otherwise false
+ */
+boolean_t Statistics_initialized(T S);
+
+
+/**
+ * Return the last raw value
+ * @param S A Statistics object
+ * @return last raw value
+ */
+uint64_t Statistics_raw(T S);
 
 
 /**

@@ -1009,6 +1009,8 @@ typedef struct myinfo {
                         float cpu_percent;                                     /**< percentage */
                         float total_cpu_percent;                               /**< percentage */
                         time_t uptime;                                     /**< Process uptime */
+                        struct IOStatistics_T read;                       /**< Read statistics */
+                        struct IOStatistics_T write;                     /**< Write statistics */
                 } process;
 
                 struct {

@@ -279,13 +279,24 @@ static void _formatStatus(const char *name, Event_Type errorType, Output_Type ty
 
 
 static void _printIOStatistics(Output_Type type, HttpResponse res, Service_T s, IOStatistics_T io, const char *name) {
-        double deltaOperations = Statistics_delta(&(io->operations));
-        _formatStatus(name, Event_Null, type, res, s, true, "%s/s [%.1f %ss/s] [avg. service time %.3f ms/%s]",
-                Str_bytesToSize(Statistics_deltaNormalize(&(io->bytes)), (char[10]){}),
-                Statistics_deltaNormalize(&(io->operations)), name,
-                deltaOperations > 0. ? Statistics_delta(&(io->time)) / deltaOperations : 0., name);
+        boolean_t hasOps = Statistics_initialized(&(io->operations));
+        boolean_t hasTime = Statistics_initialized(&(io->time));
+        boolean_t hasBytes = Statistics_initialized(&(io->bytes));
+        if (hasTime && hasOps && hasBytes) {
+                double deltaBytesPerSec = Statistics_deltaNormalize(&(io->bytes));
+                double deltaOps = Statistics_delta(&(io->operations));
+                double deltaOpsPerSec = Statistics_deltaNormalize(&(io->operations));
+                double deltaTime = Statistics_delta(&(io->time));
+                _formatStatus(name, Event_Null, type, res, s, true, "%s/s [%s total] [%.1f %ss/s] [avg. service time %.3f ms/%s]", Str_bytesToSize(deltaBytesPerSec, (char[10]){}), Str_bytesToSize(Statistics_raw(&(io->bytes)), (char[10]){}), deltaOpsPerSec, name, deltaOps > 0. ? deltaTime / deltaOps : 0., name);
+        } else if (hasOps && hasBytes) {
+                double deltaBytesPerSec = Statistics_deltaNormalize(&(io->bytes));
+                double deltaOpsPerSec = Statistics_deltaNormalize(&(io->operations));
+                _formatStatus(name, Event_Null, type, res, s, true, "%s/s [%s total] [%.1f %ss/s]", Str_bytesToSize(deltaBytesPerSec, (char[10]){}), Str_bytesToSize(Statistics_raw(&(io->bytes)), (char[10]){}), deltaOpsPerSec, name);
+        } else if (hasBytes) {
+                double deltaBytesPerSec = Statistics_deltaNormalize(&(io->bytes));
+                _formatStatus(name, Event_Null, type, res, s, true, "%s/s [%s total]", Str_bytesToSize(deltaBytesPerSec, (char[10]){}), Str_bytesToSize(Statistics_raw(&(io->bytes)), (char[10]){}));
+        }
 }
-
 
 
 static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
@@ -372,10 +383,8 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                         _formatStatus("inodes total", Event_Null, type, res, s, true, "%lld", s->inf->priv.filesystem.f_files);
                                         _formatStatus("inodes free", Event_Resource, type, res, s, true, "%lld [%.1f%%]", s->inf->priv.filesystem.f_filesfree, (float)100 * (float)s->inf->priv.filesystem.f_filesfree / (float)s->inf->priv.filesystem.f_files);
                                 }
-                                if (s->inf->priv.filesystem.hasIOStatistics) {
-                                        _printIOStatistics(type, res, s, &(s->inf->priv.filesystem.read), "read");
-                                        _printIOStatistics(type, res, s, &(s->inf->priv.filesystem.write), "write");
-                                }
+                                _printIOStatistics(type, res, s, &(s->inf->priv.filesystem.read), "read");
+                                _printIOStatistics(type, res, s, &(s->inf->priv.filesystem.write), "write");
                                 break;
 
                         case Service_Process:
@@ -393,6 +402,8 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                         _formatStatus("memory", Event_Resource, type, res, s, s->inf->priv.process.mem_percent >= 0, "%.1f%% [%s]", s->inf->priv.process.mem_percent, Str_bytesToSize(s->inf->priv.process.mem, (char[10]){}));
                                         _formatStatus("memory total", Event_Resource, type, res, s, s->inf->priv.process.total_mem_percent >= 0, "%.1f%% [%s]", s->inf->priv.process.total_mem_percent, Str_bytesToSize(s->inf->priv.process.total_mem, (char[10]){}));
                                 }
+                                _printIOStatistics(type, res, s, &(s->inf->priv.process.read), "read");
+                                _printIOStatistics(type, res, s, &(s->inf->priv.process.write), "write");
                                 break;
 
                         case Service_Program:

@@ -1656,9 +1656,9 @@ boolean_t Util_checkCredentials(char *uname, char *outside) {
 
 
 static void _resetIOStatistics(IOStatistics_T S) {
-        Statistics_reset(&(S->operations), 0ULL);
-        Statistics_reset(&(S->bytes), 0ULL);
-        Statistics_reset(&(S->time), 0ULL);
+        Statistics_reset(&(S->operations));
+        Statistics_reset(&(S->bytes));
+        Statistics_reset(&(S->time));
 }
 
 
@@ -1723,6 +1723,8 @@ void Util_resetInfo(Service_T s) {
                         s->inf->priv.process.cpu_percent = -1.;
                         s->inf->priv.process.total_cpu_percent = -1.;
                         s->inf->priv.process.uptime = -1;
+                        _resetIOStatistics(&(s->inf->priv.process.read));
+                        _resetIOStatistics(&(s->inf->priv.process.write));
                         break;
                 case Service_Net:
                         if (s->inf->priv.net.stats)

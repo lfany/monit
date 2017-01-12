@@ -294,6 +294,14 @@ boolean_t ProcessTree_updateProcess(Service_T s, pid_t pid) {
                         s->inf->priv.process.total_mem_percent = ptree[leaf].memory.usage_total >= systeminfo.mem_max ? 100. : (100. * (double)ptree[leaf].memory.usage_total / (double)systeminfo.mem_max);
                         s->inf->priv.process.mem_percent       = ptree[leaf].memory.usage >= systeminfo.mem_max ? 100. : (100. * (double)ptree[leaf].memory.usage / (double)systeminfo.mem_max);
                 }
+                if (ptree[leaf].read.bytes)
+                        Statistics_update(&(s->inf->priv.process.read.bytes), ptree[leaf].read.time, ptree[leaf].read.bytes);
+                if (ptree[leaf].read.operations)
+                        Statistics_update(&(s->inf->priv.process.read.operations), ptree[leaf].read.time, ptree[leaf].read.operations);
+                if (ptree[leaf].write.bytes)
+                        Statistics_update(&(s->inf->priv.process.write.bytes), ptree[leaf].write.time, ptree[leaf].write.bytes);
+                if (ptree[leaf].write.operations)
+                        Statistics_update(&(s->inf->priv.process.write.operations), ptree[leaf].write.time, ptree[leaf].write.operations);
                 return true;
         }
         Util_resetInfo(s);

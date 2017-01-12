@@ -61,15 +61,26 @@ void Statistics_update(T S, uint64_t time, uint64_t value) {
         S->last.value = S->current.value;
         S->current.time = time;
         S->current.value = _value;
+        S->initialized = true;
 }
 
 
-void Statistics_reset(T S, uint64_t value) {
+void Statistics_reset(T S) {
 #ifndef __LP64__
-        S->raw = value;
+        S->raw = 0ULL;
 #endif
-        S->last.time = S->current.time = 0ULL;
-        S->last.value = S->current.value = value;
+        S->last.time = S->current.time = S->last.value = S->current.value = 0ULL;
+        S->initialized = false;
+}
+
+
+boolean_t Statistics_initialized(T S) {
+        return S->initialized;
+}
+
+
+uint64_t Statistics_raw(T S) {
+        return S->current.value;
 }
 
 

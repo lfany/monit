@@ -95,7 +95,6 @@ error:
 static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
         char filesystem[PATH_MAX];
         if (_getDevice(mountpoint, filesystem)) {
-                inf->priv.filesystem.hasIOStatistics = true;
                 char path[PATH_MAX];
                 snprintf(path, sizeof(path), "/sys/class/block/%s/stat", filesystem);
                 FILE *f = fopen(path, "r");
@@ -120,7 +119,12 @@ static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
                         return false;
                 }
         } else {
-                inf->priv.filesystem.hasIOStatistics = false;
+                Statistics_reset(&(inf->priv.filesystem.read.time));
+                Statistics_reset(&(inf->priv.filesystem.read.bytes));
+                Statistics_reset(&(inf->priv.filesystem.read.operations));
+                Statistics_reset(&(inf->priv.filesystem.write.time));
+                Statistics_reset(&(inf->priv.filesystem.write.bytes));
+                Statistics_reset(&(inf->priv.filesystem.write.operations));
         }
         return true;
 }
