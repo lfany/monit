@@ -161,7 +161,7 @@ static void _ioStatistics(StringBuffer_T B, const char *name, IOStatistics_T sta
                 StringBuffer_append(B,
                         "<bytes>"
                         "<count>%.0lf</count>" // bytes per second
-                        "<total>%llu</total>"  // bytes since boot
+                        "<total>%"PRIu64"</total>"  // bytes since boot
                         "</bytes>",
                         Statistics_deltaNormalize(&(statistics->bytes)),
                         Statistics_raw(&(statistics->bytes)));
@@ -171,7 +171,7 @@ static void _ioStatistics(StringBuffer_T B, const char *name, IOStatistics_T sta
                 StringBuffer_append(B,
                         "<operations>"
                         "<count>%.0lf</count>" // operations per second
-                        "<total>%llu</total>", // operations since boot
+                        "<total>%"PRIu64"</total>", // operations since boot
                         Statistics_deltaNormalize(&(statistics->operations)),
                         Statistics_raw(&(statistics->operations)));
                 if (Statistics_initialized(&(statistics->time)))
@@ -290,10 +290,8 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                                 S->inf->priv.filesystem.inode_total,
                                                 S->inf->priv.filesystem.f_files);
                                 }
-                                if (S->inf->priv.filesystem.hasIOStatistics) {
-                                        _ioStatistics(B, "read", &(S->inf->priv.filesystem.read));
-                                        _ioStatistics(B, "write", &(S->inf->priv.filesystem.write));
-                                }
+                                _ioStatistics(B, "read", &(S->inf->priv.filesystem.read));
+                                _ioStatistics(B, "write", &(S->inf->priv.filesystem.write));
                                 break;
 
                         case Service_Net:
