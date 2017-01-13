@@ -77,6 +77,9 @@
 		934574641C771C9C00FF170F /* SMTP.c in Sources */ = {isa = PBXBuildFile; fileRef = 934574611C771C9C00FF170F /* SMTP.c */; };
 		9357B19B19F2F5A400329B3F /* mongodb.c in Sources */ = {isa = PBXBuildFile; fileRef = 9357B19919F2F5A400329B3F /* mongodb.c */; };
 		9357B19C19F2F5A400329B3F /* redis.c in Sources */ = {isa = PBXBuildFile; fileRef = 9357B19A19F2F5A400329B3F /* redis.c */; };
+		9365D22B1E28F3FC00FCF3FB /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9365D22A1E28F3FC00FCF3FB /* IOKit.framework */; };
+		9365D2311E28F40800FCF3FB /* DiskArbitration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9365D2301E28F40800FCF3FB /* DiskArbitration.framework */; };
+		9365D2331E28F41500FCF3FB /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9365D2321E28F41500FCF3FB /* CoreFoundation.framework */; };
 		9378737B1A13907100CF8C5E /* sieve.c in Sources */ = {isa = PBXBuildFile; fileRef = 9378737A1A13907100CF8C5E /* sieve.c */; };
 		9397E3091D897CCA008CAD1F /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9397E3081D897CCA008CAD1F /* libz.tbd */; };
 		93A23ED41C85E6890076FBFE /* Address.c in Sources */ = {isa = PBXBuildFile; fileRef = 93A23ED21C85E6890076FBFE /* Address.c */; };
@@ -294,6 +297,9 @@
 		934574621C771C9C00FF170F /* SMTP.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SMTP.h; sourceTree = "<group>"; };
 		9357B19919F2F5A400329B3F /* mongodb.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mongodb.c; sourceTree = "<group>"; };
 		9357B19A19F2F5A400329B3F /* redis.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = redis.c; sourceTree = "<group>"; };
+		9365D22A1E28F3FC00FCF3FB /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		9365D2301E28F40800FCF3FB /* DiskArbitration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DiskArbitration.framework; path = System/Library/Frameworks/DiskArbitration.framework; sourceTree = SDKROOT; };
+		9365D2321E28F41500FCF3FB /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		9378737A1A13907100CF8C5E /* sieve.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sieve.c; sourceTree = "<group>"; };
 		9397E3081D897CCA008CAD1F /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		93A23ED21C85E6890076FBFE /* Address.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Address.c; sourceTree = "<group>"; };
@@ -309,6 +315,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9365D2331E28F41500FCF3FB /* CoreFoundation.framework in Frameworks */,
+				9365D2311E28F40800FCF3FB /* DiskArbitration.framework in Frameworks */,
+				9365D22B1E28F3FC00FCF3FB /* IOKit.framework in Frameworks */,
 				9397E3091D897CCA008CAD1F /* libz.tbd in Frameworks */,
 				930E68291C4FD15900D9F213 /* libcrypto.1.0.0.dylib in Frameworks */,
 				930E68271C4FD0D600D9F213 /* libssl.1.0.0.dylib in Frameworks */,
@@ -648,6 +657,9 @@
 		9397E3071D897CCA008CAD1F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				9365D2321E28F41500FCF3FB /* CoreFoundation.framework */,
+				9365D2301E28F40800FCF3FB /* DiskArbitration.framework */,
+				9365D22A1E28F3FC00FCF3FB /* IOKit.framework */,
 				9397E3081D897CCA008CAD1F /* libz.tbd */,
 			);
 			name = Frameworks;
@@ -946,7 +958,7 @@
 					"$(SDKROOT)/usr/lib/system",
 					/opt/local/lib,
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = (
 					"-DDARWIN",
@@ -976,7 +988,7 @@
 					"$(SDKROOT)/usr/lib/system",
 					/opt/local/lib,
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = (
 					"-DDARWIN",
