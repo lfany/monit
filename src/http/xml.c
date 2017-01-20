@@ -269,8 +269,8 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         "<flags>%d</flags>"
                                         "<block>"
                                         "<percent>%.1f</percent>"
-                                        "<usage>%.1f</usage>"
-                                        "<total>%.1f</total>"
+                                        "<usage>%.1lf</usage>"
+                                        "<total>%.1lf</total>"
                                         "</block>",
                                         S->inf->priv.filesystem.mode & 07777,
                                         (int)S->inf->priv.filesystem.uid,

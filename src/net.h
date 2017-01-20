@@ -38,14 +38,6 @@
 
 
 /**
- * Check if the hostname resolves
- * @param hostname The host to check
- * @return true if hostname resolves, otherwise false
- */
-boolean_t check_host(const char *hostname);
-
-
-/**
  * Create a non-blocking server socket and bind it to the specified local
  * port number, with the specified backlog. Set a socket option to
  * make the port reusable again. If a bind address is given the socket

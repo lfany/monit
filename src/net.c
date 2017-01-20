@@ -182,26 +182,11 @@ static unsigned short _checksum(unsigned char *_addr, int count) {
 /* ------------------------------------------------------------------ Public */
 
 
-boolean_t check_host(const char *hostname) {
-        ASSERT(hostname);
-        struct addrinfo hints = {
-#ifdef AI_ADDRCONFIG
-                .ai_flags = AI_ADDRCONFIG
-#endif
-        };
-        struct addrinfo *res;
-        if (getaddrinfo(hostname, NULL, &hints, &res) == 0) {
-                freeaddrinfo(res);
-                return true;
-        }
-        return false;
-}
-
-
 int create_server_socket_tcp(const char *address, int port, Socket_Family family, int backlog, char error[STRLEN]) {
         struct addrinfo *result, hints = {
                 .ai_flags = AI_PASSIVE,
-                .ai_socktype = SOCK_STREAM
+                .ai_socktype = SOCK_STREAM,
+                .ai_protocol = IPPROTO_TCP
         };
         switch (family) {
                 case Socket_Ip:
@@ -219,9 +204,6 @@ int create_server_socket_tcp(const char *address, int port, Socket_Family family
                         snprintf(error, STRLEN, "Invalid socket family %d", family);
                         return -1;
         }
-#ifdef AI_ADDRCONFIG
-        hints.ai_flags |= AI_ADDRCONFIG;
-#endif
         char _port[6];
         snprintf(_port, sizeof(_port), "%d", port);
         int status = getaddrinfo(address, _port, &hints, &result);
@@ -470,11 +452,7 @@ double icmp_echo(const char *hostname, Socket_Family family, Outgoing_T *outgoin
         ASSERT(size > 0);
         int rv;
         double response = -1.;
-        struct addrinfo *result, hints = {
-#ifdef AI_ADDRCONFIG
-                .ai_flags = AI_ADDRCONFIG
-#endif
-        };
+        struct addrinfo *result, hints = {};
         switch (family) {
                 case Socket_Ip:
                         hints.ai_family = AF_UNSPEC;

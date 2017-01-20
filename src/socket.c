@@ -281,9 +281,6 @@ error:
 struct addrinfo *_resolve(const char *hostname, int port, Socket_Type type, Socket_Family family) {
         ASSERT(hostname);
         struct addrinfo *result, hints = {
-#ifdef AI_ADDRCONFIG
-                .ai_flags = AI_ADDRCONFIG,
-#endif
                 .ai_socktype = type,
                 .ai_protocol = type == Socket_Udp ? IPPROTO_UDP : IPPROTO_TCP
         };
@@ -297,6 +294,9 @@ struct addrinfo *_resolve(const char *hostname, int port, Socket_Type type, Sock
 #ifdef HAVE_IPV6
                 case Socket_Ip6:
                         hints.ai_family = AF_INET6;
+#ifdef AI_ADDRCONFIG
+                        hints.ai_flags = AI_ADDRCONFIG;
+#endif
                         break;
 #endif
                 default:
