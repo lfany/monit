@@ -201,9 +201,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         unsigned long       stat_item_stime = 0;
         unsigned long long  stat_item_starttime = 0ULL;
         uint64_t            stat_read_bytes = 0ULL;
-        uint64_t            stat_read_operations = 0ULL;
         uint64_t            stat_write_bytes = 0ULL;
-        uint64_t            stat_write_operations = 0ULL;
 
         ASSERT(reference);
 
@@ -276,22 +274,6 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
 
                 /********** /proc/PID/io **********/
                 if (file_readProc(buf, sizeof(buf), "io", stat_pid, NULL)) {
-                        if (! (tmp = strstr(buf, "syscr:"))) {
-                                DEBUG("system statistic error -- cannot find process syscr\n");
-                                continue;
-                        }
-                        if (sscanf(tmp + 6, "\t%"PRIu64, &stat_read_operations) != 1) {
-                                DEBUG("system statistic error -- cannot get process read operations\n");
-                                continue;
-                        }
-                        if (! (tmp = strstr(buf, "syscw:"))) {
-                                DEBUG("system statistic error -- cannot find process syscr\n");
-                                continue;
-                        }
-                        if (sscanf(tmp + 6, "\t%"PRIu64, &stat_write_operations) != 1) {
-                                DEBUG("system statistic error -- cannot get process write operations\n");
-                                continue;
-                        }
                         if (! (tmp = strstr(buf, "read_bytes:"))) {
                                 DEBUG("system statistic error -- cannot find process read_bytes\n");
                                 continue;
@@ -335,9 +317,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 pt[i].cpu.time = (double)(stat_item_utime + stat_item_stime) / hz * 10.; // jiffies -> seconds = 1/hz
                 pt[i].memory.usage = (uint64_t)stat_item_rss * (uint64_t)page_size;
                 pt[i].read.bytes = stat_read_bytes;
-                pt[i].read.operations = stat_read_operations;
                 pt[i].write.bytes = stat_write_bytes;
-                pt[i].write.operations = stat_write_operations;
                 pt[i].zombie = stat_item_state == 'Z' ? true : false;
         }
 
