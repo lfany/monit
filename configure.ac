@@ -87,6 +87,7 @@ AC_CHECK_HEADERS([ \
 	crt_externs.h \
 	ctype.h \
 	crypt.h \
+	devstat.h \
 	dirent.h \
 	DiskArbitration/DiskArbitration.h \
 	errno.h \
@@ -546,11 +547,13 @@ elif test "$architecture" = "FreeBSD"
 then
    ARCH="FREEBSD"
    CFLAGS="$CFLAGS -D _REENTRANT"
+   LIBS="$LIBS -ldevstat"
    test_kvm="true"
 elif test "$architecture" = "GNU/kFreeBSD"
 then
    ARCH="FREEBSD"
    CFLAGS="$CFLAGS -D _REENTRANT"
+   LIBS="$LIBS -ldevstat"
    test_kvm="true"
 elif test "$architecture" = "NetBSD"
 then

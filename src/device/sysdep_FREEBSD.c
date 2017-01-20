@@ -54,16 +54,119 @@
 #include <sys/mount.h>
 #endif
 
+#ifdef HAVE_FCNTL_H
+#include <fcntl.h>
+#endif
+
+#ifdef HAVE_CTYPE_H
+#include <ctype.h>
+#endif
+
+#ifdef HAVE_KVM_H
+#include <kvm.h>
+#endif
+
+#ifdef HAVE_PATHS_H
+#include <paths.h>
+#endif
+
+#ifdef HAVE_DEVSTAT_H
+#include <devstat.h>
+#endif
+
 #include "monit.h"
 #include "device_sysdep.h"
+
+// libmonit
+#include "io/File.h"
+
+
+/* ------------------------------------------------------------- Definitions */
+
+
+typedef struct Device_T {
+        char name[SPECNAMELEN];
+        int instance;
+} *Device_T;
 
 
 /* ----------------------------------------------------------------- Private */
 
 
+static uint64_t _bintimeToMilli(struct bintime *time) {
+        return time->sec * 1000 + (((uint64_t)1000 * (uint32_t)(time->frac >> 32)) >> 32);
+}
+
+
+// Parse the device path like /dev/da0p2 into name:instance -> da:0
+static boolean_t _parseDevice(const char *path, Device_T device) {
+        const char *base = File_basename(path);
+        for (int i = 0; base[i]; i++) {
+                if (isdigit(*(base + i))) {
+                        strncpy(device->name, base, i < sizeof(device->name) ? i : sizeof(device->name) - 1);
+                        device->instance = Str_parseInt(base + i);
+                        return true;
+                }
+        }
+        return false;
+}
+
+
+static boolean_t _getDevice(char *mountpoint, Device_T device) {
+        int countfs = getfsstat(NULL, 0, MNT_NOWAIT);
+        if (countfs != -1) {
+                struct statfs *statfs = CALLOC(countfs, sizeof(struct statfs));
+                if ((countfs = getfsstat(statfs, countfs * sizeof(struct statfs), MNT_NOWAIT)) != -1) {
+                        for (int i = 0; i < countfs; i++) {
+                                struct statfs *sfs = statfs + i;
+                                if (IS(sfs->f_mntonname, mountpoint)) {
+                                        boolean_t rv = _parseDevice(sfs->f_mntfromname, device);
+                                        FREE(statfs);
+                                        return rv;
+                                }
+                        }
+                }
+                FREE(statfs);
+        }
+        LogError("Mount point %s -- %s\n", mountpoint, STRERROR);
+        return false;
+}
+
+
 static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
-        //FIXME
-        return true;
+        boolean_t rv = true;
+        struct Device_T device = {};
+        if (_getDevice(mountpoint, &device)) {
+                struct statinfo stat = {};
+                stat.dinfo = CALLOC(1, sizeof(struct devinfo));
+                if (devstat_getdevs(NULL, &stat) != -1) {
+                        for (int i = 0; i < stat.dinfo->numdevs; i++) {
+                                if (stat.dinfo->devices[i].unit_number == device.instance && IS(stat.dinfo->devices[i].device_name, device.name)) {
+                                        uint64_t now = stat.snap_time * 1000;
+                                        Statistics_update(&(inf->priv.filesystem.read.time), now, _bintimeToMilli(&(stat.dinfo->devices[i].duration[DEVSTAT_READ])));
+                                        Statistics_update(&(inf->priv.filesystem.read.bytes), now, stat.dinfo->devices[i].bytes[DEVSTAT_READ]);
+                                        Statistics_update(&(inf->priv.filesystem.read.operations),  now, stat.dinfo->devices[i].operations[DEVSTAT_READ]);
+                                        Statistics_update(&(inf->priv.filesystem.write.time), now, _bintimeToMilli(&(stat.dinfo->devices[i].duration[DEVSTAT_WRITE])));
+                                        Statistics_update(&(inf->priv.filesystem.write.bytes), now, stat.dinfo->devices[i].bytes[DEVSTAT_WRITE]);
+                                        Statistics_update(&(inf->priv.filesystem.write.operations), now, stat.dinfo->devices[i].operations[DEVSTAT_WRITE]);
+                                        break;
+                                }
+                        }
+                } else {
+                        LogError("filesystem statistics error -- devstat_getdevs: %s\n", devstat_errbuf);
+                        rv = false;
+                }
+error:
+                FREE(stat.dinfo);
+        } else {
+                Statistics_reset(&(inf->priv.filesystem.read.time));
+                Statistics_reset(&(inf->priv.filesystem.read.bytes));
+                Statistics_reset(&(inf->priv.filesystem.read.operations));
+                Statistics_reset(&(inf->priv.filesystem.write.time));
+                Statistics_reset(&(inf->priv.filesystem.write.bytes));
+                Statistics_reset(&(inf->priv.filesystem.write.operations));
+        }
+        return rv;
 }
 
 
