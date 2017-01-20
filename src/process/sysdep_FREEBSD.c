@@ -100,21 +100,21 @@ boolean_t init_process_info_sysdep(void) {
         int mib[2] = {CTL_HW, HW_NCPU};
         size_t len = sizeof(systeminfo.cpus);
         if (sysctl(mib, 2, &systeminfo.cpus, &len, NULL, 0) == -1) {
-                DEBUG("system statistic error -- cannot get cpu count: %s\n", STRERROR);
+                DEBUG("system statistics error -- cannot get cpu count: %s\n", STRERROR);
                 return false;
         }
 
         mib[1] = HW_PHYSMEM;
         len    = sizeof(systeminfo.mem_max);
         if (sysctl(mib, 2, &systeminfo.mem_max, &len, NULL, 0) == -1) {
-                DEBUG("system statistic error -- cannot get real memory amount: %s\n", STRERROR);
+                DEBUG("system statistics error -- cannot get real memory amount: %s\n", STRERROR);
                 return false;
         }
 
         mib[1] = HW_PAGESIZE;
         len    = sizeof(pagesize);
         if (sysctl(mib, 2, &pagesize, &len, NULL, 0) == -1) {
-                DEBUG("system statistic error -- cannot get memory page size: %s\n", STRERROR);
+                DEBUG("system statistics error -- cannot get memory page size: %s\n", STRERROR);
                 return false;
         }
 
@@ -138,16 +138,17 @@ boolean_t init_process_info_sysdep(void) {
  * @return treesize > 0 if succeeded otherwise 0.
  */
 int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
-        kvm_t *kvm_handle = kvm_open(NULL, _PATH_DEVNULL, NULL, O_RDONLY, prog);
+        char errbuf[_POSIX2_LINE_MAX];
+        kvm_t *kvm_handle = kvm_openfiles(NULL, _PATH_DEVNULL, NULL, O_RDONLY, errbuf);
         if (! kvm_handle) {
-                LogError("system statistic error -- cannot initialize kvm interface\n");
+                LogError("system statistics error -- cannot initialize kvm interface\n");
                 return 0;
         }
 
         int treesize;
         struct kinfo_proc *pinfo = kvm_getprocs(kvm_handle, KERN_PROC_PROC, 0, &treesize);
         if (! pinfo || (treesize < 1)) {
-                LogError("system statistic error -- cannot get process tree\n");
+                LogError("system statistics error -- kvm_getprocs: %s\n", kvm_geterr(kvm_handle));
                 kvm_close(kvm_handle);
                 return 0;
         }
@@ -220,29 +221,29 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
         size_t len = sizeof(unsigned int);
         unsigned int active;
         if (sysctlbyname("vm.stats.vm.v_active_count", &active, &len, NULL, 0) == -1) {
-                LogError("system statistic error -- cannot get active memory usage: %s\n", STRERROR);
+                LogError("system statistics error -- cannot get active memory usage: %s\n", STRERROR);
                 return false;
         }
         if (len != sizeof(unsigned int)) {
-                LogError("system statistic error -- active memory usage statics error\n");
+                LogError("system statistics error -- active memory usage statics error\n");
                 return false;
         }
         unsigned int wired;
         if (sysctlbyname("vm.stats.vm.v_wire_count", &wired, &len, NULL, 0) == -1) {
-                LogError("system statistic error -- cannot get wired memory usage: %s\n", STRERROR);
+                LogError("system statistics error -- cannot get wired memory usage: %s\n", STRERROR);
                 return false;
         }
         if (len != sizeof(unsigned int)) {
-                LogError("system statistic error -- wired memory usage statics error\n");
+                LogError("system statistics error -- wired memory usage statics error\n");
                 return false;
         }
         uint64_t arcsize = 0ULL;
         len = sizeof(arcsize);
         if (sysctlbyname("kstat.zfs.misc.arcstats.size", &arcsize, &len, NULL, 0) == -1) {
-                DEBUG("system statistic error -- cannot get ZFS ARC memory usage: %s\n", STRERROR);
+                DEBUG("system statistics error -- cannot get ZFS ARC memory usage: %s\n", STRERROR);
         } else {
                 if (len != sizeof(arcsize)) {
-                        LogError("system statistic error -- ZFS ARC memory usage statics error\n");
+                        LogError("system statistics error -- ZFS ARC memory usage statics error\n");
                         return false;
                 }
         }
@@ -254,7 +255,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
         unsigned long long used  = 0ULL;
         size_t miblen = sizeof(mib) / sizeof(mib[0]);
         if (sysctlnametomib("vm.swap_info", mib, &miblen) == -1) {
-                LogError("system statistic error -- cannot get swap usage: %s\n", STRERROR);
+                LogError("system statistics error -- cannot get swap usage: %s\n", STRERROR);
                 si->swap_max = 0ULL;
                 return false;
         }
@@ -266,7 +267,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
                 if (sysctl(mib, miblen + 1, &xsw, &len, NULL, 0) == -1)
                         break;
                 if (xsw.xsw_version != XSWDEV_VERSION) {
-                        LogError("system statistic error -- cannot get swap usage: xswdev version mismatch\n");
+                        LogError("system statistics error -- cannot get swap usage: xswdev version mismatch\n");
                         si->swap_max = 0ULL;
                         return false;
                 }
@@ -293,13 +294,13 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
 
         len = sizeof(mib);
         if (sysctlnametomib("kern.cp_time", mib, &len) == -1) {
-                LogError("system statistic error -- cannot get cpu time handler: %s\n", STRERROR);
+                LogError("system statistics error -- cannot get cpu time handler: %s\n", STRERROR);
                 return false;
         }
 
         len = sizeof(cp_time);
         if (sysctl(mib, 2, &cp_time, &len, NULL, 0) == -1) {
-                LogError("system statistic error -- cannot get cpu time: %s\n", STRERROR);
+                LogError("system statistics error -- cannot get cpu time: %s\n", STRERROR);
                 return false;
         }
 
