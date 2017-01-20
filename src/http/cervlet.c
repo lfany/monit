@@ -292,6 +292,9 @@ static void _printIOStatistics(Output_Type type, HttpResponse res, Service_T s, 
                 double deltaBytesPerSec = Statistics_deltaNormalize(&(io->bytes));
                 double deltaOpsPerSec = Statistics_deltaNormalize(&(io->operations));
                 _formatStatus(name, Event_Null, type, res, s, true, "%s/s [%s total] [%.1f %ss/s]", Str_bytesToSize(deltaBytesPerSec, (char[10]){}), Str_bytesToSize(Statistics_raw(&(io->bytes)), (char[10]){}), deltaOpsPerSec, name);
+        } else if (hasOps) {
+                double deltaOpsPerSec = Statistics_deltaNormalize(&(io->operations));
+                _formatStatus(name, Event_Null, type, res, s, true, "%.1f %s/s [%"PRIu64" total]", deltaOpsPerSec, name, Statistics_raw(&(io->operations)));
         } else if (hasBytes) {
                 double deltaBytesPerSec = Statistics_deltaNormalize(&(io->bytes));
                 _formatStatus(name, Event_Null, type, res, s, true, "%s/s [%s total]", Str_bytesToSize(deltaBytesPerSec, (char[10]){}), Str_bytesToSize(Statistics_raw(&(io->bytes)), (char[10]){}));

@@ -73,6 +73,9 @@
 #include "ProcessTree.h"
 #include "process_sysdep.h"
 
+// libmonit
+#include "system/Time.h"
+
 
 /**
  *  System dependent resource data collecting code for FreeBSD.
@@ -148,6 +151,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 kvm_close(kvm_handle);
                 return 0;
         }
+        uint64_t now = Time_milli();
 
         ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), treesize);
 
@@ -178,6 +182,11 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                                 FREE(pt[i].cmdline);
                                 pt[i].cmdline = Str_dup(pinfo[i].ki_comm);
                         }
+                }
+                if (! pt[i].zombie) {
+                        pt[i].read.time = pt[i].write.time = now;
+                        pt[i].read.operations = pinfo[i].ki_rusage.ru_inblock;
+                        pt[i].write.operations = pinfo[i].ki_rusage.ru_oublock;
                 }
         }
         if (pflags & ProcessEngine_CollectCommandLine)
