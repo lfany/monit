@@ -69,6 +69,9 @@
 #include "ProcessTree.h"
 #include "process_sysdep.h"
 
+// libmonit
+#include "system/Time.h"
+
 
 /**
  *  System dependent resource data collecting code for OpenBSD.
@@ -169,6 +172,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
 
         pt = CALLOC(sizeof(ProcessTree_T), treesize);
 
+        uint64_t now = Time_milli();
         if (! (kvm_handle = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, buf))) {
                 FREE(pinfo);
                 FREE(pt);
@@ -184,15 +188,18 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 int index = count;
                 if (pinfo[i].p_tid < 0) {
                         count++;
-                        pt[index].pid          = pinfo[i].p_pid;
-                        pt[index].ppid         = pinfo[i].p_ppid;
-                        pt[index].cred.uid     = pinfo[i].p_ruid;
-                        pt[index].cred.euid    = pinfo[i].p_uid;
-                        pt[index].cred.gid     = pinfo[i].p_rgid;
-                        pt[index].uptime       = systeminfo.time / 10. - pinfo[i].p_ustart_sec;
-                        pt[index].cpu.time     = pinfo[i].p_rtime_sec * 10 + (double)pinfo[i].p_rtime_usec / 100000.;
-                        pt[index].memory.usage = (uint64_t)pinfo[i].p_vm_rssize * (uint64_t)pagesize;
-                        pt[index].zombie       = pinfo[i].p_stat == SZOMB ? true : false;
+                        pt[index].pid              = pinfo[i].p_pid;
+                        pt[index].ppid             = pinfo[i].p_ppid;
+                        pt[index].cred.uid         = pinfo[i].p_ruid;
+                        pt[index].cred.euid        = pinfo[i].p_uid;
+                        pt[index].cred.gid         = pinfo[i].p_rgid;
+                        pt[index].uptime           = systeminfo.time / 10. - pinfo[i].p_ustart_sec;
+                        pt[index].cpu.time         = pinfo[i].p_rtime_sec * 10 + (double)pinfo[i].p_rtime_usec / 100000.;
+                        pt[index].memory.usage     = (uint64_t)pinfo[i].p_vm_rssize * (uint64_t)pagesize;
+                        pt[index].zombie           = pinfo[i].p_stat == SZOMB ? true : false;
+                        pt[index].read.operations  = pinfo[i].p_uru_inblock;
+                        pt[index].write.operations = pinfo[i].p_uru_oublock;
+                        pt[index].read.time = pt[i].write.time = now;
                         if (pflags & ProcessEngine_CollectCommandLine) {
                                 char **args = kvm_getargv(kvm_handle, &pinfo[i], 0);
                                 if (args) {
