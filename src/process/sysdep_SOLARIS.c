@@ -139,30 +139,26 @@ double timestruc_to_tseconds(timestruc_t t) {
  * @return treesize > 0 if succeeded otherwise 0
  */
 int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
-        int            rv;
-        int            treesize;
-        char           buf[4096];
-        glob_t         globbuf;
-        pstatus_t      pstatus;
-        psinfo_t      *psinfo = (psinfo_t *)&buf;
-        ProcessTree_T *pt;
-
         ASSERT(reference);
 
         /* Find all processes in the /proc directory */
-        if ((rv = glob("/proc/[0-9]*", 0, NULL, &globbuf)) != 0) {
+        glob_t globbuf;
+        int rv = glob("/proc/[0-9]*", 0, NULL, &globbuf);
+        if (rv != 0) {
                 LogError("system statistic error -- glob failed: %d (%s)\n", rv, STRERROR);
                 return 0;
         }
 
-        treesize = globbuf.gl_pathc;
+        int treesize = globbuf.gl_pathc;
 
         /* Allocate the tree */
-        pt = CALLOC(sizeof(ProcessTree_T), treesize);
+        ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), treesize);
 
+        char buf[4096];
         for (int i = 0; i < treesize; i++) {
                 pt[i].pid = atoi(globbuf.gl_pathv[i] + strlen("/proc/"));
                 if (file_readProc(buf, sizeof(buf), "psinfo", pt[i].pid, NULL)) {
+                        psinfo_t *psinfo = (psinfo_t *)&buf;
                         pt[i].ppid         = psinfo->pr_ppid;
                         pt[i].cred.uid     = psinfo->pr_uid;
                         pt[i].cred.euid    = psinfo->pr_euid;
@@ -178,9 +174,14 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                                 }
                         }
                         if (file_readProc(buf, sizeof(buf), "status", pt[i].pid, NULL)) {
-                                memcpy(&pstatus, buf, sizeof(pstatus_t));
-                                pt[i].cpu.time = timestruc_to_tseconds(pstatus.pr_utime) + timestruc_to_tseconds(pstatus.pr_stime);
-                                pt[i].threads = pstatus.pr_nlwp;
+                                pstatus_t *pstatus = (pstatus_t *)&buf;
+                                pt[i].cpu.time = timestruc_to_tseconds(pstatus->pr_utime) + timestruc_to_tseconds(pstatus->pr_stime);
+                                pt[i].threads = pstatus->pr_nlwp;
+                        }
+                        if (file_readProc(buf, sizeof(buf), "usage", pt[i].pid, NULL)) {
+                                struct prusage *usage = (struct prusage *)&buf;
+                                pt[i].read.operations = usage->pr_inblk;
+                                pt[i].write.operations = usage->pr_oublk;
                         }
                 }
         }
