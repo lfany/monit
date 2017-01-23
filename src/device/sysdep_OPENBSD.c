@@ -42,6 +42,10 @@
 #include <string.h>
 #endif
 
+#ifdef HAVE_CTYPE_H
+#include <ctype.h>
+#endif
+
 #ifdef HAVE_SYS_PARAM_H
 #include <sys/param.h>
 #endif
@@ -50,16 +54,139 @@
 #include <sys/mount.h>
 #endif
 
+#ifdef HAVE_SYS_SYSCTL_H
+#include <sys/sysctl.h>
+#endif
+
+#ifdef HAVE_SYS_DISK_H
+#include <sys/disk.h>
+#endif
+
 #include "monit.h"
 #include "device_sysdep.h"
+
+// libmonit
+#include "system/Time.h"
+#include "io/File.h"
+
+
+/* ------------------------------------------------------------- Definitions */
+
+
+static struct {
+        uint64_t timestamp;
+        size_t diskCount;
+        size_t diskLength;
+        struct diskstats *disk;
+} _statistics = {};
+
+
+/* ------------------------------------------------------- Static destructor */
+
+
+static void __attribute__ ((destructor)) _destructor() {
+        FREE(_statistics.disk);
+}
 
 
 /* ----------------------------------------------------------------- Private */
 
 
-static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
-        //FIXME
+static uint64_t _timevalToMilli(struct timeval *time) {
+        return time->tv_sec * 1000 + time->tv_usec / 1000.;
+}
+
+
+// Parse the device path like /dev/sd0a -> sd0
+static boolean_t _parseDevice(const char *path, char device[DS_DISKNAMELEN]) {
+        const char *base = File_basename(path);
+        for (int len = strlen(base), i = len - 1; i >= 0; i--) {
+                if (isdigit(*(base + i))) {
+                        strncpy(device, base, i + 1 < sizeof(device) ? i + 1 : sizeof(device) - 1);
+                        return true;
+                }
+        }
+        return false;
+}
+
+
+static boolean_t _getDevice(char *mountpoint, char device[DS_DISKNAMELEN]) {
+        int countfs = getfsstat(NULL, 0, MNT_NOWAIT);
+        if (countfs != -1) {
+                struct statfs *statfs = CALLOC(countfs, sizeof(struct statfs));
+                if ((countfs = getfsstat(statfs, countfs * sizeof(struct statfs), MNT_NOWAIT)) != -1) {
+                        for (int i = 0; i < countfs; i++) {
+                                struct statfs *sfs = statfs + i;
+                                if (IS(sfs->f_mntonname, mountpoint)) {
+                                        boolean_t rv = _parseDevice(sfs->f_mntfromname, device);
+                                        FREE(statfs);
+                                        return rv;
+                                }
+                        }
+                }
+                FREE(statfs);
+        }
+        LogError("Mount point %s -- %s\n", mountpoint, STRERROR);
+        return false;
+}
+
+
+static boolean_t _getStatistics(uint64_t now) {
+        // Refresh only if the statistics are older then 1 second (handle also backward time jumps)
+        if (now > _statistics.timestamp + 1000 || now < _statistics.timestamp - 1000) {
+                size_t len = sizeof(_statistics.diskCount);
+                int mib[2] = {CTL_HW, HW_DISKCOUNT};
+                if (sysctl(mib, 2, &(_statistics.diskCount), &len, NULL, 0) == -1) {
+                        LogError("filesystem statistic error -- cannot get disks count: %s\n", STRERROR);
+                        return false;
+                }
+                int length = _statistics.diskCount * sizeof(struct diskstats);
+                if (_statistics.diskLength != length) {
+                        _statistics.diskLength = length;
+                        RESIZE(_statistics.disk, length);
+                }
+                mib[1] = HW_DISKSTATS;
+                if (sysctl(mib, 2, _statistics.disk, &(_statistics.diskLength), NULL, 0) == -1) {
+                        LogError("filesystem statistic error -- cannot get disks statistics: %s\n", STRERROR);
+                        return false;
+                }
+                _statistics.timestamp = now;
+        }
         return true;
+}
+
+
+static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
+        boolean_t rv = true;
+        char device[DS_DISKNAMELEN] = {};
+        if (_getDevice(mountpoint, device)) {
+                uint64_t now = Time_milli();
+                if ((rv = _getStatistics(now))) {
+                        for (int i = 0; i < _statistics.diskCount; i++)     {
+                                if (Str_isEqual(device, _statistics.disk[i].ds_name)) {
+                                        Statistics_update(&(inf->priv.filesystem.read.bytes), now, _statistics.disk[i].ds_rbytes);
+                                        Statistics_update(&(inf->priv.filesystem.write.bytes), now, _statistics.disk[i].ds_wbytes);
+                                        Statistics_update(&(inf->priv.filesystem.read.operations),  now, _statistics.disk[i].ds_rxfer);
+                                        Statistics_update(&(inf->priv.filesystem.write.operations), now, _statistics.disk[i].ds_wxfer);
+                                        // Read and write time: OpenBSD doesn't have time by operation type - only time total. We approximate the time by splitting it in read:write ratio. As write operation is usually slower
+                                        // then read operation, it is far from perfect, but probably best what we can do with available data (other then keeping it as is).
+                                        double rwTotal = _statistics.disk[i].ds_rxfer + _statistics.disk[i].ds_wxfer;
+                                        double rwPart = rwTotal ? _timevalToMilli(&(_statistics.disk[i].ds_time)) / rwTotal : 0.;
+                                        Statistics_update(&(inf->priv.filesystem.read.time), now, _statistics.disk[i].ds_rxfer * rwPart);
+                                        Statistics_update(&(inf->priv.filesystem.write.time), now, _statistics.disk[i].ds_wxfer * rwPart);
+                                        break;
+                                }
+                        }
+                }
+        } else {
+                Statistics_reset(&(inf->priv.filesystem.read.time));
+                Statistics_reset(&(inf->priv.filesystem.read.bytes));
+                Statistics_reset(&(inf->priv.filesystem.read.operations));
+                Statistics_reset(&(inf->priv.filesystem.write.time));
+                Statistics_reset(&(inf->priv.filesystem.write.bytes));
+                Statistics_reset(&(inf->priv.filesystem.write.operations));
+        }
+        return rv;
 }
 
 

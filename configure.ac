@@ -140,6 +140,7 @@ AC_CHECK_HEADERS([ \
 	sys/cfgdb.h \
 	sys/dk.h \
 	sys/dkstat.h \
+	sys/disk.h \
 	sys/filio.h \
 	sys/ioctl.h \
 	sys/loadavg.h \

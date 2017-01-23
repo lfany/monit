@@ -156,7 +156,6 @@ static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
                         LogError("filesystem statistics error -- devstat_getdevs: %s\n", devstat_errbuf);
                         rv = false;
                 }
-error:
                 FREE(stat.dinfo);
         } else {
                 Statistics_reset(&(inf->priv.filesystem.read.time));
