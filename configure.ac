@@ -143,6 +143,7 @@ AC_CHECK_HEADERS([ \
 	sys/disk.h \
 	sys/filio.h \
 	sys/ioctl.h \
+	sys/iostat.h \
 	sys/loadavg.h \
 	sys/lock.h \
 	sys/mnttab.h \
