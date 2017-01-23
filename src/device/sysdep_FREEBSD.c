@@ -78,6 +78,7 @@
 #include "device_sysdep.h"
 
 // libmonit
+#include "system/Time.h"
 #include "io/File.h"
 
 
@@ -88,6 +89,25 @@ typedef struct Device_T {
         char name[SPECNAMELEN];
         int instance;
 } *Device_T;
+
+
+static struct {
+        uint64_t timestamp;
+        struct statinfo disk;
+} _statistics = {};
+
+
+/* --------------------------------------- Static constructor and destructor */
+
+
+static void __attribute__ ((constructor)) _constructor() {
+        _statistics.disk.dinfo = CALLOC(1, sizeof(struct devinfo));
+}
+
+
+static void __attribute__ ((destructor)) _destructor() {
+        FREE(_statistics.disk.dinfo);
+}
 
 
 /* ----------------------------------------------------------------- Private */
@@ -133,30 +153,38 @@ static boolean_t _getDevice(char *mountpoint, Device_T device) {
 }
 
 
+static boolean_t _getStatistics(uint64_t now) {
+        // Refresh only if the statistics are older then 1 second (handle also backward time jumps)
+        if (now > _statistics.timestamp + 1000 || now < _statistics.timestamp - 1000) {
+                if (devstat_getdevs(NULL, &(_statistics.disk)) == -1) {
+                        LogError("filesystem statistics error -- devstat_getdevs: %s\n", devstat_errbuf);
+                        return false;
+                }
+                _statistics.timestamp = now;
+        }
+        return true;
+}
+
+
 static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
         boolean_t rv = true;
         struct Device_T device = {};
         if (_getDevice(mountpoint, &device)) {
-                struct statinfo stat = {};
-                stat.dinfo = CALLOC(1, sizeof(struct devinfo));
-                if (devstat_getdevs(NULL, &stat) != -1) {
-                        for (int i = 0; i < stat.dinfo->numdevs; i++) {
-                                if (stat.dinfo->devices[i].unit_number == device.instance && IS(stat.dinfo->devices[i].device_name, device.name)) {
-                                        uint64_t now = stat.snap_time * 1000;
-                                        Statistics_update(&(inf->priv.filesystem.read.time), now, _bintimeToMilli(&(stat.dinfo->devices[i].duration[DEVSTAT_READ])));
-                                        Statistics_update(&(inf->priv.filesystem.read.bytes), now, stat.dinfo->devices[i].bytes[DEVSTAT_READ]);
-                                        Statistics_update(&(inf->priv.filesystem.read.operations),  now, stat.dinfo->devices[i].operations[DEVSTAT_READ]);
-                                        Statistics_update(&(inf->priv.filesystem.write.time), now, _bintimeToMilli(&(stat.dinfo->devices[i].duration[DEVSTAT_WRITE])));
-                                        Statistics_update(&(inf->priv.filesystem.write.bytes), now, stat.dinfo->devices[i].bytes[DEVSTAT_WRITE]);
-                                        Statistics_update(&(inf->priv.filesystem.write.operations), now, stat.dinfo->devices[i].operations[DEVSTAT_WRITE]);
+                uint64_t now = Time_milli();
+                if ((rv = _getStatistics(now))) {
+                        for (int i = 0; i < _statistics.disk.dinfo->numdevs; i++) {
+                                if (_statistics.disk.dinfo->devices[i].unit_number == device.instance && IS(_statistics.disk.dinfo->devices[i].device_name, device.name)) {
+                                        uint64_t now = _statistics.disk.snap_time * 1000;
+                                        Statistics_update(&(inf->priv.filesystem.read.time), now, _bintimeToMilli(&(_statistics.disk.dinfo->devices[i].duration[DEVSTAT_READ])));
+                                        Statistics_update(&(inf->priv.filesystem.read.bytes), now, _statistics.disk.dinfo->devices[i].bytes[DEVSTAT_READ]);
+                                        Statistics_update(&(inf->priv.filesystem.read.operations),  now, _statistics.disk.dinfo->devices[i].operations[DEVSTAT_READ]);
+                                        Statistics_update(&(inf->priv.filesystem.write.time), now, _bintimeToMilli(&(_statistics.disk.dinfo->devices[i].duration[DEVSTAT_WRITE])));
+                                        Statistics_update(&(inf->priv.filesystem.write.bytes), now, _statistics.disk.dinfo->devices[i].bytes[DEVSTAT_WRITE]);
+                                        Statistics_update(&(inf->priv.filesystem.write.operations), now, _statistics.disk.dinfo->devices[i].operations[DEVSTAT_WRITE]);
                                         break;
                                 }
                         }
-                } else {
-                        LogError("filesystem statistics error -- devstat_getdevs: %s\n", devstat_errbuf);
-                        rv = false;
                 }
-                FREE(stat.dinfo);
         } else {
                 Statistics_reset(&(inf->priv.filesystem.read.time));
                 Statistics_reset(&(inf->priv.filesystem.read.bytes));
