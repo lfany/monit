@@ -3043,6 +3043,11 @@ static void addservice(Service_T s) {
                         }
                         break;
                 case Service_Filesystem:
+                        if (! s->nonexistlist) {
+                                // Add existence test if not defined
+                                addeventaction(&(nonexistset).action, Action_Restart, Action_Alert);
+                                addnonexist(&nonexistset);
+                        }
                         if (! s->fsflaglist) {
                                 // Add filesystem flags change test if not defined
                                 addeventaction(&(fsflagset).action, Action_Alert, Action_Ignored);
