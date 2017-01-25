@@ -38,11 +38,13 @@ Fixed: Issue #510: The "set ssl" options defaults had no effect on the Monit HTT
 
 Fixed: Issue #515: The compression may fail of response body is empty and zlib version <= 1.2.3.
 
+Fixed: Issue #537: Monit HTTP server could not start if no network interface available
+
 Fixed: Monit HTTP GUI: Safari may fail to load the page if SSL is enabled.
 
 Fixed: If the connection timed out, Monit reported incorrect error: "Resource temporarily unavailable".
 
-Fixed: Issue #537: Monit HTTP server could not start if no network interface available
+Fixed: Implicit filesystem existence monitoring even if the "does not exist" test is not defined.
 
 
 Version 5.20.0
