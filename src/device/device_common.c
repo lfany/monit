@@ -68,7 +68,7 @@ boolean_t filesystem_usage(Service_T s) {
         ASSERT(s);
 
         struct stat sb;
-        char buf[PATH_MAX+1];
+        char buf[PATH_MAX] = {};
         if (lstat(s->path, &sb) == 0) {
                 if (S_ISLNK(sb.st_mode)) {
                         // Symbolic link: dereference so we'll be able to find it in mnttab + get permissions of the target
@@ -83,7 +83,7 @@ boolean_t filesystem_usage(Service_T s) {
                         }
                         // If the target is device, get its mountpoint
                         if (S_ISBLK(sb.st_mode) || S_ISCHR(sb.st_mode)) {
-                                char dev[PATH_MAX+1];
+                                char dev[PATH_MAX] = {};
                                 snprintf(dev, sizeof(dev), "%s", buf);
                                 if (! device_mountpoint_sysdep(dev, buf, sizeof(buf)))
                                         return false;

@@ -388,6 +388,19 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                 }
                                 _printIOStatistics(type, res, s, &(s->inf->priv.filesystem.read), "read", "read");
                                 _printIOStatistics(type, res, s, &(s->inf->priv.filesystem.write), "write", "write");
+                                boolean_t hasWaitTime = Statistics_initialized(&(s->inf->priv.filesystem.waitTime));
+                                boolean_t hasRunTime = Statistics_initialized(&(s->inf->priv.filesystem.runTime));
+                                if (hasWaitTime && hasRunTime) {
+                                        double waitTime = Statistics_deltaNormalize(&(s->inf->priv.filesystem.waitTime));
+                                        double runTime = Statistics_deltaNormalize(&(s->inf->priv.filesystem.runTime));
+                                        _formatStatus("service time", Event_Null, type, res, s, true, "%.3fms (of which queue time %.3fms, active time %.3fms)", waitTime + runTime, waitTime, runTime);
+                                } else if (hasWaitTime) {
+                                        double waitTime = Statistics_deltaNormalize(&(s->inf->priv.filesystem.waitTime));
+                                        _formatStatus("queue time", Event_Null, type, res, s, true, "%.3fms", waitTime);
+                                } else if (hasRunTime) {
+                                        double runTime = Statistics_deltaNormalize(&(s->inf->priv.filesystem.runTime));
+                                        _formatStatus("active time", Event_Null, type, res, s, true, "%.3fms", runTime);
+                                }
                                 break;
 
                         case Service_Process:

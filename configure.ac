@@ -142,10 +142,12 @@ AC_CHECK_HEADERS([ \
 	sys/dkstat.h \
 	sys/disk.h \
 	sys/filio.h \
+	sys/instance.h \
 	sys/ioctl.h \
 	sys/iostat.h \
 	sys/loadavg.h \
 	sys/lock.h \
+	sys/mntent.h \
 	sys/mnttab.h \
 	sys/mutex.h \
 	sys/nlist.h \

@@ -292,6 +292,16 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                 }
                                 _ioStatistics(B, "read", &(S->inf->priv.filesystem.read));
                                 _ioStatistics(B, "write", &(S->inf->priv.filesystem.write));
+                                boolean_t hasWaitTime = Statistics_initialized(&(S->inf->priv.filesystem.waitTime));
+                                boolean_t hasRunTime = Statistics_initialized(&(S->inf->priv.filesystem.runTime));
+                                if (hasWaitTime || hasRunTime) {
+                                        StringBuffer_append(B, "<servicetime>");
+                                        if (hasWaitTime)
+                                                StringBuffer_append(B, "<wait>%.3f</wait>", Statistics_deltaNormalize(&(S->inf->priv.filesystem.waitTime)));
+                                        if (hasRunTime)
+                                                StringBuffer_append(B, "<run>%.3f</run>", Statistics_deltaNormalize(&(S->inf->priv.filesystem.runTime)));
+                                        StringBuffer_append(B, "</servicetime>");
+                                }
                                 break;
 
                         case Service_Net:
@@ -383,6 +393,8 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                                 S->inf->priv.process.cpu_percent,
                                                 S->inf->priv.process.total_cpu_percent);
                                 }
+                                _ioStatistics(B, "read", &(S->inf->priv.process.read));
+                                _ioStatistics(B, "write", &(S->inf->priv.process.write));
                                 break;
 
                         default:

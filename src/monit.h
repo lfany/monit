@@ -962,6 +962,8 @@ typedef struct myinfo {
                         int mode;                                              /**< Permission */
                         struct IOStatistics_T read;                       /**< Read statistics */
                         struct IOStatistics_T write;                     /**< Write statistics */
+                        struct Statistics_T waitTime;       /**< Time spend in wait queue [ms] */
+                        struct Statistics_T runTime;         /**< Time spend in run queue [ms] */
                 } filesystem;
 
                 struct {
