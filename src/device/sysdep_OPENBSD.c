@@ -168,12 +168,7 @@ static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
                                         Statistics_update(&(inf->priv.filesystem.write.bytes), now, _statistics.disk[i].ds_wbytes);
                                         Statistics_update(&(inf->priv.filesystem.read.operations),  now, _statistics.disk[i].ds_rxfer);
                                         Statistics_update(&(inf->priv.filesystem.write.operations), now, _statistics.disk[i].ds_wxfer);
-                                        // Read and write time: OpenBSD doesn't have time by operation type - only time total. We approximate the time by splitting it in read:write ratio. As write operation is usually slower
-                                        // then read operation, it is far from perfect, but probably best what we can do with available data (other then keeping it as is).
-                                        double rwTotal = _statistics.disk[i].ds_rxfer + _statistics.disk[i].ds_wxfer;
-                                        double rwPart = rwTotal ? _timevalToMilli(&(_statistics.disk[i].ds_time)) / rwTotal : 0.;
-                                        Statistics_update(&(inf->priv.filesystem.read.time), now, _statistics.disk[i].ds_rxfer * rwPart);
-                                        Statistics_update(&(inf->priv.filesystem.write.time), now, _statistics.disk[i].ds_wxfer * rwPart);
+                                        Statistics_update(&(inf->priv.filesystem.runTime), now, _timevalToMilli(&(_statistics.disk[i].ds_time)));
                                         break;
                                 }
                         }
