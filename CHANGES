@@ -25,7 +25,9 @@ server-side ciphers preference. Example (using monit's default ciphers string):
 New: The certificate minimum valid days test now triggers the timestamp event instead
 of connection event.
 
-Fixed: Issue #488: Ping test may fail.
+Fixed: Issue #488: Ping test may fail if the machine performs other ping tests with small payload.
+
+Fixed: Issue #543: Ping test may timeout prematurely on machine with heavy ICMP traffic.
 
 Fixed: Issue #495: Position independent CSRF cookie value.
 

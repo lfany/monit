@@ -432,8 +432,7 @@ static double _receivePing(const char *hostname, int socket, struct addrinfo *ad
                                 // Time jumped
                                 break;
                         } else {
-                                int64_t delta = stopped - started;
-                                read_timeout = timeout - (int)delta;
+                                read_timeout = timeout - (stopped - started) / 1000.;
                         }
                 } else {
                         memcpy(&started, data, sizeof(int64_t));
