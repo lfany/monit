@@ -102,6 +102,7 @@ AC_CHECK_HEADERS([ \
 	kvm.h \
 	paths.h \
 	kstat.h \
+	libzfs.h \
 	zone.h \
 	sys/protosw.h \
 	libproc.h \
@@ -142,6 +143,7 @@ AC_CHECK_HEADERS([ \
 	sys/dkstat.h \
 	sys/disk.h \
 	sys/filio.h \
+	sys/fs/zfs.h \
 	sys/instance.h \
 	sys/ioctl.h \
 	sys/iostat.h \
@@ -151,6 +153,7 @@ AC_CHECK_HEADERS([ \
 	sys/mnttab.h \
 	sys/mutex.h \
 	sys/nlist.h \
+	sys/nvpair.h \
 	sys/param.h \
 	sys/pstat.h \
 	sys/queue.h \
@@ -505,6 +508,7 @@ then
    ARCH="SOLARIS"
    CFLAGS="$CFLAGS -D _REENTRANT -D_POSIX_PTHREAD_SEMANTICS -D__EXTENSIONS__ -m64"
    LDFLAGS="$LDFLAGS -m64"
+   LIBS="$LIBS -lzfs -lnvpair"
    test_kstat="true"
    AC_DEFINE([HAVE_CPU_WAIT], [1], [Define to 1 if CPU wait information is available.])
    if test `uname -m` = "i86pc"
