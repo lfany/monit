@@ -123,7 +123,10 @@ static boolean_t _getDevice(char *mountpoint, char device[IOSTATNAMELEN]) {
                                 struct statvfs *sfs = statvfs + i;
                                 if (IS(sfs->f_mntonname, mountpoint)) {
                                         //FIXME: NetBSD kernel has NFS statistics as well, but there is no clear mapping between the kernel label ("nfsX" style) and the NFS mount => we don't support NFS currently
-                                        boolean_t rv = _parseDevice(sfs->f_mntfromname, device);
+                                        boolean_t rv = false;
+                                        if (! IS(sfs->f_fstypename, "nfs")) {
+                                                rv = _parseDevice(sfs->f_mntfromname, device);
+                                        }
                                         FREE(statvfs);
                                         return rv;
                                 }
