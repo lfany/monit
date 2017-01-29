@@ -116,10 +116,8 @@ static boolean_t _getDevice(char *mountpoint, Device_T device) {
                         } else if (IS(mnt.mnt_fstype, MNTTYPE_ZFS)) {
                                 strncpy(device->module, "zfs", sizeof(device->module) - 1);
                                 char *slash = strchr(mnt.mnt_special, '/');
-                                if (slash) {
-                                        strncpy(device->name, mnt.mnt_special, slash - mnt.mnt_special);
-                                        rv = true;
-                                }
+                                strncpy(device->name, mnt.mnt_special, slash ? slash - mnt.mnt_special : sizeof(device->name) - 1);
+                                rv = true;
                         } else {
                                 char special[PATH_MAX];
                                 if (! realpath(mnt.mnt_special, special)) {
