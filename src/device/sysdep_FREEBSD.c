@@ -87,6 +87,7 @@
 
 typedef struct Device_T {
         char name[SPECNAMELEN];
+        char type[MFSNAMELEN];
         int instance;
 } *Device_T;
 
@@ -140,7 +141,13 @@ static boolean_t _getDevice(char *mountpoint, Device_T device) {
                         for (int i = 0; i < countfs; i++) {
                                 struct statfs *sfs = statfs + i;
                                 if (IS(sfs->f_mntonname, mountpoint)) {
-                                        boolean_t rv = _parseDevice(sfs->f_mntfromname, device);
+                                        boolean_t rv = false;
+                                        strncpy(device->type, sfs->f_fstypename, sizeof(device->type) - 1);
+                                        if (IS(sfs->f_fstypename, "zfs")) {
+                                                //FIXME: can add ZFS support (see sysdep_SOLARIS.c), but libzfs headers are not installed on FreeBSD by default (part of "cddl" set)
+                                        } else {
+                                                rv = _parseDevice(sfs->f_mntfromname, device);
+                                        }
                                         FREE(statfs);
                                         return rv;
                                 }
