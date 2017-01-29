@@ -70,6 +70,7 @@
 #include <sys/iostat.h>
 #endif
 
+
 #include "monit.h"
 #include "device_sysdep.h"
 
@@ -121,6 +122,7 @@ static boolean_t _getDevice(char *mountpoint, char device[IOSTATNAMELEN]) {
                         for (int i = 0; i < countfs; i++) {
                                 struct statvfs *sfs = statvfs + i;
                                 if (IS(sfs->f_mntonname, mountpoint)) {
+                                        //FIXME: NetBSD kernel has NFS statistics as well, but there is no clear mapping between the kernel label ("nfsX" style) and the NFS mount => we don't support NFS currently
                                         boolean_t rv = _parseDevice(sfs->f_mntfromname, device);
                                         FREE(statvfs);
                                         return rv;
@@ -170,12 +172,7 @@ static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
                                         Statistics_update(&(inf->priv.filesystem.write.bytes), now, _statistics.disk[i].wbytes);
                                         Statistics_update(&(inf->priv.filesystem.read.operations),  now, _statistics.disk[i].rxfer);
                                         Statistics_update(&(inf->priv.filesystem.write.operations), now, _statistics.disk[i].wxfer);
-                                        // Read and write time: NetBSD doesn't have time by operation type - only time total. We approximate the time by splitting it in read:write ratio. As write operation is usually slower
-                                        // then read operation, it is far from perfect, but probably best what we can do with available data (other then keeping it as is).
-                                        double rwTotal = _statistics.disk[i].rxfer + _statistics.disk[i].wxfer;
-                                        double rwPart = rwTotal ? (_statistics.disk[i].time_sec * 1000 + _statistics.disk[i].time_usec / 1000.) / rwTotal : 0.;
-                                        Statistics_update(&(inf->priv.filesystem.read.time), now, _statistics.disk[i].rxfer * rwPart);
-                                        Statistics_update(&(inf->priv.filesystem.write.time), now, _statistics.disk[i].wxfer * rwPart);
+                                        Statistics_update(&(inf->priv.filesystem.runTime), now, _statistics.disk[i].time_sec * 1000. + _statistics.disk[i].time_usec / 1000.);
                                         break;
                                 }
                         }

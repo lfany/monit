@@ -5,6 +5,14 @@
 Version 5.21.0
 
 New: The filesystem read/write statistics is now displayed in Monit GUI and CLI.
+                  Type                  Tested          No Support
+        Solaris:  per-filesystem        UFS, ZFS, NFS   CIFS
+        NetBSD:   per-disk              FFS             NFS
+        OpenBSD:  per-disk              FFS             NFS
+        FreeBSD:  per-filesystem
+        Linux:    per-filesystem
+        MacOS:    per-disk
+        AIX:
 
 New: The per-process read/write statistics is now displayed in Monit GUI and CLI
 on Linux and MacOS.
