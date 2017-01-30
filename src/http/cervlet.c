@@ -287,17 +287,17 @@ static void _printIOStatistics(Output_Type type, HttpResponse res, Service_T s, 
                 double deltaOps = Statistics_delta(&(io->operations));
                 double deltaOpsPerSec = Statistics_deltaNormalize(&(io->operations));
                 double deltaTime = Statistics_delta(&(io->time));
-                _formatStatus(header, Event_Null, type, res, s, true, "%s/s [%s total], %.1f %ss/s [%"PRIu64" %ss total], avg. service time %.3f ms/%s", Str_bytesToSize(deltaBytesPerSec, (char[10]){}), Str_bytesToSize(Statistics_raw(&(io->bytes)), (char[10]){}), deltaOpsPerSec, name, Statistics_raw(&(io->operations)), name, deltaOps > 0. ? deltaTime / deltaOps : 0., name);
+                _formatStatus(header, Event_Resource, type, res, s, true, "%s/s [%s total], %.1f %ss/s [%"PRIu64" %ss total], avg. service time %.3f ms/%s", Str_bytesToSize(deltaBytesPerSec, (char[10]){}), Str_bytesToSize(Statistics_raw(&(io->bytes)), (char[10]){}), deltaOpsPerSec, name, Statistics_raw(&(io->operations)), name, deltaOps > 0. ? deltaTime / deltaOps : 0., name);
         } else if (hasOps && hasBytes) {
                 double deltaBytesPerSec = Statistics_deltaNormalize(&(io->bytes));
                 double deltaOpsPerSec = Statistics_deltaNormalize(&(io->operations));
-                _formatStatus(header, Event_Null, type, res, s, true, "%s/s [%s total], %.1f %ss/s [%"PRIu64" %ss total]", Str_bytesToSize(deltaBytesPerSec, (char[10]){}), Str_bytesToSize(Statistics_raw(&(io->bytes)), (char[10]){}), deltaOpsPerSec, name, Statistics_raw(&(io->operations)), name);
+                _formatStatus(header, Event_Resource, type, res, s, true, "%s/s [%s total], %.1f %ss/s [%"PRIu64" %ss total]", Str_bytesToSize(deltaBytesPerSec, (char[10]){}), Str_bytesToSize(Statistics_raw(&(io->bytes)), (char[10]){}), deltaOpsPerSec, name, Statistics_raw(&(io->operations)), name);
         } else if (hasOps) {
                 double deltaOpsPerSec = Statistics_deltaNormalize(&(io->operations));
-                _formatStatus(header, Event_Null, type, res, s, true, "%.1f %ss/s [%"PRIu64" %ss total]", deltaOpsPerSec, name, Statistics_raw(&(io->operations)), name);
+                _formatStatus(header, Event_Resource, type, res, s, true, "%.1f %ss/s [%"PRIu64" %ss total]", deltaOpsPerSec, name, Statistics_raw(&(io->operations)), name);
         } else if (hasBytes) {
                 double deltaBytesPerSec = Statistics_deltaNormalize(&(io->bytes));
-                _formatStatus(header, Event_Null, type, res, s, true, "%s/s [%s total]", Str_bytesToSize(deltaBytesPerSec, (char[10]){}), Str_bytesToSize(Statistics_raw(&(io->bytes)), (char[10]){}));
+                _formatStatus(header, Event_Resource, type, res, s, true, "%s/s [%s total]", Str_bytesToSize(deltaBytesPerSec, (char[10]){}), Str_bytesToSize(Statistics_raw(&(io->bytes)), (char[10]){}));
         }
 }
 
@@ -575,6 +575,7 @@ static void do_head(HttpResponse res, const char *path, const char *name, int re
                             " .column {min-width: 80px;} "\
                             " .left {text-align:left} "\
                             " .right {text-align:right} "\
+                            " .center {text-align:center} "\
                             " #wrap {min-height: 100%%;} "\
                             " #main {overflow:auto; padding-bottom:50px;} "\
                             " /*Opera Fix*/body:before {content:\"\";height:100%%;float:left;width:0;margin-top:-32767px;} "\
@@ -1214,35 +1215,53 @@ static void do_home_process(HttpResponse res) {
                                             "<tr>"
                                             "<th class='left' class='first'>Process</th>"
                                             "<th class='left'>Status</th>"
-                                            "<th class='right'>Uptime</th>");
-                        if (Run.flags & Run_ProcessEngineEnabled) {
-                                StringBuffer_append(res->outputbuffer,
-                                                    "<th class='right'>CPU Total</b></th>"
-                                                    "<th class='right'>Memory Total</th>");
-                        }
-                        StringBuffer_append(res->outputbuffer, "</tr>");
+                                            "<th class='right'>Uptime</th>"
+                                            "<th class='right'>CPU Total</b></th>"
+                                            "<th class='right'>Memory Total</th>"
+                                            "<th class='column right'>Read</th>"
+                                            "<th class='column right'>Write</th>"
+                                            "</tr>");
                         header = false;
                 }
                 StringBuffer_append(res->outputbuffer,
-                                    "<tr %s>"
+                                    "<tr%s>"
                                     "<td class='left'><a href='%s'>%s</a></td>"
                                     "<td class='left'>%s</td>",
-                                    on ? "class='stripe'" : "",
+                                    on ? " class='stripe'" : "",
                                     s->name, s->name,
                                     get_service_status(HTML, s, buf, sizeof(buf)));
-                if (! Util_hasServiceStatus(s) || s->inf->priv.process.uptime < 0)
+                if (! (Run.flags & Run_ProcessEngineEnabled) || ! Util_hasServiceStatus(s) || s->inf->priv.process.uptime < 0) {
                         StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
-                else
+                } else {
                         StringBuffer_append(res->outputbuffer, "<td class='right'>%s</td>", _getUptime(s->inf->priv.process.uptime, (char[256]){}));
-                if (Run.flags & Run_ProcessEngineEnabled) {
-                        if (! Util_hasServiceStatus(s) || s->inf->priv.process.total_cpu_percent < 0)
+                }
+                if (! (Run.flags & Run_ProcessEngineEnabled) || ! Util_hasServiceStatus(s) || s->inf->priv.process.total_cpu_percent < 0) {
                                 StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
-                        else
-                                StringBuffer_append(res->outputbuffer, "<td class='right%s'>%.1f%%</td>", (s->error & Event_Resource) ? " red-text" : "", s->inf->priv.process.total_cpu_percent);
-                        if (! Util_hasServiceStatus(s) || s->inf->priv.process.total_mem_percent < 0)
-                                StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
-                        else
-                                StringBuffer_append(res->outputbuffer, "<td class='right%s'>%.1f%% [%s]</td>", (s->error & Event_Resource) ? " red-text" : "", s->inf->priv.process.total_mem_percent, Str_bytesToSize(s->inf->priv.process.total_mem, buf));
+                } else {
+                        StringBuffer_append(res->outputbuffer, "<td class='right%s'>%.1f%%</td>", (s->error & Event_Resource) ? " red-text" : "", s->inf->priv.process.total_cpu_percent);
+                }
+                if (! (Run.flags & Run_ProcessEngineEnabled) || ! Util_hasServiceStatus(s) || s->inf->priv.process.total_mem_percent < 0) {
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
+                } else {
+                        StringBuffer_append(res->outputbuffer, "<td class='right%s'>%.1f%% [%s]</td>", (s->error & Event_Resource) ? " red-text" : "", s->inf->priv.process.total_mem_percent, Str_bytesToSize(s->inf->priv.process.total_mem, buf));
+                }
+                boolean_t hasReadBytes = Statistics_initialized(&(s->inf->priv.process.read.bytes));
+                boolean_t hasReadOperations = Statistics_initialized(&(s->inf->priv.process.read.operations));
+                if (! (Run.flags & Run_ProcessEngineEnabled) || ! Util_hasServiceStatus(s) || (! hasReadBytes && ! hasReadOperations)) {
+                        StringBuffer_append(res->outputbuffer, "<td class='column right'>-</td>");
+                } else if (hasReadBytes) {
+                        StringBuffer_append(res->outputbuffer, "<td class='column right%s'>%s/s</td>", (s->error & Event_Resource) ? " red-text" : "", Str_bytesToSize(Statistics_deltaNormalize(&(s->inf->priv.process.read.bytes)), (char[10]){}));
+                } else if (hasReadOperations) {
+                        StringBuffer_append(res->outputbuffer, "<td class='column right%s'>%.1f/s</td>", (s->error & Event_Resource) ? " red-text" : "", Statistics_deltaNormalize(&(s->inf->priv.process.read.operations)));
+                }
+                boolean_t hasWriteBytes = Statistics_initialized(&(s->inf->priv.process.write.bytes));
+                boolean_t hasWriteOperations = Statistics_initialized(&(s->inf->priv.process.write.operations));
+                if (! (Run.flags & Run_ProcessEngineEnabled) || ! Util_hasServiceStatus(s) || (! hasWriteBytes && ! hasWriteOperations)) {
+                        StringBuffer_append(res->outputbuffer, "<td class='column right'>-</td>");
+                } else if (hasWriteBytes) {
+                        StringBuffer_append(res->outputbuffer, "<td class='column right%s'>%s/s</td>", (s->error & Event_Resource) ? " red-text" : "", Str_bytesToSize(Statistics_deltaNormalize(&(s->inf->priv.process.write.bytes)), (char[10]){}));
+                } else if (hasWriteOperations) {
+                        StringBuffer_append(res->outputbuffer, "<td class='column right%s'>%.1f/s</td>", (s->error & Event_Resource) ? " red-text" : "", Statistics_deltaNormalize(&(s->inf->priv.process.write.operations)));
                 }
                 StringBuffer_append(res->outputbuffer, "</tr>");
                 on = ! on;
@@ -1412,9 +1431,11 @@ static void do_home_filesystem(HttpResponse res) {
                                                     "<td class='column right'>not supported by filesystem</td>");
                         }
                         StringBuffer_append(res->outputbuffer,
-                                            "<td class='column right'>%s/s</td>"
-                                            "<td class='column right'>%s/s</td>",
+                                            "<td class='column right%s'>%s/s</td>"
+                                            "<td class='column right%s'>%s/s</td>",
+                                            (s->error & Event_Resource) ? " red-text" : "",
                                             Str_bytesToSize(Statistics_deltaNormalize(&(s->inf->priv.filesystem.read.bytes)), (char[10]){}),
+                                            (s->error & Event_Resource) ? " red-text" : "",
                                             Str_bytesToSize(Statistics_deltaNormalize(&(s->inf->priv.filesystem.write.bytes)), (char[10]){}));
                 }
                 StringBuffer_append(res->outputbuffer, "</tr>");
