@@ -10,7 +10,7 @@ New: The filesystem read/write statistics is now displayed in Monit GUI and CLI.
         NetBSD:   per-disk              FFS             NFS
         OpenBSD:  per-disk              FFS             NFS
         FreeBSD:  per-disk              UFS             NFS, ZFS
-        Linux:    per-filesystem
+        Linux:    per-filesystem        EXT4, XFS
         MacOS:    per-disk
         AIX:
 

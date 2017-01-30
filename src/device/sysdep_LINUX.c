@@ -73,14 +73,14 @@ static char *_getDevice(char *mountpoint, char filesystem[PATH_MAX]) {
         }
         struct mntent *mnt;
         while ((mnt = getmntent(f))) {
-                if (IS(mountpoint, mnt->mnt_dir)) {
+                if (IS(mountpoint, mnt->mnt_dir) && ! IS(mnt->mnt_fsname, "rootfs")) {
                         if (! realpath(mnt->mnt_fsname, filesystem)) {
                                 // If the file doesn't exist it's a virtual filesystem -> skip
                                 if (errno != ENOENT && errno != ENOTDIR)
                                         LogError("Mount point %s -- %s\n", mountpoint, STRERROR);
                                 goto error;
                         }
-                        snprintf(filesystem, PATH_MAX, "%s", File_basename(mnt->mnt_fsname));
+                        snprintf(filesystem, PATH_MAX, "%s", File_basename(filesystem));
                         endmntent(f);
                         return filesystem;
                 }
