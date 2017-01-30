@@ -54,6 +54,10 @@
 #include <mntent.h>
 #endif
 
+#ifdef HAVE_PATHS_H
+#include <paths.h>
+#endif
+
 #include "monit.h"
 #include "device_sysdep.h"
 
@@ -82,7 +86,7 @@ typedef struct Device_T {
 static boolean_t _getCifsDiskActivity(Device_T device, Info_T inf) {
         FILE *f = fopen(CIFSSTAT, "r");
         if (! f) {
-                LogError("Cannot open %s file\n", CIFSSTAT);
+                LogError("Cannot open %s\n", CIFSSTAT);
                 return false;
         }
         uint64_t now = Time_milli();
@@ -120,7 +124,7 @@ static boolean_t _getCifsDiskActivity(Device_T device, Info_T inf) {
 static boolean_t _getNfsDiskActivity(Device_T device, Info_T inf) {
         FILE *f = fopen(NFSSTAT, "r");
         if (! f) {
-                LogError("Cannot open %s file\n", NFSSTAT);
+                LogError("Cannot open %s\n", NFSSTAT);
                 return false;
         }
         uint64_t now = Time_milli();
@@ -185,9 +189,9 @@ static boolean_t _getBlockDiskActivity(Device_T device, Info_T inf) {
 
 
 static boolean_t _getDevice(char *mountpoint, Device_T device) {
-        FILE *f = setmntent("/etc/mtab", "r");
+        FILE *f = setmntent(_PATH_MOUNTED, "r");
         if (! f) {
-                LogError("Cannot open /etc/mtab file\n");
+                LogError("Cannot open %s\n", _PATH_MOUNTED);
                 return false;
         }
         struct mntent *mnt;
@@ -215,7 +219,7 @@ static boolean_t _getDevice(char *mountpoint, Device_T device) {
                         return true;
                 }
         }
-        LogError("Mount point %s -- not found in /etc/mtab\n", mountpoint);
+        LogError("Mount point %s -- not found in %s\n", mountpoint, _PATH_MOUNTED);
 error:
         endmntent(f);
         return false;
@@ -263,9 +267,9 @@ static boolean_t _getDiskUsage(char *mountpoint, Info_T inf) {
 char *device_mountpoint_sysdep(char *dev, char *buf, int buflen) {
         ASSERT(dev);
         ASSERT(buf);
-        FILE *f = setmntent("/etc/mtab", "r");
+        FILE *f = setmntent(_PATH_MOUNTED, "r");
         if (! f) {
-                LogError("Cannot open /etc/mtab file\n");
+                LogError("Cannot open %s\n", _PATH_MOUNTED);
                 return NULL;
         }
         struct mntent *mnt;
@@ -278,7 +282,7 @@ char *device_mountpoint_sysdep(char *dev, char *buf, int buflen) {
                 }
         }
         endmntent(f);
-        LogError("Device %s not found in /etc/mtab\n", dev);
+        LogError("Device %s not found in %s\n", dev, _PATH_MOUNTED);
         return NULL;
 }
 
