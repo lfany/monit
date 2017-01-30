@@ -572,6 +572,9 @@ static void do_head(HttpResponse res, const char *path, const char *name, int re
                             " .yellow-text {color:#ffff00;} "\
                             " .orange-text {color:#ff8800;} "\
                             " .short {overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 350px;}"\
+                            " .column {min-width: 80px;} "\
+                            " .left {text-align:left} "\
+                            " .right {text-align:right} "\
                             " #wrap {min-height: 100%%;} "\
                             " #main {overflow:auto; padding-bottom:50px;} "\
                             " /*Opera Fix*/body:before {content:\"\";height:100%%;float:left;width:0;margin-top:-32767px;} "\
@@ -603,7 +606,7 @@ static void do_head(HttpResponse res, const char *path, const char *name, int re
                             "  <tr>"\
                             "    <td width='20%%'><a href='.'>Home</a>&nbsp;&gt;&nbsp;<a href='%s'>%s</a></td>"\
                             "    <td width='60%%' style='text-align:center;'>Use <a href='http://mmonit.com/'>M/Monit</a> to manage all your Monit instances</td>"\
-                            "    <td width='20%%'><p align='right'><a href='_about'>Monit %s</a></td>"\
+                            "    <td width='20%%'><p class='right'><a href='_about'>Monit %s</a></td>"\
                             "  </tr>"\
                             "</table>"\
                             "<center>",
@@ -629,9 +632,9 @@ static void do_home(HttpResponse res) {
         StringBuffer_append(res->outputbuffer,
                             "<table id='header' width='100%%'>"
                             " <tr>"
-                            "  <td colspan=2 valign='top' align='left' width='100%%'>"
+                            "  <td colspan=2 valign='top' class='left' width='100%%'>"
                             "  <h1>Monit Service Manager</h1>"
-                            "  <p align='center'>Monit is <a href='_runtime'>running</a> on %s and monitoring:</p><br>"
+                            "  <p class='center'>Monit is <a href='_runtime'>running</a> on %s and monitoring:</p><br>"
                             "  </td>"
                             " </tr>"
                             "</table>", Run.system->name);
@@ -1151,27 +1154,27 @@ static void do_home_system(HttpResponse res) {
         StringBuffer_append(res->outputbuffer,
                             "<table id='header-row'>"
                             "<tr>"
-                            "<th align='left' class='first'>System</th>"
-                            "<th align='left'>Status</th>");
+                            "<th class='left first'>System</th>"
+                            "<th class='left'>Status</th>");
 
         if (Run.flags & Run_ProcessEngineEnabled) {
                 StringBuffer_append(res->outputbuffer,
-                                    "<th align='right'>Load</th>"
-                                    "<th align='right'>CPU</th>"
-                                    "<th align='right'>Memory</th>"
-                                    "<th align='right'>Swap</th>");
+                                    "<th class='right'>Load</th>"
+                                    "<th class='right'>CPU</th>"
+                                    "<th class='right'>Memory</th>"
+                                    "<th class='right'>Swap</th>");
         }
         StringBuffer_append(res->outputbuffer,
                             "</tr>"
                             "<tr class='stripe'>"
-                            "<td align='left'><a href='%s'>%s</a></td>"
-                            "<td align='left'>%s</td>",
+                            "<td class='left'><a href='%s'>%s</a></td>"
+                            "<td class='left'>%s</td>",
                             s->name, s->name,
                             get_service_status(HTML, s, buf, sizeof(buf)));
         if (Run.flags & Run_ProcessEngineEnabled) {
                 StringBuffer_append(res->outputbuffer,
-                                    "<td align='right'>[%.2f]&nbsp;[%.2f]&nbsp;[%.2f]</td>"
-                                    "<td align='right'>"
+                                    "<td class='right'>[%.2f]&nbsp;[%.2f]&nbsp;[%.2f]</td>"
+                                    "<td class='right'>"
                                     "%.1f%%us,&nbsp;%.1f%%sy"
 #ifdef HAVE_CPU_WAIT
                                     ",&nbsp;%.1f%%wa"
@@ -1185,10 +1188,10 @@ static void do_home_system(HttpResponse res) {
 #endif
                                     );
                 StringBuffer_append(res->outputbuffer,
-                                    "<td align='right'>%.1f%% [%s]</td>",
+                                    "<td class='right'>%.1f%% [%s]</td>",
                                     systeminfo.total_mem_percent, Str_bytesToSize(systeminfo.total_mem, buf));
                 StringBuffer_append(res->outputbuffer,
-                                    "<td align='right'>%.1f%% [%s]</td>",
+                                    "<td class='right'>%.1f%% [%s]</td>",
                                     systeminfo.total_swap_percent, Str_bytesToSize(systeminfo.total_swap, buf));
         }
         StringBuffer_append(res->outputbuffer,
@@ -1209,37 +1212,37 @@ static void do_home_process(HttpResponse res) {
                         StringBuffer_append(res->outputbuffer,
                                             "<table id='header-row'>"
                                             "<tr>"
-                                            "<th align='left' class='first'>Process</th>"
-                                            "<th align='left'>Status</th>"
-                                            "<th align='right'>Uptime</th>");
+                                            "<th class='left' class='first'>Process</th>"
+                                            "<th class='left'>Status</th>"
+                                            "<th class='right'>Uptime</th>");
                         if (Run.flags & Run_ProcessEngineEnabled) {
                                 StringBuffer_append(res->outputbuffer,
-                                                    "<th align='right'>CPU Total</b></th>"
-                                                    "<th align='right'>Memory Total</th>");
+                                                    "<th class='right'>CPU Total</b></th>"
+                                                    "<th class='right'>Memory Total</th>");
                         }
                         StringBuffer_append(res->outputbuffer, "</tr>");
                         header = false;
                 }
                 StringBuffer_append(res->outputbuffer,
                                     "<tr %s>"
-                                    "<td align='left'><a href='%s'>%s</a></td>"
-                                    "<td align='left'>%s</td>",
+                                    "<td class='left'><a href='%s'>%s</a></td>"
+                                    "<td class='left'>%s</td>",
                                     on ? "class='stripe'" : "",
                                     s->name, s->name,
                                     get_service_status(HTML, s, buf, sizeof(buf)));
                 if (! Util_hasServiceStatus(s) || s->inf->priv.process.uptime < 0)
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>-</td>");
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
                 else
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>%s</td>", _getUptime(s->inf->priv.process.uptime, (char[256]){}));
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>%s</td>", _getUptime(s->inf->priv.process.uptime, (char[256]){}));
                 if (Run.flags & Run_ProcessEngineEnabled) {
                         if (! Util_hasServiceStatus(s) || s->inf->priv.process.total_cpu_percent < 0)
-                                StringBuffer_append(res->outputbuffer, "<td align='right'>-</td>");
+                                StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
                         else
-                                StringBuffer_append(res->outputbuffer, "<td align='right' class='%s'>%.1f%%</td>", (s->error & Event_Resource) ? "red-text" : "", s->inf->priv.process.total_cpu_percent);
+                                StringBuffer_append(res->outputbuffer, "<td class='right%s'>%.1f%%</td>", (s->error & Event_Resource) ? " red-text" : "", s->inf->priv.process.total_cpu_percent);
                         if (! Util_hasServiceStatus(s) || s->inf->priv.process.total_mem_percent < 0)
-                                StringBuffer_append(res->outputbuffer, "<td align='right'>-</td>");
+                                StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
                         else
-                                StringBuffer_append(res->outputbuffer, "<td align='right' class='%s'>%.1f%% [%s]</td>", (s->error & Event_Resource) ? "red-text" : "", s->inf->priv.process.total_mem_percent, Str_bytesToSize(s->inf->priv.process.total_mem, buf));
+                                StringBuffer_append(res->outputbuffer, "<td class='right%s'>%.1f%% [%s]</td>", (s->error & Event_Resource) ? " red-text" : "", s->inf->priv.process.total_mem_percent, Str_bytesToSize(s->inf->priv.process.total_mem, buf));
                 }
                 StringBuffer_append(res->outputbuffer, "</tr>");
                 on = ! on;
@@ -1261,28 +1264,28 @@ static void do_home_program(HttpResponse res) {
                         StringBuffer_append(res->outputbuffer,
                                             "<table id='header-row'>"
                                             "<tr>"
-                                            "<th align='left' class='first'>Program</th>"
-                                            "<th align='left'>Status</th>"
-                                            "<th align='left'>Output</th>"
-                                            "<th align='right'>Last started</th>"
-                                            "<th align='right'>Exit value</th>"
+                                            "<th class='left' class='first'>Program</th>"
+                                            "<th class='left'>Status</th>"
+                                            "<th class='left'>Output</th>"
+                                            "<th class='right'>Last started</th>"
+                                            "<th class='right'>Exit value</th>"
                                             "</tr>");
                         header = false;
                 }
                 StringBuffer_append(res->outputbuffer,
                                     "<tr %s>"
-                                    "<td align='left'><a href='%s'>%s</a></td>"
-                                    "<td align='left'>%s</td>",
+                                    "<td class='left'><a href='%s'>%s</a></td>"
+                                    "<td class='left'>%s</td>",
                                     on ? "class='stripe'" : "",
                                     s->name, s->name,
                                     get_service_status(HTML, s, buf, sizeof(buf)));
                 if (! Util_hasServiceStatus(s)) {
-                        StringBuffer_append(res->outputbuffer, "<td align='left'>-</td>");
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>-</td>");
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>-</td>");
+                        StringBuffer_append(res->outputbuffer, "<td class='left'>-</td>");
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
                 } else {
                         if (s->program->started) {
-                                StringBuffer_append(res->outputbuffer, "<td align='left' class='short'>");
+                                StringBuffer_append(res->outputbuffer, "<td class='left short'>");
                                 if (StringBuffer_length(s->program->output)) {
                                         // Print first line only (escape HTML characters if any)
                                         const char *output = StringBuffer_toString(s->program->output);
@@ -1302,12 +1305,12 @@ static void do_home_program(HttpResponse res) {
                                         StringBuffer_append(res->outputbuffer, "no output");
                                 }
                                 StringBuffer_append(res->outputbuffer, "</td>");
-                                StringBuffer_append(res->outputbuffer, "<td align='right'>%s</td>", Time_fmt((char[32]){}, 32, "%d %b %Y %H:%M:%S", s->program->started));
-                                StringBuffer_append(res->outputbuffer, "<td align='right'>%d</td>", s->program->exitStatus);
+                                StringBuffer_append(res->outputbuffer, "<td class='right'>%s</td>", Time_fmt((char[32]){}, 32, "%d %b %Y %H:%M:%S", s->program->started));
+                                StringBuffer_append(res->outputbuffer, "<td class='right'>%d</td>", s->program->exitStatus);
                         } else {
-                                StringBuffer_append(res->outputbuffer, "<td align='right'>-</td>");
-                                StringBuffer_append(res->outputbuffer, "<td align='right'>Not yet started</td>");
-                                StringBuffer_append(res->outputbuffer, "<td align='right'>-</td>");
+                                StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
+                                StringBuffer_append(res->outputbuffer, "<td class='right'>Not yet started</td>");
+                                StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
                         }
                 }
                 StringBuffer_append(res->outputbuffer, "</tr>");
@@ -1331,26 +1334,26 @@ static void do_home_net(HttpResponse res) {
                         StringBuffer_append(res->outputbuffer,
                                             "<table id='header-row'>"
                                             "<tr>"
-                                            "<th align='left' class='first'>Net</th>"
-                                            "<th align='left'>Status</th>"
-                                            "<th align='right'>Upload</th>"
-                                            "<th align='right'>Download</th>"
+                                            "<th class='left first'>Net</th>"
+                                            "<th class='left'>Status</th>"
+                                            "<th class='right'>Upload</th>"
+                                            "<th class='right'>Download</th>"
                                             "</tr>");
                         header = false;
                 }
                 StringBuffer_append(res->outputbuffer,
                                     "<tr %s>"
-                                    "<td align='left'><a href='%s'>%s</a></td>"
-                                    "<td align='left'>%s</td>",
+                                    "<td class='left'><a href='%s'>%s</a></td>"
+                                    "<td class='left'>%s</td>",
                                     on ? "class='stripe'" : "",
                                     s->name, s->name,
                                     get_service_status(HTML, s, buf, sizeof(buf)));
                 if (! Util_hasServiceStatus(s) || Link_getState(s->inf->priv.net.stats) != 1) {
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>-</td>");
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>-</td>");
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
                 } else {
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>%s&#47;s</td>", Str_bytesToSize(Link_getBytesOutPerSecond(s->inf->priv.net.stats), buf));
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>%s&#47;s</td>", Str_bytesToSize(Link_getBytesInPerSecond(s->inf->priv.net.stats), buf));
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>%s&#47;s</td>", Str_bytesToSize(Link_getBytesOutPerSecond(s->inf->priv.net.stats), buf));
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>%s&#47;s</td>", Str_bytesToSize(Link_getBytesInPerSecond(s->inf->priv.net.stats), buf));
                 }
                 StringBuffer_append(res->outputbuffer, "</tr>");
                 on = ! on;
@@ -1372,45 +1375,45 @@ static void do_home_filesystem(HttpResponse res) {
                         StringBuffer_append(res->outputbuffer,
                                             "<table id='header-row'>"
                                             "<tr>"
-                                            "<th align='left' class='first'>Filesystem</th>"
-                                            "<th align='left'>Status</th>"
-                                            "<th align='right'>Space usage</th>"
-                                            "<th align='right'>Inodes usage</th>"
-                                            "<th align='right'>Read</th>"
-                                            "<th align='right'>Write</th>"
+                                            "<th class='column left first'>Filesystem</th>"
+                                            "<th class='column left'>Status</th>"
+                                            "<th class='column right'>Space usage</th>"
+                                            "<th class='column right'>Inodes usage</th>"
+                                            "<th class='column right'>Read</th>"
+                                            "<th class='column right'>Write</th>"
                                             "</tr>");
                         header = false;
                 }
                 StringBuffer_append(res->outputbuffer,
                                     "<tr %s>"
-                                    "<td align='left'><a href='%s'>%s</a></td>"
-                                    "<td align='left'>%s</td>",
+                                    "<td class='column left'><a href='%s'>%s</a></td>"
+                                    "<td class='column left'>%s</td>",
                                     on ? "class='stripe'" : "",
                                     s->name, s->name,
                                     get_service_status(HTML, s, buf, sizeof(buf)));
                 if (! Util_hasServiceStatus(s)) {
                         StringBuffer_append(res->outputbuffer,
-                                            "<td align='right'>- [-]</td>"
-                                            "<td align='right'>- [-]</td>"
-                                            "<td align='right'>- [-]</td>"
-                                            "<td align='right'>- [-]</td>");
+                                            "<td class='column right'>- [-]</td>"
+                                            "<td class='column right'>- [-]</td>"
+                                            "<td class='column right'>- [-]</td>"
+                                            "<td class='column right'>- [-]</td>");
                 } else {
                         StringBuffer_append(res->outputbuffer,
-                                            "<td align='right'>%.1f%% [%s]</td>",
+                                            "<td class='column right'>%.1f%% [%s]</td>",
                                             s->inf->priv.filesystem.space_percent,
                                             s->inf->priv.filesystem.f_bsize > 0 ? Str_bytesToSize(s->inf->priv.filesystem.space_total * s->inf->priv.filesystem.f_bsize, buf) : "0 MB");
                         if (s->inf->priv.filesystem.f_files > 0) {
                                 StringBuffer_append(res->outputbuffer,
-                                                    "<td align='right'>%.1f%% [%lld objects]</td>",
+                                                    "<td class='column right'>%.1f%% [%lld objects]</td>",
                                                     s->inf->priv.filesystem.inode_percent,
                                                     s->inf->priv.filesystem.inode_total);
                         } else {
                                 StringBuffer_append(res->outputbuffer,
-                                                    "<td align='right'>not supported by filesystem</td>");
+                                                    "<td class='column right'>not supported by filesystem</td>");
                         }
                         StringBuffer_append(res->outputbuffer,
-                                            "<td align='right'>%s/s</td>"
-                                            "<td align='right'>%s/s</td>",
+                                            "<td class='column right'>%s/s</td>"
+                                            "<td class='column right'>%s/s</td>",
                                             Str_bytesToSize(Statistics_deltaNormalize(&(s->inf->priv.filesystem.read.bytes)), (char[10]){}),
                                             Str_bytesToSize(Statistics_deltaNormalize(&(s->inf->priv.filesystem.write.bytes)), (char[10]){}));
                 }
@@ -1434,39 +1437,39 @@ static void do_home_file(HttpResponse res) {
                         StringBuffer_append(res->outputbuffer,
                                             "<table id='header-row'>"
                                             "<tr>"
-                                            "<th align='left' class='first'>File</th>"
-                                            "<th align='left'>Status</th>"
-                                            "<th align='right'>Size</th>"
-                                            "<th align='right'>Permission</th>"
-                                            "<th align='right'>UID</th>"
-                                            "<th align='right'>GID</th>"
+                                            "<th class='left first'>File</th>"
+                                            "<th class='left'>Status</th>"
+                                            "<th class='right'>Size</th>"
+                                            "<th class='right'>Permission</th>"
+                                            "<th class='right'>UID</th>"
+                                            "<th class='right'>GID</th>"
                                             "</tr>");
 
                         header = false;
                 }
                 StringBuffer_append(res->outputbuffer,
                                     "<tr %s>"
-                                    "<td align='left'><a href='%s'>%s</a></td>"
-                                    "<td align='left'>%s</td>",
+                                    "<td class='left'><a href='%s'>%s</a></td>"
+                                    "<td class='left'>%s</td>",
                                     on ? "class='stripe'" : "",
                                     s->name, s->name,
                                     get_service_status(HTML, s, buf, sizeof(buf)));
                 if (! Util_hasServiceStatus(s) || s->inf->priv.file.size < 0)
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>-</td>");
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
                 else
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>%s</td>", Str_bytesToSize(s->inf->priv.file.size, (char[10]){}));
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>%s</td>", Str_bytesToSize(s->inf->priv.file.size, (char[10]){}));
                 if (! Util_hasServiceStatus(s) || s->inf->priv.file.mode < 0)
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>-</td>");
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
                 else
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>%04o</td>", s->inf->priv.file.mode & 07777);
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>%04o</td>", s->inf->priv.file.mode & 07777);
                 if (! Util_hasServiceStatus(s) || s->inf->priv.file.uid < 0)
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>-</td>");
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
                 else
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>%d</td>", s->inf->priv.file.uid);
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>%d</td>", s->inf->priv.file.uid);
                 if (! Util_hasServiceStatus(s) || s->inf->priv.file.gid < 0)
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>-</td>");
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
                 else
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>%d</td>", s->inf->priv.file.gid);
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>%d</td>", s->inf->priv.file.gid);
                 StringBuffer_append(res->outputbuffer, "</tr>");
                 on = ! on;
         }
@@ -1487,33 +1490,33 @@ static void do_home_fifo(HttpResponse res) {
                         StringBuffer_append(res->outputbuffer,
                                             "<table id='header-row'>"
                                             "<tr>"
-                                            "<th align='left' class='first'>Fifo</th>"
-                                            "<th align='left'>Status</th>"
-                                            "<th align='right'>Permission</th>"
-                                            "<th align='right'>UID</th>"
-                                            "<th align='right'>GID</th>"
+                                            "<th class='left first'>Fifo</th>"
+                                            "<th class='left'>Status</th>"
+                                            "<th class='right'>Permission</th>"
+                                            "<th class='right'>UID</th>"
+                                            "<th class='right'>GID</th>"
                                             "</tr>");
                         header = false;
                 }
                 StringBuffer_append(res->outputbuffer,
                                     "<tr %s>"
-                                    "<td align='left'><a href='%s'>%s</a></td>"
-                                    "<td align='left'>%s</td>",
+                                    "<td class='left'><a href='%s'>%s</a></td>"
+                                    "<td class='left'>%s</td>",
                                     on ? "class='stripe'" : "",
                                     s->name, s->name,
                                     get_service_status(HTML, s, buf, sizeof(buf)));
                 if (! Util_hasServiceStatus(s) || s->inf->priv.fifo.mode < 0)
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>-</td>");
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
                 else
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>%04o</td>", s->inf->priv.fifo.mode & 07777);
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>%04o</td>", s->inf->priv.fifo.mode & 07777);
                 if (! Util_hasServiceStatus(s) || s->inf->priv.fifo.uid < 0)
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>-</td>");
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
                 else
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>%d</td>", s->inf->priv.fifo.uid);
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>%d</td>", s->inf->priv.fifo.uid);
                 if (! Util_hasServiceStatus(s) || s->inf->priv.fifo.gid < 0)
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>-</td>");
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
                 else
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>%d</td>", s->inf->priv.fifo.gid);
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>%d</td>", s->inf->priv.fifo.gid);
                 StringBuffer_append(res->outputbuffer, "</tr>");
                 on = ! on;
         }
@@ -1534,33 +1537,33 @@ static void do_home_directory(HttpResponse res) {
                         StringBuffer_append(res->outputbuffer,
                                             "<table id='header-row'>"
                                             "<tr>"
-                                            "<th align='left' class='first'>Directory</th>"
-                                            "<th align='left'>Status</th>"
-                                            "<th align='right'>Permission</th>"
-                                            "<th align='right'>UID</th>"
-                                            "<th align='right'>GID</th>"
+                                            "<th class='left first'>Directory</th>"
+                                            "<th class='left'>Status</th>"
+                                            "<th class='right'>Permission</th>"
+                                            "<th class='right'>UID</th>"
+                                            "<th class='right'>GID</th>"
                                             "</tr>");
                         header = false;
                 }
                 StringBuffer_append(res->outputbuffer,
                                     "<tr %s>"
-                                    "<td align='left'><a href='%s'>%s</a></td>"
-                                    "<td align='left'>%s</td>",
+                                    "<td class='left'><a href='%s'>%s</a></td>"
+                                    "<td class='left'>%s</td>",
                                     on ? "class='stripe'" : "",
                                     s->name, s->name,
                                     get_service_status(HTML, s, buf, sizeof(buf)));
                 if (! Util_hasServiceStatus(s) || s->inf->priv.directory.mode < 0)
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>-</td>");
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
                 else
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>%04o</td>", s->inf->priv.directory.mode & 07777);
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>%04o</td>", s->inf->priv.directory.mode & 07777);
                 if (! Util_hasServiceStatus(s) || s->inf->priv.directory.uid < 0)
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>-</td>");
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
                 else
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>%d</td>", s->inf->priv.directory.uid);
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>%d</td>", s->inf->priv.directory.uid);
                 if (! Util_hasServiceStatus(s) || s->inf->priv.directory.gid < 0)
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>-</td>");
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
                 else
-                        StringBuffer_append(res->outputbuffer, "<td align='right'>%d</td>", s->inf->priv.directory.gid);
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>%d</td>", s->inf->priv.directory.gid);
                 StringBuffer_append(res->outputbuffer, "</tr>");
                 on = ! on;
         }
@@ -1581,25 +1584,25 @@ static void do_home_host(HttpResponse res) {
                         StringBuffer_append(res->outputbuffer,
                                             "<table id='header-row'>"
                                             "<tr>"
-                                            "<th align='left' class='first'>Host</th>"
-                                            "<th align='left'>Status</th>"
-                                            "<th align='right'>Protocol(s)</th>"
+                                            "<th class='left first'>Host</th>"
+                                            "<th class='left'>Status</th>"
+                                            "<th class='right'>Protocol(s)</th>"
                                             "</tr>");
                         header = false;
                 }
                 StringBuffer_append(res->outputbuffer,
                                     "<tr %s>"
-                                    "<td align='left'><a href='%s'>%s</a></td>"
-                                    "<td align='left'>%s</td>",
+                                    "<td class='left'><a href='%s'>%s</a></td>"
+                                    "<td class='left'>%s</td>",
                                     on ? "class='stripe'" : "",
                                     s->name, s->name,
                                     get_service_status(HTML, s, buf, sizeof(buf)));
                 if (! Util_hasServiceStatus(s)) {
                         StringBuffer_append(res->outputbuffer,
-                                            "<td align='right'>-</td>");
+                                            "<td class='right'>-</td>");
                 } else {
                         StringBuffer_append(res->outputbuffer,
-                                            "<td align='right'>");
+                                            "<td class='right'>");
                         for (Icmp_T icmp = s->icmplist; icmp; icmp = icmp->next) {
                                 if (icmp != s->icmplist)
                                         StringBuffer_append(res->outputbuffer, "&nbsp;&nbsp;<b>|</b>&nbsp;&nbsp;");
