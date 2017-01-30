@@ -5,12 +5,12 @@
 Version 5.21.0
 
 New: The filesystem read/write statistics is now displayed in Monit GUI and CLI.
-                  Type                  Tested          No Support
-        Solaris:  per-filesystem        UFS, ZFS, NFS   CIFS
-        NetBSD:   per-disk              FFS             NFS
-        OpenBSD:  per-disk              FFS             NFS
-        FreeBSD:  per-disk              UFS             NFS, ZFS
-        Linux:    per-filesystem        EXT4, XFS
+                  Type                  No Support
+        Solaris:  per-filesystem        CIFS
+        NetBSD:   per-disk              NFS
+        OpenBSD:  per-disk              NFS
+        FreeBSD:  per-disk              NFS, ZFS
+        Linux:    per-filesystem        FUSE
         MacOS:    per-disk
         AIX:
 

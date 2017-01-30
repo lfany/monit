@@ -62,61 +62,114 @@
 #include "io/File.h"
 
 
+/* ------------------------------------------------------------- Definitions */
+
+
+typedef struct Device_T {
+        char name[PATH_MAX];
+        char type[STRLEN];
+} *Device_T;
+
+
 /* ----------------------------------------------------------------- Private */
 
 
-static char *_getDevice(char *mountpoint, char filesystem[PATH_MAX]) {
+static boolean_t _getDevice(char *mountpoint, Device_T device) {
         FILE *f = setmntent("/etc/mtab", "r");
         if (! f) {
                 LogError("Cannot open /etc/mtab file\n");
-                return NULL;
+                return false;
         }
         struct mntent *mnt;
         while ((mnt = getmntent(f))) {
                 if (IS(mountpoint, mnt->mnt_dir) && ! IS(mnt->mnt_fsname, "rootfs")) {
-                        if (! realpath(mnt->mnt_fsname, filesystem)) {
-                                // If the file doesn't exist it's a virtual filesystem -> skip
-                                if (errno != ENOENT && errno != ENOTDIR)
-                                        LogError("Mount point %s -- %s\n", mountpoint, STRERROR);
-                                goto error;
+                        strncpy(device->type, mnt->mnt_type, sizeof(device->type) - 1);
+                        if (Str_startsWith(mnt->mnt_type, "cifs") || Str_startsWith(mnt->mnt_type, "nfs")) {
+                                strncpy(device->name, mnt->mnt_fsname, sizeof(device->name) - 1);
+                        } else  {
+                                if (! realpath(mnt->mnt_fsname, device->name)) {
+                                        // If the file doesn't exist it's a virtual filesystem -> skip
+                                        if (errno != ENOENT && errno != ENOTDIR)
+                                                LogError("Mount point %s -- %s\n", mountpoint, STRERROR);
+                                        goto error;
+                                }
+                                snprintf(device->name, sizeof(device->name), "%s", File_basename(device->name));
                         }
-                        snprintf(filesystem, PATH_MAX, "%s", File_basename(filesystem));
                         endmntent(f);
-                        return filesystem;
+                        return true;
                 }
         }
         LogError("Mount point %s -- not found in /etc/mtab\n", mountpoint);
 error:
         endmntent(f);
-        return NULL;
+        return false;
 }
 
 
 static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
-        char filesystem[PATH_MAX];
-        if (_getDevice(mountpoint, filesystem)) {
-                char path[PATH_MAX];
-                snprintf(path, sizeof(path), "/sys/class/block/%s/stat", filesystem);
-                FILE *f = fopen(path, "r");
-                if (f) {
-                        uint64_t now = Time_milli();
-                        uint64_t readOperations = 0ULL, readSectors = 0ULL, readTime = 0ULL;
-                        uint64_t writeOperations = 0ULL, writeSectors = 0ULL, writeTime = 0ULL;
-                        if (fscanf(f, "%"PRIu64" %*u %"PRIu64" %"PRIu64" %"PRIu64" %*u %"PRIu64" %"PRIu64" %*u %*u %*u", &readOperations, &readSectors, &readTime, &writeOperations, &writeSectors, &writeTime) != 6) {
-                                fclose(f);
-                                LogError("filesystem statistic error: cannot parse %s -- %s\n", path, STRERROR);
+        struct Device_T device = {};
+        if (_getDevice(mountpoint, &device)) {
+                if (Str_startsWith(device.type, "cifs")) {
+                        //FIXME
+                } else if (Str_startsWith(device.type, "nfs")) {
+                        FILE *f = fopen("/proc/self/mountstats", "r");
+                        if (! f) {
+                                LogError("Cannot open /proc/self/mountstats file\n");
                                 return false;
                         }
-                        Statistics_update(&(inf->priv.filesystem.read.time), now, readTime);
-                        Statistics_update(&(inf->priv.filesystem.read.bytes), now, readSectors * 512);
-                        Statistics_update(&(inf->priv.filesystem.read.operations), now, readOperations);
-                        Statistics_update(&(inf->priv.filesystem.write.time), now, writeTime);
-                        Statistics_update(&(inf->priv.filesystem.write.bytes), now, writeSectors * 512);
-                        Statistics_update(&(inf->priv.filesystem.write.operations), now, writeOperations);
+                        uint64_t now = Time_milli();
+                        char line[PATH_MAX];
+                        char pattern[PATH_MAX];
+                        boolean_t found = false;
+                        snprintf(pattern, sizeof(pattern), "device %s ", device.name);
+                        while (fgets(line, sizeof(line), f)) {
+                                if (! found && Str_startsWith(line, pattern)) {
+                                        found = true;
+                                } else if (found) {
+                                        char name[256];
+                                        uint64_t operations;
+                                        uint64_t bytesSent;
+                                        uint64_t bytesReceived;
+                                        uint64_t time;
+                                        if (sscanf(line, " %255[^:]: %"PRIu64" %*u %*u %"PRIu64 " %"PRIu64" %*u %*u %"PRIu64, name, &operations, &bytesSent, &bytesReceived, &time) == 5) {
+                                                if (IS(name, "READ")) {
+                                                        Statistics_update(&(inf->priv.filesystem.read.time), now, time / 1000.); // us -> ms
+                                                        Statistics_update(&(inf->priv.filesystem.read.bytes), now, bytesReceived);
+                                                        Statistics_update(&(inf->priv.filesystem.read.operations), now, operations);
+                                                } else if (IS(name, "WRITE")) {
+                                                        Statistics_update(&(inf->priv.filesystem.write.time), now, time / 1000.); // us -> ms
+                                                        Statistics_update(&(inf->priv.filesystem.write.bytes), now, bytesSent);
+                                                        Statistics_update(&(inf->priv.filesystem.write.operations), now, operations);
+                                                        break;
+                                                }
+                                        }
+                                }
+                        }
                         fclose(f);
                 } else {
-                        LogError("filesystem statistic error: cannot read %s -- %s\n", path, STRERROR);
-                        return false;
+                        char path[PATH_MAX];
+                        snprintf(path, sizeof(path), "/sys/class/block/%s/stat", device.name);
+                        FILE *f = fopen(path, "r");
+                        if (f) {
+                                uint64_t now = Time_milli();
+                                uint64_t readOperations = 0ULL, readSectors = 0ULL, readTime = 0ULL;
+                                uint64_t writeOperations = 0ULL, writeSectors = 0ULL, writeTime = 0ULL;
+                                if (fscanf(f, "%"PRIu64" %*u %"PRIu64" %"PRIu64" %"PRIu64" %*u %"PRIu64" %"PRIu64" %*u %*u %*u", &readOperations, &readSectors, &readTime, &writeOperations, &writeSectors, &writeTime) != 6) {
+                                        fclose(f);
+                                        LogError("filesystem statistic error: cannot parse %s -- %s\n", path, STRERROR);
+                                        return false;
+                                }
+                                Statistics_update(&(inf->priv.filesystem.read.time), now, readTime);
+                                Statistics_update(&(inf->priv.filesystem.read.bytes), now, readSectors * 512);
+                                Statistics_update(&(inf->priv.filesystem.read.operations), now, readOperations);
+                                Statistics_update(&(inf->priv.filesystem.write.time), now, writeTime);
+                                Statistics_update(&(inf->priv.filesystem.write.bytes), now, writeSectors * 512);
+                                Statistics_update(&(inf->priv.filesystem.write.operations), now, writeOperations);
+                                fclose(f);
+                        } else {
+                                LogError("filesystem statistic error: cannot read %s -- %s\n", path, STRERROR);
+                                return false;
+                        }
                 }
         } else {
                 Statistics_reset(&(inf->priv.filesystem.read.time));
