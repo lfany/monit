@@ -508,8 +508,9 @@ then
    ARCH="SOLARIS"
    CFLAGS="$CFLAGS -D _REENTRANT -D_POSIX_PTHREAD_SEMANTICS -D__EXTENSIONS__ -m64"
    LDFLAGS="$LDFLAGS -m64"
-   LIBS="$LIBS -lzfs -lnvpair"
-   test_kstat="true"
+   AC_CHECK_LIB([zfs], [libzfs_init])
+   AC_CHECK_LIB([nvpair], [nvlist_free])
+   AC_CHECK_LIB([kstat], [kstat_open])
    AC_DEFINE([HAVE_CPU_WAIT], [1], [Define to 1 if CPU wait information is available.])
    if test `uname -m` = "i86pc"
    then
@@ -549,36 +550,40 @@ elif test "$architecture" = "OpenBSD"
 then
    ARCH="OPENBSD"
    CFLAGS="$CFLAGS -D _REENTRANT"
-   test_kvm="true"
+   AC_CHECK_LIB([kvm], [kvm_open])
    use_pam=0 # No PAM on OpenBSD (supports BSD Auth API instead of PAM)
 elif test "$architecture" = "FreeBSD"
 then
    ARCH="FREEBSD"
    CFLAGS="$CFLAGS -D _REENTRANT"
-   LIBS="$LIBS -ldevstat"
-   test_kvm="true"
+   AC_CHECK_LIB([devstat], [devstat_getnumdevs])
+   AC_CHECK_LIB([zfs], [libzfs_init])
+   AC_CHECK_LIB([nvpair], [nvlist_free])
+   AC_CHECK_LIB([kvm], [kvm_open])
 elif test "$architecture" = "GNU/kFreeBSD"
 then
    ARCH="FREEBSD"
    CFLAGS="$CFLAGS -D _REENTRANT"
-   LIBS="$LIBS -ldevstat"
-   test_kvm="true"
+   AC_CHECK_LIB([devstat], [devstat_getnumdevs])
+   AC_CHECK_LIB([zfs], [libzfs_init])
+   AC_CHECK_LIB([nvpair], [nvlist_free])
+   AC_CHECK_LIB([kvm], [kvm_open])
 elif test "$architecture" = "NetBSD"
 then
    ARCH="NETBSD"
    CFLAGS="$CFLAGS -D _REENTRANT"
-   test_kvm="true"
+   AC_CHECK_LIB([kvm], [kvm_open])
 elif test "$architecture" = "DragonFly"
 then
    ARCH="DRAGONFLY"
    CFLAGS="$CFLAGS -D _REENTRANT"
-   test_kvm="true"
+   AC_CHECK_LIB([kvm], [kvm_open])
 elif test "$architecture" = "Darwin"
 then
    ARCH="DARWIN"
    CFLAGS="$CFLAGS -DREENTRANT -no-cpp-precomp -DNEED_SOCKLEN_T_DEFINED"
    LDFLAGS="$LDFLAGS -Wl,-search_paths_first"
-   test_kvm="true"
+   AC_CHECK_LIB([kvm], [kvm_open])
    LIBS="$LIBS -framework System -framework CoreFoundation -framework DiskArbitration -framework IOKit -multiply_defined suppress"
 elif test "$architecture" = "AIX"
 then
@@ -593,34 +598,6 @@ else
    ARCH="UNKNOWN"
 fi
 AC_SUBST(ARCH)
-
-
-# ------------------------------------------------------------------------
-# Resource code
-# ------------------------------------------------------------------------
-
-# Test for kvm libs
-kvm_libs=""
-if test "$test_kvm"; then
-       	AC_CHECK_LIB([kvm],
-        	     [kvm_open],
-        	     [kvm_libs="-lkvm"])
-       	if test "$kvm_libs"
-       	then
-       	        LIBS="$LIBS $kvm_libs"
-       	fi
-fi
-kstat_libs=""
-if test "$test_kstat"; then
-       	AC_CHECK_LIB([kstat],
-        	     [kstat_open],
-        	     [kstat_libs="-lkstat"])
-       	if test "$kstat_libs"
-       	then
-       	        LIBS="$LIBS $kstat_libs"
-       	fi
-fi
-
 
 # ------------------------------------------------------------------------
 # Large files code
