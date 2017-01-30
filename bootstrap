@@ -3,11 +3,11 @@
 # autoconf        >= 2.59
 # automake        >= 1.10
 # libtool         >= 1.4
-if (glibtoolize -f -c 2>/dev/null || libtoolize -f -c) && aclocal -I config && autoheader && automake --foreign --add-missing --copy && autoconf 
+if (glibtoolize -f -c 2>/dev/null || libtoolize -f -c) && aclocal -I config && autoheader && automake --foreign --add-missing --copy && autoconf
 then
         if cd libmonit && ./bootstrap
         then
-                echo "Success bootstrapping Monit" 
+                echo "Success bootstrapping Monit"
                 exit 0;
         fi
 fi

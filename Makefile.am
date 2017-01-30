@@ -89,7 +89,7 @@ monit_SOURCES	= src/y.tab.c \
 		  src/ssl/Ssl.c \
 		  src/terminal/Box.c \
 		  src/terminal/Color.c
- 
+
 monit_LDADD 	= libmonit/libmonit.la
 monit_LDFLAGS 	= -static $(EXTLDFLAGS)
 
@@ -122,7 +122,7 @@ dist-hook::
 	-mv $(distdir)/doc/CHANGES $(distdir)/
 	-perl -pi -e 's/^Version: .*/Version: '$(VERSION)'/' $(distdir)/system/packages/redhat/monit.spec
 	-chmod 600 monitrc
-	
+
 clean-local:
 	-rm -f `find . -name "*.o" -o -name "*.lo" -o -name "*.loT" -o -name "*~"`
 
@@ -131,11 +131,11 @@ distclean-local:
 	-rm -f monit-[0-9].*tar.gz
 
 cleanall: clean distclean
-	-rm -f libmonit/Makefile.in libmonit/configure libmonit/aclocal.m4 libmonit/src/xconfig.h.in 
-	-rm -f Makefile.in configure aclocal.m4 autom4te.cache src/config.h.in monit.1 
+	-rm -f libmonit/Makefile.in libmonit/configure libmonit/aclocal.m4 libmonit/src/xconfig.h.in
+	-rm -f Makefile.in configure aclocal.m4 autom4te.cache src/config.h.in monit.1
 	-rm -rf libmonit/m4 libmonit/config
 	-rm -rf m4 config
-		
+
 monit.1: doc/monit.pod
 	$(POD2MAN) $(POD2MANFLAGS) $< > $@
 	-rm -f pod2*
@@ -151,8 +151,8 @@ src/y.tab.c src/tokens.h: src/p.y
 	-cat src/y.tab.c >> src/.y.tab.c
 	-mv src/.y.tab.c src/y.tab.c
 	-mv src/y.tab.h src/tokens.h
-	
+
 src/lex.yy.c: src/l.l
-	$(FLEX) $(FLEXFLAGS) -o$@ $< 
+	$(FLEX) $(FLEXFLAGS) -o$@ $<
 
 

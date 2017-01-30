@@ -1,5 +1,5 @@
-[![Monit](https://mmonit.com/monit/img/logo@2x.png)](https://mmonit.com/monit/) 
- 
+[![Monit](https://mmonit.com/monit/img/logo@2x.png)](https://mmonit.com/monit/)
+
 
 #[Monit](https://mmonit.com/monit/) is a free open source utility for managing and monitoring, processes, programs, files, directories and filesystems on a UNIX system. Monit conducts automatic maintenance and repair and can execute meaningful causal actions in error situations.#
 
@@ -8,8 +8,8 @@
 SYSTEM REQUIREMENTS
 ===================
 
-__Memory and Disk space__. A minimum of 1 megabytes RAM are required and around 500KB of free disk space. You may need more RAM depending on how many services Monit should monitor. 
-  
+__Memory and Disk space__. A minimum of 1 megabytes RAM are required and around 500KB of free disk space. You may need more RAM depending on how many services Monit should monitor.
+
 __ANSI-C Compiler and Build System__. You will need an ANSI-C99 compiler installed to build Monit. The GNU C compiler (GCC) from the Free Software Foundation (FSF) is recommended. In addition, your PATH must contain basic build tools such as make.
 
 GIT
@@ -21,21 +21,21 @@ To checkout Monit source code, use `git clone https://tildeslash@bitbucket.org/t
 BOOTSTRAPPING
 =============
 
-If you build Monit from the git repository you should call `./bootstrap` first, before continuing with the installation steps below. 
+If you build Monit from the git repository you should call `./bootstrap` first, before continuing with the installation steps below.
 
 
 INSTALLATION
 ============
 
 Monit utilize the GNU auto-tools and provided the requirements above are
-satisfied, building Monit is conducted via the standard;  
+satisfied, building Monit is conducted via the standard;
 
-> ./configure  
-> make  
-> make install  
+> ./configure
+> make
+> make install
 
 This will install Monit and the Monit man-file in /usr/local/bin and /usr/local/man/man1 respectively. If you want another location than
-/usr/local, run configure with the *--prefix* options and specify the install directory. 
+/usr/local, run configure with the *--prefix* options and specify the install directory.
 
 Use ./configure --help for build and install options. By default, Monit is built with SSL, PAM and large file support. You can change this
 with the *--without-<xxx>* options to ./configure. For instance, *--without-ssl*, *--without-pam* or *--without-largefiles*.
@@ -45,11 +45,11 @@ DISTRIBUTION
 
 If you need to build your own Monit source release package, follow these steps.
 
-> make cleanall  
-> ./bootstrap && ./configure  
-> make dist 
+> make cleanall
+> ./bootstrap && ./configure
+> make dist
 
-This will produce a `monit-x.y.tar.gz` file in the current directory which can be used for distribution. Note that we do not use *make distclean* which is the convention, instead we use `make cleanall` to reset the Monit build directory, including libmonit, to pristine condition for a source release. Before a release you might also want to run *unit-tests* in *libmonit*. I.e. *cd libmonit; make verify;*. 
+This will produce a `monit-x.y.tar.gz` file in the current directory which can be used for distribution. Note that we do not use *make distclean* which is the convention, instead we use `make cleanall` to reset the Monit build directory, including libmonit, to pristine condition for a source release. Before a release you might also want to run *unit-tests* in *libmonit*. I.e. *cd libmonit; make verify;*.
 
 QUICK START
 ===========
@@ -75,12 +75,12 @@ Please use `man monit` for an in-depth documentation of the program. More docume
 MAILING LIST
 ============
 
-You can subscribe to [Monitʼs mailing list](https://lists.nongnu.org/mailman/listinfo/monit-announce) to be the first to hear about new releases and important information about Monit. 
+You can subscribe to [Monitʼs mailing list](https://lists.nongnu.org/mailman/listinfo/monit-announce) to be the first to hear about new releases and important information about Monit.
 
 
 CONTRIBUTING
 ============
- 
+
 You are welcome to contribute to this project. Join our [mailing
 list](http://lists.nongnu.org/mailman/listinfo/monit-general) and ask first if a new feature is wanted before working on a patch.
 Good pull requests, patches, improvements and new features are always helpful and appreciated.
@@ -98,7 +98,7 @@ REPORTING A BUG
 ===============
 
 If you believe you have found a bug, please use the [issue tracker](https://bitbucket.org/tildeslash/monit/issues) to report the problem.
-Remember to include the necessary information that will enable us to understand and reproduce this problem. 
+Remember to include the necessary information that will enable us to understand and reproduce this problem.
 
 If you have found a security vulnerabilities we appreciate if you will send this information to [cve@tildeslash.com](mailto:cve@tildeslash.com).
 
@@ -109,7 +109,7 @@ ACKNOWLEDGMENTS
 Thanks to the [Free Software Foundation](http://www.fsf.org) for hosting the mailing list and to [Atlassian](https://www.atlassian.com) for hosting the code repository.
 
 The design of libmonit was inspired by principles put forth by *David R. Hanson* in his excellent book ["C Interfaces and
-Implementations"](http://www.cs.princeton.edu/software/cii/ "CII"). 
+Implementations"](http://www.cs.princeton.edu/software/cii/ "CII").
 
 
 CONTACT INFORMATION

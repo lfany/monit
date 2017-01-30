@@ -16,7 +16,7 @@ AC_CONFIG_COMMANDS([libtool_patch],[test `uname` = "OpenBSD" && perl -p -i -e "s
 AC_CONFIG_COMMANDS([monitrc], [chmod 600 monitrc])
 
 # ------------------------------------------------------------------------
-# Programs 
+# Programs
 # ------------------------------------------------------------------------
 
 AC_PROG_CC
@@ -49,7 +49,7 @@ fi
 
 
 # ------------------------------------------------------------------------
-# Libtool 
+# Libtool
 # ------------------------------------------------------------------------
 
 AC_DISABLE_STATIC
@@ -57,7 +57,7 @@ AC_PROG_LIBTOOL
 
 
 # ------------------------------------------------------------------------
-# Libraries 
+# Libraries
 # ------------------------------------------------------------------------
 
 # Check for libraries
@@ -70,7 +70,7 @@ AC_CHECK_LIB([pthread], [pthread_create], [], [AC_MSG_ERROR([POSIX thread librar
 
 
 # ------------------------------------------------------------------------
-# Header files 
+# Header files
 # ------------------------------------------------------------------------
 
 AC_HEADER_STDC
@@ -383,7 +383,7 @@ AC_CHECK_MEMBERS([struct tm.tm_gmtoff])
 
 
 # ------------------------------------------------------------------------
-# Functions 
+# Functions
 # ------------------------------------------------------------------------
 
 # Checks for library functions.
@@ -417,14 +417,14 @@ AC_TRY_LINK([
 
 
 # ------------------------------------------------------------------------
-# Compiler 
+# Compiler
 # ------------------------------------------------------------------------
 
 # Compiler characteristics
 AC_C_CONST
 AC_C_BIGENDIAN
 
-# If the compiler is gcc, tune warnings and make the char type unsigned 
+# If the compiler is gcc, tune warnings and make the char type unsigned
 # and enable C99 support
 if test "x$GCC" = "xyes"; then
 	CFLAGS="$CFLAGS -Wall -Wunused -Wno-unused-label -funsigned-char";
@@ -433,7 +433,7 @@ if test "x$GCC" = "xyes"; then
         # does this compiler support -Wno-pointer-sign ?
         svd_CFLAGS="$CFLAGS"
         CFLAGS="-Wno-pointer-sign $CFLAGS"
-        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])        
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
         # does this compiler support -Wno-address ?
         svd_CFLAGS="$CFLAGS"
         CFLAGS="-Wno-address $CFLAGS"
@@ -470,7 +470,7 @@ fi
 
 
 # ------------------------------------------------------------------------
-# Paths 
+# Paths
 # ------------------------------------------------------------------------
 
 # Find the right directory to put the root-mode PID file in
@@ -503,7 +503,7 @@ fi
 
 # Backward compatibility until we get ride of arch settings
 architecture=`uname`
-if test "$architecture" = "SunOS" 
+if test "$architecture" = "SunOS"
 then
    ARCH="SOLARIS"
    CFLAGS="$CFLAGS -D _REENTRANT -D_POSIX_PTHREAD_SEMANTICS -D__EXTENSIONS__ -m64"
@@ -532,7 +532,7 @@ then
             LDFLAGS="$LDFLAGS -xarch=sparc"
       fi
    fi
-elif test "$architecture" = "Linux" 
+elif test "$architecture" = "Linux"
 then
    ARCH="LINUX"
    CFLAGS="$CFLAGS -D _REENTRANT"
@@ -608,7 +608,7 @@ AC_MSG_CHECKING([for large files support])
 AC_ARG_WITH(largefiles,
     [  --without-largefiles    disable large files support (default: enabled)],
     [
-        dnl Check the withvalue                
+        dnl Check the withvalue
         if test "x$withval" = "xno" ; then
             use_largefiles=0
             AC_MSG_RESULT([disabled])
@@ -683,7 +683,7 @@ AC_MSG_CHECKING([for PAM support])
 AC_ARG_WITH(pam,
     [  --without-pam           disable the use of pam (default: enabled)],
     [
-        dnl Check the withvalue                
+        dnl Check the withvalue
         if test "x$withval" = "xno" ; then
             use_pam=0
             AC_MSG_RESULT([disabled])
@@ -721,7 +721,7 @@ checksslincldir() { :
     return 1
 }
 
-# Check for ssl libraries 
+# Check for ssl libraries
 checkssllibdirdynamic() { :
     CRYPTOLIB=`ls -1 $1/libcrypto.so* $1/libcrypto.dylib* 2>/dev/null | wc -l`
     SSLLIB=`ls -1 $1/libssl.so* $1/libssl.dylib* 2>/dev/null | wc -l`
@@ -778,7 +778,7 @@ then
     AC_ARG_WITH(ssl,
         [  --without-ssl           disable the use of ssl (default: enabled)],
         [
-            dnl Check the withvalue                
+            dnl Check the withvalue
             if test "x$withval" = "xno" ; then
                 use_ssl=0
                 AC_MSG_RESULT([disabled])
@@ -819,11 +819,11 @@ then
                 checksslincldir "$withval"
             ],
             [
-                if test -z "$sslincldir"; then	
+                if test -z "$sslincldir"; then
                     dnl Search default locations of SSL includes
                     for maindir in /usr /usr/local /usr/lib /usr/pkg /var /opt /usr/sfw /opt/csw /opt/freeware; do
                         for dir in "$maindir/include"\
-                                   "$maindir/include/openssl"\ 
+                                   "$maindir/include/openssl"\
                                    "$maindir/include/ssl"\
                                    "$maindir/ssl/include"; do
                             checksslincldir $dir && break 2
@@ -851,7 +851,7 @@ then
                 checkssllibdirdynamic "$withval"
             ],
             [
-                if test -z "$ssllibdir"; then	
+                if test -z "$ssllibdir"; then
                     dnl Search default locations of SSL libraries
                     for maindir in "" \
                                    /usr \
@@ -1058,7 +1058,7 @@ cat <<EOT
 | AFFERO GENERAL PUBLIC LICENSE version 3, available in this |
 | distribution in the file COPYING.                          |
 |                                                            |
-| By continuing this installation process, you are bound by  | 
+| By continuing this installation process, you are bound by  |
 | the terms of this license agreement. If you do not agree   |
 | with the terms of this license, you must abort the         |
 | installation process at this point.                        |
