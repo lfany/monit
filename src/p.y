@@ -583,25 +583,25 @@ optprogram      : start
                 ;
 
 setalert        : SET alertmail formatlist reminder {
-                   mailset.events = Event_All;
-                    addmail($<string>2, &mailset, &Run.maillist);
+                        mailset.events = Event_All;
+                        addmail($<string>2, &mailset, &Run.maillist);
                   }
                 | SET alertmail '{' eventoptionlist '}' formatlist reminder {
-                    addmail($<string>2, &mailset, &Run.maillist);
+                        addmail($<string>2, &mailset, &Run.maillist);
                   }
                 | SET alertmail NOT '{' eventoptionlist '}' formatlist reminder {
-                   mailset.events = ~mailset.events;
-                   addmail($<string>2, &mailset, &Run.maillist);
+                        mailset.events = ~mailset.events;
+                        addmail($<string>2, &mailset, &Run.maillist);
                   }
                 ;
 
 setdaemon       : SET DAEMON NUMBER startdelay {
-                    if (! (Run.flags & Run_Daemon) || ihp.daemon) {
-                      ihp.daemon     = true;
-                      Run.flags      |= Run_Daemon;
-                      Run.polltime   = $3;
-                      Run.startdelay = $<number>4;
-                    }
+                        if (! (Run.flags & Run_Daemon) || ihp.daemon) {
+                                ihp.daemon     = true;
+                                Run.flags      |= Run_Daemon;
+                                Run.polltime   = $3;
+                                Run.startdelay = $<number>4;
+                        }
                   }
                 ;
 
@@ -610,8 +610,12 @@ setterminal     : SET TERMINAL BATCH {
                   }
                 ;
 
-startdelay      : /* EMPTY */        { $<number>$ = START_DELAY; }
-                | START DELAY NUMBER { $<number>$ = $3; }
+startdelay      : /* EMPTY */ {
+                        $<number>$ = START_DELAY;
+                  }
+                | START DELAY NUMBER {
+                        $<number>$ = $3;
+                  }
                 ;
 
 setinit         : SET INIT {
@@ -693,50 +697,50 @@ setfips         : SET FIPS {
                 ;
 
 setlog          : SET LOGFILE PATH   {
-                   if (! Run.files.log || ihp.logfile) {
-                     ihp.logfile = true;
-                     setlogfile($3);
-                     Run.flags &= ~Run_UseSyslog;
-                     Run.flags |= Run_Log;
-                   }
+                        if (! Run.files.log || ihp.logfile) {
+                                ihp.logfile = true;
+                                setlogfile($3);
+                                Run.flags &= ~Run_UseSyslog;
+                                Run.flags |= Run_Log;
+                        }
                   }
                 | SET LOGFILE SYSLOG {
-                    setsyslog(NULL);
+                        setsyslog(NULL);
                   }
                 | SET LOGFILE SYSLOG FACILITY STRING {
-                    setsyslog($5); FREE($5);
+                        setsyslog($5); FREE($5);
                   }
                 ;
 
 seteventqueue   : SET EVENTQUEUE BASEDIR PATH {
-                    Run.eventlist_dir = $4;
+                        Run.eventlist_dir = $4;
                   }
                 | SET EVENTQUEUE BASEDIR PATH SLOT NUMBER {
-                    Run.eventlist_dir = $4;
-                    Run.eventlist_slots = $6;
+                        Run.eventlist_dir = $4;
+                        Run.eventlist_slots = $6;
                   }
                 | SET EVENTQUEUE SLOT NUMBER {
-                    Run.eventlist_dir = Str_dup(MYEVENTLISTBASE);
-                    Run.eventlist_slots = $4;
+                        Run.eventlist_dir = Str_dup(MYEVENTLISTBASE);
+                        Run.eventlist_slots = $4;
                   }
                 ;
 
 setidfile       : SET IDFILE PATH {
-                    Run.files.id = $3;
+                        Run.files.id = $3;
                   }
                 ;
 
 setstatefile    : SET STATEFILE PATH {
-                    Run.files.state = $3;
+                        Run.files.state = $3;
                   }
                 ;
 
 setpid          : SET PIDFILE PATH {
-                   if (! Run.files.pid || ihp.pidfile) {
-                     ihp.pidfile = true;
-                     setpidfile($3);
-                   }
-                 }
+                        if (! Run.files.pid || ihp.pidfile) {
+                                ihp.pidfile = true;
+                                setpidfile($3);
+                        }
+                  }
                 ;
 
 setmmonits      : SET MMONIT mmonitlist
@@ -767,7 +771,7 @@ mmonitopt       : TIMEOUT NUMBER SECOND {
 
 credentials     : /* EMPTY */
                 | REGISTER CREDENTIALS {
-                    Run.flags &= ~Run_MmonitCredentials;
+                        Run.flags &= ~Run_MmonitCredentials;
                   }
                 ;
 
@@ -915,25 +919,25 @@ certmd5         : CERTMD5 STRING { // Backward compatibility
                 ;
 
 setmailservers  : SET MAILSERVER mailserverlist nettimeout hostname {
-                   if (($<number>4) > SMTP_TIMEOUT)
-                        Run.mailserver_timeout = $<number>4;
-                   Run.mail_hostname = $<string>5;
+                        if (($<number>4) > SMTP_TIMEOUT)
+                                Run.mailserver_timeout = $<number>4;
+                        Run.mail_hostname = $<string>5;
                   }
                 ;
 
 setmailformat   : SET MAILFORMAT '{' formatoptionlist '}' {
-                   if (mailset.from) {
-                        Run.MailFormat.from = mailset.from;
-                   } else {
-                        Run.MailFormat.from = Address_new();
-                        Run.MailFormat.from->address = Str_dup(ALERT_FROM);
-                   }
-                   if (mailset.replyto)
-                        Run.MailFormat.replyto = mailset.replyto;
-                   Run.MailFormat.subject = mailset.subject ?  mailset.subject : Str_dup(ALERT_SUBJECT);
-                   Run.MailFormat.message = mailset.message ?  mailset.message : Str_dup(ALERT_MESSAGE);
-                   reset_mailset();
-                 }
+                        if (mailset.from) {
+                                Run.MailFormat.from = mailset.from;
+                        } else {
+                                Run.MailFormat.from = Address_new();
+                                Run.MailFormat.from->address = Str_dup(ALERT_FROM);
+                        }
+                        if (mailset.replyto)
+                                Run.MailFormat.replyto = mailset.replyto;
+                        Run.MailFormat.subject = mailset.subject ?  mailset.subject : Str_dup(ALERT_SUBJECT);
+                        Run.MailFormat.message = mailset.message ?  mailset.message : Str_dup(ALERT_MESSAGE);
+                        reset_mailset();
+                  }
                 ;
 
 mailserverlist  : mailserver
@@ -1132,66 +1136,70 @@ allowuser       : STRING {
                   }
                 ;
 
-readonly        : /* EMPTY */ { $<number>$ = false; }
-                | READONLY { $<number>$ = true; }
+readonly        : /* EMPTY */ {
+                        $<number>$ = false;
+                  }
+                | READONLY {
+                        $<number>$ = true;
+                  }
                 ;
 
 checkproc       : CHECKPROC SERVICENAME PIDFILE PATH {
-                    createservice(Service_Process, $<string>2, $4, check_process);
+                        createservice(Service_Process, $<string>2, $4, check_process);
                   }
                 | CHECKPROC SERVICENAME PATHTOK PATH {
-                    createservice(Service_Process, $<string>2, $4, check_process);
+                        createservice(Service_Process, $<string>2, $4, check_process);
                   }
                 | CHECKPROC SERVICENAME MATCH STRING {
-                    createservice(Service_Process, $<string>2, $4, check_process);
-                    matchset.ignore = false;
-                    matchset.match_path = NULL;
-                    matchset.match_string = Str_dup($4);
-                    addmatch(&matchset, Action_Ignored, 0);
+                        createservice(Service_Process, $<string>2, $4, check_process);
+                        matchset.ignore = false;
+                        matchset.match_path = NULL;
+                        matchset.match_string = Str_dup($4);
+                        addmatch(&matchset, Action_Ignored, 0);
                   }
                 | CHECKPROC SERVICENAME MATCH PATH {
-                    createservice(Service_Process, $<string>2, $4, check_process);
-                    matchset.ignore = false;
-                    matchset.match_path = NULL;
-                    matchset.match_string = Str_dup($4);
-                    addmatch(&matchset, Action_Ignored, 0);
+                        createservice(Service_Process, $<string>2, $4, check_process);
+                        matchset.ignore = false;
+                        matchset.match_path = NULL;
+                        matchset.match_string = Str_dup($4);
+                        addmatch(&matchset, Action_Ignored, 0);
                   }
                 ;
 
 checkfile       : CHECKFILE SERVICENAME PATHTOK PATH {
-                    createservice(Service_File, $<string>2, $4, check_file);
+                        createservice(Service_File, $<string>2, $4, check_file);
                   }
                 ;
 
 checkfilesys    : CHECKFILESYS SERVICENAME PATHTOK PATH {
-                    createservice(Service_Filesystem, $<string>2, $4, check_filesystem);
+                        createservice(Service_Filesystem, $<string>2, $4, check_filesystem);
                   }
                 | CHECKFILESYS SERVICENAME PATHTOK STRING {
-                    createservice(Service_Filesystem, $<string>2, $4, check_filesystem);
+                        createservice(Service_Filesystem, $<string>2, $4, check_filesystem);
                   }
                 ;
 
 checkdir        : CHECKDIR SERVICENAME PATHTOK PATH {
-                    createservice(Service_Directory, $<string>2, $4, check_directory);
+                        createservice(Service_Directory, $<string>2, $4, check_directory);
                   }
                 ;
 
 checkhost       : CHECKHOST SERVICENAME ADDRESS STRING {
-                    createservice(Service_Host, $<string>2, $4, check_remote_host);
+                        createservice(Service_Host, $<string>2, $4, check_remote_host);
                   }
                 ;
 
 checknet        : CHECKNET SERVICENAME ADDRESS STRING {
-                    if (Link_isGetByAddressSupported()) {
-                        createservice(Service_Net, $<string>2, $4, check_net);
-                        current->inf->priv.net.stats = Link_createForAddress($4);
-                    } else {
-                        yyerror("Network monitoring by IP address is not supported on this platform, please use 'check network <foo> with interface <bar>' instead");
-                    }
+                        if (Link_isGetByAddressSupported()) {
+                                createservice(Service_Net, $<string>2, $4, check_net);
+                                current->inf->priv.net.stats = Link_createForAddress($4);
+                        } else {
+                                yyerror("Network monitoring by IP address is not supported on this platform, please use 'check network <foo> with interface <bar>' instead");
+                        }
                   }
                 | CHECKNET SERVICENAME INTERFACE STRING {
-                    createservice(Service_Net, $<string>2, $4, check_net);
-                    current->inf->priv.net.stats = Link_createForInterface($4);
+                        createservice(Service_Net, $<string>2, $4, check_net);
+                        current->inf->priv.net.stats = Link_createForInterface($4);
                   }
                 ;
 
@@ -1211,7 +1219,7 @@ checksystem     : CHECKSYSTEM SERVICENAME {
                 ;
 
 checkfifo       : CHECKFIFO SERVICENAME PATHTOK PATH {
-                    createservice(Service_Fifo, $<string>2, $4, check_fifo);
+                        createservice(Service_Fifo, $<string>2, $4, check_fifo);
                   }
                 ;
 
@@ -1232,27 +1240,27 @@ checkprogram    : CHECKPROGRAM SERVICENAME PATHTOK argumentlist programtimeout {
                 ;
 
 start           : START argumentlist starttimeout {
-                    addcommand(START, $<number>3);
+                        addcommand(START, $<number>3);
                   }
                 | START argumentlist useroptionlist starttimeout {
-                    addcommand(START, $<number>4);
+                        addcommand(START, $<number>4);
                   }
                 ;
 
 stop            : STOP argumentlist stoptimeout {
-                    addcommand(STOP, $<number>3);
+                        addcommand(STOP, $<number>3);
                   }
                 | STOP argumentlist useroptionlist stoptimeout {
-                    addcommand(STOP, $<number>4);
+                        addcommand(STOP, $<number>4);
                   }
                 ;
 
 
 restart         : RESTART argumentlist restarttimeout {
-                    addcommand(RESTART, $<number>3);
+                        addcommand(RESTART, $<number>3);
                   }
                 | RESTART argumentlist useroptionlist restarttimeout {
-                    addcommand(RESTART, $<number>4);
+                        addcommand(RESTART, $<number>4);
                   }
                 ;
 
@@ -1310,11 +1318,11 @@ hostname        : /* EMPTY */     {
                 ;
 
 connection      : IF FAILED host port connectionoptlist rate1 THEN action1 recovery {
-                    /* This is a workaround to support content match without having to create an URL object. 'urloption' creates the Request_T object we need minus the URL object, but with enough information to perform content test.
-                     TODO: Parser is in need of refactoring */
-                    portset.url_request = urlrequest;
-                    addeventaction(&(portset).action, $<number>8, $<number>9);
-                    addport(&(current->portlist), &portset);
+                        /* This is a workaround to support content match without having to create an URL object. 'urloption' creates the Request_T object we need minus the URL object, but with enough information to perform content test.
+                           TODO: Parser is in need of refactoring */
+                        portset.url_request = urlrequest;
+                        addeventaction(&(portset).action, $<number>8, $<number>9);
+                        addport(&(current->portlist), &portset);
                   }
                 ;
 
@@ -1336,9 +1344,9 @@ connectionopt   : ip
                 ;
 
 connectionurl   : IF FAILED URL URLOBJECT connectionurloptlist rate1 THEN action1 recovery {
-                    prepare_urlrequest($<url>4);
-                    addeventaction(&(portset).action, $<number>8, $<number>9);
-                    addport(&(current->portlist), &portset);
+                        prepare_urlrequest($<url>4);
+                        addeventaction(&(portset).action, $<number>8, $<number>9);
+                        addport(&(current->portlist), &portset);
                   }
                 ;
 
@@ -1424,22 +1432,22 @@ unixsocket      : UNIXSOCKET PATH {
                 ;
 
 ip              : IPV4 {
-                    portset.family = Socket_Ip4;
+                        portset.family = Socket_Ip4;
                   }
                 | IPV6 {
-                    portset.family = Socket_Ip6;
+                        portset.family = Socket_Ip6;
                   }
                 ;
 
 type            : TYPE TCP {
-                    portset.type = Socket_Tcp;
+                        portset.type = Socket_Tcp;
                   }
                 | TYPE TCPSSL typeoptlist { // The typelist is kept for backward compatibility (replaced by ssloptionlist)
-                    portset.type = Socket_Tcp;
-                    sslset.flags = SSL_Enabled;
+                        portset.type = Socket_Tcp;
+                        sslset.flags = SSL_Enabled;
                   }
                 | TYPE UDP {
-                    portset.type = Socket_Udp;
+                        portset.type = Socket_Udp;
                   }
                 ;
 
@@ -1592,16 +1600,16 @@ websocketlist   : websocket
                 ;
 
 websocket       : ORIGIN STRING {
-                    portset.parameters.websocket.origin = $<string>2;
+                        portset.parameters.websocket.origin = $<string>2;
                   }
                 | REQUEST PATH {
-                    portset.parameters.websocket.request = $<string>2;
+                        portset.parameters.websocket.request = $<string>2;
                   }
                 | HOST STRING {
-                    portset.parameters.websocket.host = $<string>2;
+                        portset.parameters.websocket.host = $<string>2;
                   }
                 | VERSIONOPT NUMBER {
-                    portset.parameters.websocket.version = $<number>2;
+                        portset.parameters.websocket.version = $<number>2;
                   }
                 ;
 
@@ -1635,15 +1643,15 @@ mysql           : username {
                 ;
 
 target          : TARGET MAILADDR {
-                    $<string>$ = $2;
+                        $<string>$ = $2;
                   }
                 | TARGET STRING {
-                    $<string>$ = $2;
+                        $<string>$ = $2;
                   }
                 ;
 
 maxforward      : MAXFORWARD NUMBER {
-                     $<number>$ = verifyMaxForward($2);
+                        $<number>$ = verifyMaxForward($2);
                   }
                 ;
 
@@ -1677,25 +1685,25 @@ http            : username {
                 ;
 
 status          : STATUS operator NUMBER {
-                    portset.parameters.http.operator = $<number>2;
-                    portset.parameters.http.status = $<number>3;
+                        portset.parameters.http.operator = $<number>2;
+                        portset.parameters.http.status = $<number>3;
                   }
                 ;
 
 request         : REQUEST PATH {
-                    portset.parameters.http.request = Util_urlEncode($2, false);
-                    FREE($2);
+                        portset.parameters.http.request = Util_urlEncode($2, false);
+                        FREE($2);
                   }
                 ;
 
 responsesum     : CHECKSUM STRING {
-                    portset.parameters.http.checksum = $2;
+                        portset.parameters.http.checksum = $2;
                   }
                 ;
 
 hostheader      : HOSTHEADER STRING {
-                    addhttpheader(&portset, Str_cat("Host:%s", $2));
-                    FREE($2);
+                        addhttpheader(&portset, Str_cat("Host:%s", $2));
+                        FREE($2);
                   }
                 ;
 
@@ -1706,7 +1714,7 @@ httpheaderlist  : /* EMPTY */
                 ;
 
 secret          : SECRET STRING {
-                    $<string>$ = $2;
+                        $<string>$ = $2;
                   }
                 ;
 
@@ -1775,29 +1783,29 @@ apache_stat     : username {
                 ;
 
 exist           : IF NOT EXIST rate1 THEN action1 recovery {
-                    addeventaction(&(nonexistset).action, $<number>6, $<number>7);
-                    addnonexist(&nonexistset);
+                        addeventaction(&(nonexistset).action, $<number>6, $<number>7);
+                        addnonexist(&nonexistset);
                   }
                 ;
 
 
 pid             : IF CHANGED PID rate1 THEN action1 {
-                    addeventaction(&(pidset).action, $<number>6, Action_Ignored);
-                    addpid(&pidset);
+                        addeventaction(&(pidset).action, $<number>6, Action_Ignored);
+                        addpid(&pidset);
                   }
                 ;
 
 ppid            : IF CHANGED PPID rate1 THEN action1 {
-                    addeventaction(&(ppidset).action, $<number>6, Action_Ignored);
-                    addppid(&ppidset);
+                        addeventaction(&(ppidset).action, $<number>6, Action_Ignored);
+                        addppid(&ppidset);
                   }
                 ;
 
 uptime          : IF UPTIME operator NUMBER time rate1 THEN action1 recovery {
-                    uptimeset.operator = $<number>3;
-                    uptimeset.uptime = ((unsigned long long)$4 * $<number>5);
-                    addeventaction(&(uptimeset).action, $<number>8, $<number>9);
-                    adduptime(&uptimeset);
+                        uptimeset.operator = $<number>3;
+                        uptimeset.uptime = ((unsigned long long)$4 * $<number>5);
+                        addeventaction(&(uptimeset).action, $<number>8, $<number>9);
+                        adduptime(&uptimeset);
                   }
 
 icmpcount       : COUNT NUMBER {
@@ -1821,42 +1829,42 @@ icmpoutgoing    : ADDRESS STRING {
                 ;
 
 stoptimeout     : /* EMPTY */ {
-                   $<number>$ = Run.limits.stopTimeout;
+                        $<number>$ = Run.limits.stopTimeout;
                   }
                 | TIMEOUT NUMBER SECOND {
-                   $<number>$ = $2 * 1000; // milliseconds internally
+                        $<number>$ = $2 * 1000; // milliseconds internally
                   }
                 ;
 
 starttimeout    : /* EMPTY */ {
-                   $<number>$ = Run.limits.startTimeout;
+                        $<number>$ = Run.limits.startTimeout;
                   }
                 | TIMEOUT NUMBER SECOND {
-                   $<number>$ = $2 * 1000; // milliseconds internally
+                        $<number>$ = $2 * 1000; // milliseconds internally
                   }
                 ;
 
 restarttimeout  : /* EMPTY */ {
-                   $<number>$ = Run.limits.restartTimeout;
+                        $<number>$ = Run.limits.restartTimeout;
                   }
                 | TIMEOUT NUMBER SECOND {
-                   $<number>$ = $2 * 1000; // milliseconds internally
+                        $<number>$ = $2 * 1000; // milliseconds internally
                   }
                 ;
 
 programtimeout  : /* EMPTY */ {
-                   $<number>$ = Run.limits.programTimeout;
+                        $<number>$ = Run.limits.programTimeout;
                   }
                 | TIMEOUT NUMBER SECOND {
-                   $<number>$ = $2 * 1000; // milliseconds internally
+                        $<number>$ = $2 * 1000; // milliseconds internally
                   }
                 ;
 
 nettimeout      : /* EMPTY */ {
-                   $<number>$ = Run.limits.networkTimeout;
+                        $<number>$ = Run.limits.networkTimeout;
                   }
                 | TIMEOUT NUMBER SECOND {
-                   $<number>$ = $2 * 1000; // net timeout is in milliseconds internally
+                        $<number>$ = $2 * 1000; // net timeout is in milliseconds internally
                   }
                 ;
 
@@ -1866,27 +1874,27 @@ connectiontimeout : TIMEOUT NUMBER SECOND {
                   ;
 
 retry           : RETRY NUMBER {
-                   $<number>$ = $2;
+                        $<number>$ = $2;
                   }
                 ;
 
 actionrate      : IF NUMBER RESTART NUMBER CYCLE THEN action1 {
-                   actionrateset.count = $2;
-                   actionrateset.cycle = $4;
-                   addeventaction(&(actionrateset).action, $<number>7, Action_Alert);
-                   addactionrate(&actionrateset);
-                 }
+                        actionrateset.count = $2;
+                        actionrateset.cycle = $4;
+                        addeventaction(&(actionrateset).action, $<number>7, Action_Alert);
+                        addactionrate(&actionrateset);
+                  }
                 | IF NUMBER RESTART NUMBER CYCLE THEN TIMEOUT {
-                   actionrateset.count = $2;
-                   actionrateset.cycle = $4;
-                   addeventaction(&(actionrateset).action, Action_Unmonitor, Action_Alert);
-                   addactionrate(&actionrateset);
-                 }
+                        actionrateset.count = $2;
+                        actionrateset.cycle = $4;
+                        addeventaction(&(actionrateset).action, Action_Unmonitor, Action_Alert);
+                        addactionrate(&actionrateset);
+                  }
                 ;
 
 urloption       : CONTENT urloperator STRING {
-                    seturlrequest($<number>2, $<string>3);
-                    FREE($3);
+                        seturlrequest($<number>2, $<string>3);
+                        FREE($3);
                   }
                 ;
 
@@ -1895,18 +1903,18 @@ urloperator     : EQUAL    { $<number>$ = Operator_Equal; }
                 ;
 
 alert           : alertmail formatlist reminder {
-                   mailset.events = Event_All;
-                   addmail($<string>1, &mailset, &current->maillist);
+                        mailset.events = Event_All;
+                        addmail($<string>1, &mailset, &current->maillist);
                   }
                 | alertmail '{' eventoptionlist '}' formatlist reminder {
-                   addmail($<string>1, &mailset, &current->maillist);
+                        addmail($<string>1, &mailset, &current->maillist);
                   }
                 | alertmail NOT '{' eventoptionlist '}' formatlist reminder {
-                   mailset.events = ~mailset.events;
-                   addmail($<string>1, &mailset, &current->maillist);
+                        mailset.events = ~mailset.events;
+                        addmail($<string>1, &mailset, &current->maillist);
                   }
                 | noalertmail {
-                   addmail($<string>1, &mailset, &current->maillist);
+                        addmail($<string>1, &mailset, &current->maillist);
                   }
                 ;
 
@@ -1966,16 +1974,16 @@ formatoption    : MAILFROM ADDRESSOBJECT { mailset.from = $<address>1; }
                 ;
 
 every           : EVERY NUMBER CYCLE {
-                   current->every.type = Every_SkipCycles;
-                   current->every.spec.cycle.counter = current->every.spec.cycle.number = $2;
+                        current->every.type = Every_SkipCycles;
+                        current->every.spec.cycle.counter = current->every.spec.cycle.number = $2;
                  }
                 | EVERY TIMESPEC {
-                   current->every.type = Every_Cron;
-                   current->every.spec.cron = $2;
+                        current->every.type = Every_Cron;
+                        current->every.spec.cron = $2;
                  }
                 | NOTEVERY TIMESPEC {
-                   current->every.type = Every_NotInCron;
-                   current->every.spec.cron = $2;
+                        current->every.type = Every_NotInCron;
+                        current->every.spec.cron = $2;
                  }
                 ;
 
@@ -2037,8 +2045,8 @@ statusvalue     : IF STATUS operator NUMBER rate1 THEN action1 recovery {
                 ;
 
 resourceprocess : IF resourceprocesslist rate1 THEN action1 recovery {
-                     addeventaction(&(resourceset).action, $<number>5, $<number>6);
-                     addresource(&resourceset);
+                        addeventaction(&(resourceset).action, $<number>5, $<number>6);
+                        addresource(&resourceset);
                    }
                 ;
 
@@ -2054,8 +2062,8 @@ resourceprocessopt  : resourcecpuproc
                     ;
 
 resourcesystem  : IF resourcesystemlist rate1 THEN action1 recovery {
-                     addeventaction(&(resourceset).action, $<number>5, $<number>6);
-                     addresource(&resourceset);
+                        addeventaction(&(resourceset).action, $<number>5, $<number>6);
+                        addresource(&resourceset);
                    }
                 ;
 
@@ -2070,21 +2078,21 @@ resourcesystemopt  : resourceload
                    ;
 
 resourcecpuproc : CPU operator value PERCENT {
-                    resourceset.resource_id = Resource_CpuPercent;
-                    resourceset.operator = $<number>2;
-                    resourceset.limit = $<real>3;
+                        resourceset.resource_id = Resource_CpuPercent;
+                        resourceset.operator = $<number>2;
+                        resourceset.limit = $<real>3;
                   }
                 | TOTALCPU operator value PERCENT {
-                    resourceset.resource_id = Resource_CpuPercentTotal;
-                    resourceset.operator = $<number>2;
-                    resourceset.limit = $<real>3;
+                        resourceset.resource_id = Resource_CpuPercentTotal;
+                        resourceset.operator = $<number>2;
+                        resourceset.limit = $<real>3;
                   }
                 ;
 
 resourcecpu     : resourcecpuid operator value PERCENT {
-                    resourceset.resource_id = $<number>1;
-                    resourceset.operator = $<number>2;
-                    resourceset.limit = $<real>3;
+                        resourceset.resource_id = $<number>1;
+                        resourceset.operator = $<number>2;
+                        resourceset.limit = $<real>3;
                   }
                 ;
 
@@ -2095,57 +2103,57 @@ resourcecpuid   : CPUUSER   { $<number>$ = Resource_CpuUser; }
                 ;
 
 resourcemem     : MEMORY operator value unit {
-                    resourceset.resource_id = Resource_MemoryKbyte;
-                    resourceset.operator = $<number>2;
-                    resourceset.limit = $<real>3 * $<number>4;
+                        resourceset.resource_id = Resource_MemoryKbyte;
+                        resourceset.operator = $<number>2;
+                        resourceset.limit = $<real>3 * $<number>4;
                   }
                 | MEMORY operator value PERCENT {
-                    resourceset.resource_id = Resource_MemoryPercent;
-                    resourceset.operator = $<number>2;
-                    resourceset.limit = $<real>3;
+                        resourceset.resource_id = Resource_MemoryPercent;
+                        resourceset.operator = $<number>2;
+                        resourceset.limit = $<real>3;
                   }
                 | TOTALMEMORY operator value unit {
-                    resourceset.resource_id = Resource_MemoryKbyteTotal;
-                    resourceset.operator = $<number>2;
-                    resourceset.limit = $<real>3 * $<number>4;
+                        resourceset.resource_id = Resource_MemoryKbyteTotal;
+                        resourceset.operator = $<number>2;
+                        resourceset.limit = $<real>3 * $<number>4;
                   }
                 | TOTALMEMORY operator value PERCENT  {
-                    resourceset.resource_id = Resource_MemoryPercentTotal;
-                    resourceset.operator = $<number>2;
-                    resourceset.limit = $<real>3;
+                        resourceset.resource_id = Resource_MemoryPercentTotal;
+                        resourceset.operator = $<number>2;
+                        resourceset.limit = $<real>3;
                   }
                 ;
 
 resourceswap    : SWAP operator value unit {
-                    resourceset.resource_id = Resource_SwapKbyte;
-                    resourceset.operator = $<number>2;
-                    resourceset.limit = $<real>3 * $<number>4;
+                        resourceset.resource_id = Resource_SwapKbyte;
+                        resourceset.operator = $<number>2;
+                        resourceset.limit = $<real>3 * $<number>4;
                   }
                 | SWAP operator value PERCENT {
-                    resourceset.resource_id = Resource_SwapPercent;
-                    resourceset.operator = $<number>2;
-                    resourceset.limit = $<real>3;
+                        resourceset.resource_id = Resource_SwapPercent;
+                        resourceset.operator = $<number>2;
+                        resourceset.limit = $<real>3;
                   }
                 ;
 
 resourcethreads : THREADS operator NUMBER {
-                    resourceset.resource_id = Resource_Threads;
-                    resourceset.operator = $<number>2;
-                    resourceset.limit = $<number>3;
+                        resourceset.resource_id = Resource_Threads;
+                        resourceset.operator = $<number>2;
+                        resourceset.limit = $<number>3;
                   }
                 ;
 
 resourcechild   : CHILDREN operator NUMBER {
-                    resourceset.resource_id = Resource_Children;
-                    resourceset.operator = $<number>2;
-                    resourceset.limit = $<number>3;
+                        resourceset.resource_id = Resource_Children;
+                        resourceset.operator = $<number>2;
+                        resourceset.limit = $<number>3;
                   }
                 ;
 
 resourceload    : resourceloadavg operator value {
-                    resourceset.resource_id = $<number>1;
-                    resourceset.operator = $<number>2;
-                    resourceset.limit = $<real>3;
+                        resourceset.resource_id = $<number>1;
+                        resourceset.operator = $<number>2;
+                        resourceset.limit = $<real>3;
                   }
                 ;
 
@@ -2159,15 +2167,15 @@ value           : REAL { $<real>$ = $1; }
                 ;
 
 timestamp       : IF TIMESTAMP operator NUMBER time rate1 THEN action1 recovery {
-                    timestampset.operator = $<number>3;
-                    timestampset.time = ($4 * $<number>5);
-                    addeventaction(&(timestampset).action, $<number>8, $<number>9);
-                    addtimestamp(&timestampset);
+                        timestampset.operator = $<number>3;
+                        timestampset.time = ($4 * $<number>5);
+                        addeventaction(&(timestampset).action, $<number>8, $<number>9);
+                        addtimestamp(&timestampset);
                   }
                 | IF CHANGED TIMESTAMP rate1 THEN action1 {
-                    timestampset.test_changes = true;
-                    addeventaction(&(timestampset).action, $<number>6, Action_Ignored);
-                    addtimestamp(&timestampset);
+                        timestampset.test_changes = true;
+                        addeventaction(&(timestampset).action, $<number>6, Action_Ignored);
+                        addtimestamp(&timestampset);
                   }
                 ;
 
@@ -2235,24 +2243,24 @@ action          : ALERT {
                 ;
 
 action1         : action {
-                    $<number>$ = $<number>1;
-                    if ($<number>1 == Action_Exec && command) {
-                      repeat1 = repeat;
-                      repeat = 0;
-                      command1 = command;
-                      command = NULL;
-                    }
+                        $<number>$ = $<number>1;
+                        if ($<number>1 == Action_Exec && command) {
+                                repeat1 = repeat;
+                                repeat = 0;
+                                command1 = command;
+                                command = NULL;
+                        }
                   }
                 ;
 
 action2         : action {
-                    $<number>$ = $<number>1;
-                    if ($<number>1 == Action_Exec && command) {
-                      repeat2 = repeat;
-                      repeat = 0;
-                      command2 = command;
-                      command = NULL;
-                    }
+                        $<number>$ = $<number>1;
+                        if ($<number>1 == Action_Exec && command) {
+                                repeat2 = repeat;
+                                repeat = 0;
+                                command2 = command;
+                                command = NULL;
+                        }
                   }
                 ;
 
@@ -2305,34 +2313,34 @@ rate2           : /* EMPTY */
                 ;
 
 recovery        : /* EMPTY */ {
-                    $<number>$ = Action_Alert;
+                        $<number>$ = Action_Alert;
                   }
                 | ELSE IF RECOVERED rate2 THEN action2 {
-                    $<number>$ = $<number>6;
+                        $<number>$ = $<number>6;
                   }
                 | ELSE IF PASSED rate2 THEN action2 {
-                    $<number>$ = $<number>6;
+                        $<number>$ = $<number>6;
                   }
                 | ELSE IF SUCCEEDED rate2 THEN action2 {
-                    $<number>$ = $<number>6;
+                        $<number>$ = $<number>6;
                   }
                 ;
 
 checksum        : IF FAILED hashtype CHECKSUM rate1 THEN action1 recovery {
-                    addeventaction(&(checksumset).action, $<number>7, $<number>8);
-                    addchecksum(&checksumset);
+                        addeventaction(&(checksumset).action, $<number>7, $<number>8);
+                        addchecksum(&checksumset);
                   }
                 | IF FAILED hashtype CHECKSUM EXPECT STRING rate1 THEN action1
                   recovery {
-                    snprintf(checksumset.hash, sizeof(checksumset.hash), "%s", $6);
-                    FREE($6);
-                    addeventaction(&(checksumset).action, $<number>9, $<number>10);
-                    addchecksum(&checksumset);
+                        snprintf(checksumset.hash, sizeof(checksumset.hash), "%s", $6);
+                        FREE($6);
+                        addeventaction(&(checksumset).action, $<number>9, $<number>10);
+                        addchecksum(&checksumset);
                   }
                 | IF CHANGED hashtype CHECKSUM rate1 THEN action1 {
-                    checksumset.test_changes = true;
-                    addeventaction(&(checksumset).action, $<number>7, Action_Ignored);
-                    addchecksum(&checksumset);
+                        checksumset.test_changes = true;
+                        addeventaction(&(checksumset).action, $<number>7, Action_Ignored);
+                        addchecksum(&checksumset);
                   }
                 ;
 hashtype        : /* EMPTY */ { checksumset.type = Hash_Unknown; }
@@ -2341,72 +2349,72 @@ hashtype        : /* EMPTY */ { checksumset.type = Hash_Unknown; }
                 ;
 
 inode           : IF INODE operator NUMBER rate1 THEN action1 recovery {
-                    filesystemset.resource = Resource_Inode;
-                    filesystemset.operator = $<number>3;
-                    filesystemset.limit_absolute = $4;
-                    addeventaction(&(filesystemset).action, $<number>7, $<number>8);
-                    addfilesystem(&filesystemset);
+                        filesystemset.resource = Resource_Inode;
+                        filesystemset.operator = $<number>3;
+                        filesystemset.limit_absolute = $4;
+                        addeventaction(&(filesystemset).action, $<number>7, $<number>8);
+                        addfilesystem(&filesystemset);
                   }
                 | IF INODE operator value PERCENT rate1 THEN action1 recovery {
-                    filesystemset.resource = Resource_Inode;
-                    filesystemset.operator = $<number>3;
-                    filesystemset.limit_percent = $<real>4;
-                    addeventaction(&(filesystemset).action, $<number>8, $<number>9);
-                    addfilesystem(&filesystemset);
+                        filesystemset.resource = Resource_Inode;
+                        filesystemset.operator = $<number>3;
+                        filesystemset.limit_percent = $<real>4;
+                        addeventaction(&(filesystemset).action, $<number>8, $<number>9);
+                        addfilesystem(&filesystemset);
                   }
                 | IF INODE TFREE operator NUMBER rate1 THEN action1 recovery {
-                    filesystemset.resource = Resource_InodeFree;
-                    filesystemset.operator = $<number>4;
-                    filesystemset.limit_absolute = $5;
-                    addeventaction(&(filesystemset).action, $<number>8, $<number>9);
-                    addfilesystem(&filesystemset);
+                        filesystemset.resource = Resource_InodeFree;
+                        filesystemset.operator = $<number>4;
+                        filesystemset.limit_absolute = $5;
+                        addeventaction(&(filesystemset).action, $<number>8, $<number>9);
+                        addfilesystem(&filesystemset);
                   }
                 | IF INODE TFREE operator value PERCENT rate1 THEN action1 recovery {
-                    filesystemset.resource = Resource_InodeFree;
-                    filesystemset.operator = $<number>4;
-                    filesystemset.limit_percent = $<real>5;
-                    addeventaction(&(filesystemset).action, $<number>9, $<number>10);
-                    addfilesystem(&filesystemset);
+                        filesystemset.resource = Resource_InodeFree;
+                        filesystemset.operator = $<number>4;
+                        filesystemset.limit_percent = $<real>5;
+                        addeventaction(&(filesystemset).action, $<number>9, $<number>10);
+                        addfilesystem(&filesystemset);
                   }
                 ;
 
 space           : IF SPACE operator value unit rate1 THEN action1 recovery {
-                    if (! filesystem_usage(current))
-                      yyerror2("Cannot read usage of filesystem %s", current->path);
-                    filesystemset.resource = Resource_Space;
-                    filesystemset.operator = $<number>3;
-                    filesystemset.limit_absolute = (long long)((double)$<real>4 / (double)current->inf->priv.filesystem.f_bsize * (double)$<number>5);
-                    addeventaction(&(filesystemset).action, $<number>8, $<number>9);
-                    addfilesystem(&filesystemset);
+                        if (! filesystem_usage(current))
+                                yyerror2("Cannot read usage of filesystem %s", current->path);
+                        filesystemset.resource = Resource_Space;
+                        filesystemset.operator = $<number>3;
+                        filesystemset.limit_absolute = (long long)((double)$<real>4 / (double)current->inf->priv.filesystem.f_bsize * (double)$<number>5);
+                        addeventaction(&(filesystemset).action, $<number>8, $<number>9);
+                        addfilesystem(&filesystemset);
                   }
                 | IF SPACE operator value PERCENT rate1 THEN action1 recovery {
-                    filesystemset.resource = Resource_Space;
-                    filesystemset.operator = $<number>3;
-                    filesystemset.limit_percent = $<real>4;
-                    addeventaction(&(filesystemset).action, $<number>8, $<number>9);
-                    addfilesystem(&filesystemset);
+                        filesystemset.resource = Resource_Space;
+                        filesystemset.operator = $<number>3;
+                        filesystemset.limit_percent = $<real>4;
+                        addeventaction(&(filesystemset).action, $<number>8, $<number>9);
+                        addfilesystem(&filesystemset);
                   }
                 | IF SPACE TFREE operator value unit rate1 THEN action1 recovery {
-                    if (! filesystem_usage(current))
-                      yyerror2("Cannot read usage of filesystem %s", current->path);
-                    filesystemset.resource = Resource_SpaceFree;
-                    filesystemset.operator = $<number>4;
-                    filesystemset.limit_absolute = (long long)((double)$<real>5 / (double)current->inf->priv.filesystem.f_bsize * (double)$<number>6);
-                    addeventaction(&(filesystemset).action, $<number>9, $<number>10);
-                    addfilesystem(&filesystemset);
+                        if (! filesystem_usage(current))
+                                yyerror2("Cannot read usage of filesystem %s", current->path);
+                        filesystemset.resource = Resource_SpaceFree;
+                        filesystemset.operator = $<number>4;
+                        filesystemset.limit_absolute = (long long)((double)$<real>5 / (double)current->inf->priv.filesystem.f_bsize * (double)$<number>6);
+                        addeventaction(&(filesystemset).action, $<number>9, $<number>10);
+                        addfilesystem(&filesystemset);
                   }
                 | IF SPACE TFREE operator value PERCENT rate1 THEN action1 recovery {
-                    filesystemset.resource = Resource_SpaceFree;
-                    filesystemset.operator = $<number>4;
-                    filesystemset.limit_percent = $<real>5;
-                    addeventaction(&(filesystemset).action, $<number>9, $<number>10);
-                    addfilesystem(&filesystemset);
+                        filesystemset.resource = Resource_SpaceFree;
+                        filesystemset.operator = $<number>4;
+                        filesystemset.limit_percent = $<real>5;
+                        addeventaction(&(filesystemset).action, $<number>9, $<number>10);
+                        addfilesystem(&filesystemset);
                   }
                 ;
 
 fsflag          : IF CHANGED FSFLAG rate1 THEN action1 {
-                    addeventaction(&(fsflagset).action, $<number>6, Action_Ignored);
-                    addfsflag(&fsflagset);
+                        addeventaction(&(fsflagset).action, $<number>6, Action_Ignored);
+                        addfsflag(&fsflagset);
                   }
                 ;
 
@@ -2418,103 +2426,103 @@ unit            : /* empty */  { $<number>$ = Unit_Byte; }
                 ;
 
 permission      : IF FAILED PERMISSION NUMBER rate1 THEN action1 recovery {
-                    permset.perm = check_perm($4);
-                    addeventaction(&(permset).action, $<number>7, $<number>8);
-                    addperm(&permset);
+                        permset.perm = check_perm($4);
+                        addeventaction(&(permset).action, $<number>7, $<number>8);
+                        addperm(&permset);
                   }
                 | IF CHANGED PERMISSION rate1 THEN action1 recovery {
-                    permset.test_changes = true;
-                    addeventaction(&(permset).action, $<number>6, Action_Ignored);
-                    addperm(&permset);
+                        permset.test_changes = true;
+                        addeventaction(&(permset).action, $<number>6, Action_Ignored);
+                        addperm(&permset);
                   }
                 ;
 
 match           : IF CONTENT urloperator PATH rate1 THEN action1 {
-                    matchset.not = $<number>3 == Operator_Equal ? false : true;
-                    matchset.ignore = false;
-                    matchset.match_path = $4;
-                    matchset.match_string = NULL;
-                    addmatchpath(&matchset, $<number>7);
-                    FREE($4);
+                        matchset.not = $<number>3 == Operator_Equal ? false : true;
+                        matchset.ignore = false;
+                        matchset.match_path = $4;
+                        matchset.match_string = NULL;
+                        addmatchpath(&matchset, $<number>7);
+                        FREE($4);
                   }
                 | IF CONTENT urloperator STRING rate1 THEN action1 {
-                    matchset.not = $<number>3 == Operator_Equal ? false : true;
-                    matchset.ignore = false;
-                    matchset.match_path = NULL;
-                    matchset.match_string = $4;
-                    addmatch(&matchset, $<number>7, 0);
+                        matchset.not = $<number>3 == Operator_Equal ? false : true;
+                        matchset.ignore = false;
+                        matchset.match_path = NULL;
+                        matchset.match_string = $4;
+                        addmatch(&matchset, $<number>7, 0);
                   }
                 | IGNORE CONTENT urloperator PATH {
-                    matchset.not = $<number>3 == Operator_Equal ? false : true;
-                    matchset.ignore = true;
-                    matchset.match_path = $4;
-                    matchset.match_string = NULL;
-                    addmatchpath(&matchset, Action_Ignored);
-                    FREE($4);
+                        matchset.not = $<number>3 == Operator_Equal ? false : true;
+                        matchset.ignore = true;
+                        matchset.match_path = $4;
+                        matchset.match_string = NULL;
+                        addmatchpath(&matchset, Action_Ignored);
+                        FREE($4);
                   }
                 | IGNORE CONTENT urloperator STRING {
-                    matchset.not = $<number>3 == Operator_Equal ? false : true;
-                    matchset.ignore = true;
-                    matchset.match_path = NULL;
-                    matchset.match_string = $4;
-                    addmatch(&matchset, Action_Ignored, 0);
+                        matchset.not = $<number>3 == Operator_Equal ? false : true;
+                        matchset.ignore = true;
+                        matchset.match_path = NULL;
+                        matchset.match_string = $4;
+                        addmatch(&matchset, Action_Ignored, 0);
                   }
                 /* The below MATCH statement is deprecated (replaced by CONTENT) */
                 | IF matchflagnot MATCH PATH rate1 THEN action1 {
-                    matchset.ignore = false;
-                    matchset.match_path = $4;
-                    matchset.match_string = NULL;
-                    addmatchpath(&matchset, $<number>7);
-                    FREE($4);
+                        matchset.ignore = false;
+                        matchset.match_path = $4;
+                        matchset.match_string = NULL;
+                        addmatchpath(&matchset, $<number>7);
+                        FREE($4);
                   }
                 | IF matchflagnot MATCH STRING rate1 THEN action1 {
-                    matchset.ignore = false;
-                    matchset.match_path = NULL;
-                    matchset.match_string = $4;
-                    addmatch(&matchset, $<number>7, 0);
+                        matchset.ignore = false;
+                        matchset.match_path = NULL;
+                        matchset.match_string = $4;
+                        addmatch(&matchset, $<number>7, 0);
                   }
                 | IGNORE matchflagnot MATCH PATH {
-                    matchset.ignore = true;
-                    matchset.match_path = $4;
-                    matchset.match_string = NULL;
-                    addmatchpath(&matchset, Action_Ignored);
-                    FREE($4);
+                        matchset.ignore = true;
+                        matchset.match_path = $4;
+                        matchset.match_string = NULL;
+                        addmatchpath(&matchset, Action_Ignored);
+                        FREE($4);
                   }
                 | IGNORE matchflagnot MATCH STRING {
-                    matchset.ignore = true;
-                    matchset.match_path = NULL;
-                    matchset.match_string = $4;
-                    addmatch(&matchset, Action_Ignored, 0);
+                        matchset.ignore = true;
+                        matchset.match_path = NULL;
+                        matchset.match_string = $4;
+                        addmatch(&matchset, Action_Ignored, 0);
                   }
                 ;
 
 matchflagnot    : /* EMPTY */ {
-                    matchset.not = false;
+                        matchset.not = false;
                   }
                 | NOT {
-                    matchset.not = true;
+                        matchset.not = true;
                   }
                 ;
 
 
 size            : IF SIZE operator NUMBER unit rate1 THEN action1 recovery {
-                    sizeset.operator = $<number>3;
-                    sizeset.size = ((unsigned long long)$4 * $<number>5);
-                    addeventaction(&(sizeset).action, $<number>8, $<number>9);
-                    addsize(&sizeset);
+                        sizeset.operator = $<number>3;
+                        sizeset.size = ((unsigned long long)$4 * $<number>5);
+                        addeventaction(&(sizeset).action, $<number>8, $<number>9);
+                        addsize(&sizeset);
                   }
                 | IF CHANGED SIZE rate1 THEN action1 {
-                    sizeset.test_changes = true;
-                    addeventaction(&(sizeset).action, $<number>6, Action_Ignored);
-                    addsize(&sizeset);
+                        sizeset.test_changes = true;
+                        addeventaction(&(sizeset).action, $<number>6, Action_Ignored);
+                        addsize(&sizeset);
                   }
                 ;
 
 uid             : IF FAILED UID STRING rate1 THEN action1 recovery {
-                    uidset.uid = get_uid($4, 0);
-                    addeventaction(&(uidset).action, $<number>7, $<number>8);
-                    current->uid = adduid(&uidset);
-                    FREE($4);
+                        uidset.uid = get_uid($4, 0);
+                        addeventaction(&(uidset).action, $<number>7, $<number>8);
+                        current->uid = adduid(&uidset);
+                        FREE($4);
                   }
                 | IF FAILED UID NUMBER rate1 THEN action1 recovery {
                     uidset.uid = get_uid(NULL, $4);
@@ -2524,147 +2532,147 @@ uid             : IF FAILED UID STRING rate1 THEN action1 recovery {
                 ;
 
 euid            : IF FAILED EUID STRING rate1 THEN action1 recovery {
-                    uidset.uid = get_uid($4, 0);
-                    addeventaction(&(uidset).action, $<number>7, $<number>8);
-                    current->euid = adduid(&uidset);
-                    FREE($4);
+                        uidset.uid = get_uid($4, 0);
+                        addeventaction(&(uidset).action, $<number>7, $<number>8);
+                        current->euid = adduid(&uidset);
+                        FREE($4);
                   }
                 | IF FAILED EUID NUMBER rate1 THEN action1 recovery {
-                    uidset.uid = get_uid(NULL, $4);
-                    addeventaction(&(uidset).action, $<number>7, $<number>8);
-                    current->euid = adduid(&uidset);
+                        uidset.uid = get_uid(NULL, $4);
+                        addeventaction(&(uidset).action, $<number>7, $<number>8);
+                        current->euid = adduid(&uidset);
                   }
                 ;
 
 gid             : IF FAILED GID STRING rate1 THEN action1 recovery {
-                    gidset.gid = get_gid($4, 0);
-                    addeventaction(&(gidset).action, $<number>7, $<number>8);
-                    current->gid = addgid(&gidset);
-                    FREE($4);
+                        gidset.gid = get_gid($4, 0);
+                        addeventaction(&(gidset).action, $<number>7, $<number>8);
+                        current->gid = addgid(&gidset);
+                        FREE($4);
                   }
                 | IF FAILED GID NUMBER rate1 THEN action1 recovery {
-                    gidset.gid = get_gid(NULL, $4);
-                    addeventaction(&(gidset).action, $<number>7, $<number>8);
-                    current->gid = addgid(&gidset);
+                        gidset.gid = get_gid(NULL, $4);
+                        addeventaction(&(gidset).action, $<number>7, $<number>8);
+                        current->gid = addgid(&gidset);
                   }
                 ;
 
 linkstatus   : IF FAILED LINK rate1 THEN action1 recovery {
-                    addeventaction(&(linkstatusset).action, $<number>6, $<number>7);
-                    addlinkstatus(current, &linkstatusset);
+                        addeventaction(&(linkstatusset).action, $<number>6, $<number>7);
+                        addlinkstatus(current, &linkstatusset);
                   }
                 ;
 
 linkspeed    : IF CHANGED LINK rate1 THEN action1 recovery {
-                    addeventaction(&(linkspeedset).action, $<number>6, $<number>7);
-                    addlinkspeed(current, &linkspeedset);
+                        addeventaction(&(linkspeedset).action, $<number>6, $<number>7);
+                        addlinkspeed(current, &linkspeedset);
                   }
 
 linksaturation : IF SATURATION operator NUMBER PERCENT rate1 THEN action1 recovery {
-                    linksaturationset.operator = $<number>3;
-                    linksaturationset.limit = (unsigned long long)$4;
-                    addeventaction(&(linksaturationset).action, $<number>8, $<number>9);
-                    addlinksaturation(current, &linksaturationset);
+                        linksaturationset.operator = $<number>3;
+                        linksaturationset.limit = (unsigned long long)$4;
+                        addeventaction(&(linksaturationset).action, $<number>8, $<number>9);
+                        addlinksaturation(current, &linksaturationset);
                   }
                 ;
 
 upload          : IF UPLOAD operator NUMBER unit currenttime rate1 THEN action1 recovery {
-                    bandwidthset.operator = $<number>3;
-                    bandwidthset.limit = ((unsigned long long)$4 * $<number>5);
-                    bandwidthset.rangecount = 1;
-                    bandwidthset.range = $<number>6;
-                    addeventaction(&(bandwidthset).action, $<number>9, $<number>10);
-                    addbandwidth(&(current->uploadbyteslist), &bandwidthset);
+                        bandwidthset.operator = $<number>3;
+                        bandwidthset.limit = ((unsigned long long)$4 * $<number>5);
+                        bandwidthset.rangecount = 1;
+                        bandwidthset.range = $<number>6;
+                        addeventaction(&(bandwidthset).action, $<number>9, $<number>10);
+                        addbandwidth(&(current->uploadbyteslist), &bandwidthset);
                   }
                 | IF TOTAL UPLOAD operator NUMBER unit totaltime rate1 THEN action1 recovery {
-                    bandwidthset.operator = $<number>4;
-                    bandwidthset.limit = ((unsigned long long)$5 * $<number>6);
-                    bandwidthset.rangecount = 1;
-                    bandwidthset.range = $<number>7;
-                    addeventaction(&(bandwidthset).action, $<number>10, $<number>11);
-                    addbandwidth(&(current->uploadbyteslist), &bandwidthset);
+                        bandwidthset.operator = $<number>4;
+                        bandwidthset.limit = ((unsigned long long)$5 * $<number>6);
+                        bandwidthset.rangecount = 1;
+                        bandwidthset.range = $<number>7;
+                        addeventaction(&(bandwidthset).action, $<number>10, $<number>11);
+                        addbandwidth(&(current->uploadbyteslist), &bandwidthset);
                   }
                 | IF TOTAL UPLOAD operator NUMBER unit NUMBER totaltime rate1 THEN action1 recovery {
-                    bandwidthset.operator = $<number>4;
-                    bandwidthset.limit = ((unsigned long long)$5 * $<number>6);
-                    bandwidthset.rangecount = $7;
-                    bandwidthset.range = $<number>8;
-                    addeventaction(&(bandwidthset).action, $<number>11, $<number>12);
-                    addbandwidth(&(current->uploadbyteslist), &bandwidthset);
+                        bandwidthset.operator = $<number>4;
+                        bandwidthset.limit = ((unsigned long long)$5 * $<number>6);
+                        bandwidthset.rangecount = $7;
+                        bandwidthset.range = $<number>8;
+                        addeventaction(&(bandwidthset).action, $<number>11, $<number>12);
+                        addbandwidth(&(current->uploadbyteslist), &bandwidthset);
                   }
                 | IF UPLOAD operator NUMBER PACKET currenttime rate1 THEN action1 recovery {
-                    bandwidthset.operator = $<number>3;
-                    bandwidthset.limit = (unsigned long long)$4;
-                    bandwidthset.rangecount = 1;
-                    bandwidthset.range = $<number>6;
-                    addeventaction(&(bandwidthset).action, $<number>9, $<number>10);
-                    addbandwidth(&(current->uploadpacketslist), &bandwidthset);
+                        bandwidthset.operator = $<number>3;
+                        bandwidthset.limit = (unsigned long long)$4;
+                        bandwidthset.rangecount = 1;
+                        bandwidthset.range = $<number>6;
+                        addeventaction(&(bandwidthset).action, $<number>9, $<number>10);
+                        addbandwidth(&(current->uploadpacketslist), &bandwidthset);
                   }
                 | IF TOTAL UPLOAD operator NUMBER PACKET totaltime rate1 THEN action1 recovery {
-                    bandwidthset.operator = $<number>4;
-                    bandwidthset.limit = (unsigned long long)$5;
-                    bandwidthset.rangecount = 1;
-                    bandwidthset.range = $<number>7;
-                    addeventaction(&(bandwidthset).action, $<number>10, $<number>11);
-                    addbandwidth(&(current->uploadpacketslist), &bandwidthset);
+                        bandwidthset.operator = $<number>4;
+                        bandwidthset.limit = (unsigned long long)$5;
+                        bandwidthset.rangecount = 1;
+                        bandwidthset.range = $<number>7;
+                        addeventaction(&(bandwidthset).action, $<number>10, $<number>11);
+                        addbandwidth(&(current->uploadpacketslist), &bandwidthset);
                   }
                 | IF TOTAL UPLOAD operator NUMBER PACKET NUMBER totaltime rate1 THEN action1 recovery {
-                    bandwidthset.operator = $<number>4;
-                    bandwidthset.limit = (unsigned long long)$5;
-                    bandwidthset.rangecount = $7;
-                    bandwidthset.range = $<number>8;
-                    addeventaction(&(bandwidthset).action, $<number>11, $<number>12);
-                    addbandwidth(&(current->uploadpacketslist), &bandwidthset);
+                        bandwidthset.operator = $<number>4;
+                        bandwidthset.limit = (unsigned long long)$5;
+                        bandwidthset.rangecount = $7;
+                        bandwidthset.range = $<number>8;
+                        addeventaction(&(bandwidthset).action, $<number>11, $<number>12);
+                        addbandwidth(&(current->uploadpacketslist), &bandwidthset);
                   }
                 ;
 
 download        : IF DOWNLOAD operator NUMBER unit currenttime rate1 THEN action1 recovery {
-                    bandwidthset.operator = $<number>3;
-                    bandwidthset.limit = ((unsigned long long)$4 * $<number>5);
-                    bandwidthset.rangecount = 1;
-                    bandwidthset.range = $<number>6;
-                    addeventaction(&(bandwidthset).action, $<number>9, $<number>10);
-                    addbandwidth(&(current->downloadbyteslist), &bandwidthset);
+                        bandwidthset.operator = $<number>3;
+                        bandwidthset.limit = ((unsigned long long)$4 * $<number>5);
+                        bandwidthset.rangecount = 1;
+                        bandwidthset.range = $<number>6;
+                        addeventaction(&(bandwidthset).action, $<number>9, $<number>10);
+                        addbandwidth(&(current->downloadbyteslist), &bandwidthset);
                   }
                 | IF TOTAL DOWNLOAD operator NUMBER unit totaltime rate1 THEN action1 recovery {
-                    bandwidthset.operator = $<number>4;
-                    bandwidthset.limit = ((unsigned long long)$5 * $<number>6);
-                    bandwidthset.rangecount = 1;
-                    bandwidthset.range = $<number>7;
-                    addeventaction(&(bandwidthset).action, $<number>10, $<number>11);
-                    addbandwidth(&(current->downloadbyteslist), &bandwidthset);
+                        bandwidthset.operator = $<number>4;
+                        bandwidthset.limit = ((unsigned long long)$5 * $<number>6);
+                        bandwidthset.rangecount = 1;
+                        bandwidthset.range = $<number>7;
+                        addeventaction(&(bandwidthset).action, $<number>10, $<number>11);
+                        addbandwidth(&(current->downloadbyteslist), &bandwidthset);
                   }
                 | IF TOTAL DOWNLOAD operator NUMBER unit NUMBER totaltime rate1 THEN action1 recovery {
-                    bandwidthset.operator = $<number>4;
-                    bandwidthset.limit = ((unsigned long long)$5 * $<number>6);
-                    bandwidthset.rangecount = $7;
-                    bandwidthset.range = $<number>8;
-                    addeventaction(&(bandwidthset).action, $<number>11, $<number>12);
-                    addbandwidth(&(current->downloadbyteslist), &bandwidthset);
+                        bandwidthset.operator = $<number>4;
+                        bandwidthset.limit = ((unsigned long long)$5 * $<number>6);
+                        bandwidthset.rangecount = $7;
+                        bandwidthset.range = $<number>8;
+                        addeventaction(&(bandwidthset).action, $<number>11, $<number>12);
+                        addbandwidth(&(current->downloadbyteslist), &bandwidthset);
                   }
                 | IF DOWNLOAD operator NUMBER PACKET currenttime rate1 THEN action1 recovery {
-                    bandwidthset.operator = $<number>3;
-                    bandwidthset.limit = (unsigned long long)$4;
-                    bandwidthset.rangecount = 1;
-                    bandwidthset.range = $<number>6;
-                    addeventaction(&(bandwidthset).action, $<number>9, $<number>10);
-                    addbandwidth(&(current->downloadpacketslist), &bandwidthset);
+                        bandwidthset.operator = $<number>3;
+                        bandwidthset.limit = (unsigned long long)$4;
+                        bandwidthset.rangecount = 1;
+                        bandwidthset.range = $<number>6;
+                        addeventaction(&(bandwidthset).action, $<number>9, $<number>10);
+                        addbandwidth(&(current->downloadpacketslist), &bandwidthset);
                   }
                 | IF TOTAL DOWNLOAD operator NUMBER PACKET totaltime rate1 THEN action1 recovery {
-                    bandwidthset.operator = $<number>4;
-                    bandwidthset.limit = (unsigned long long)$5;
-                    bandwidthset.rangecount = 1;
-                    bandwidthset.range = $<number>7;
-                    addeventaction(&(bandwidthset).action, $<number>10, $<number>11);
-                    addbandwidth(&(current->downloadpacketslist), &bandwidthset);
+                        bandwidthset.operator = $<number>4;
+                        bandwidthset.limit = (unsigned long long)$5;
+                        bandwidthset.rangecount = 1;
+                        bandwidthset.range = $<number>7;
+                        addeventaction(&(bandwidthset).action, $<number>10, $<number>11);
+                        addbandwidth(&(current->downloadpacketslist), &bandwidthset);
                   }
                 | IF TOTAL DOWNLOAD operator NUMBER PACKET NUMBER totaltime rate1 THEN action1 recovery {
-                    bandwidthset.operator = $<number>4;
-                    bandwidthset.limit = (unsigned long long)$5;
-                    bandwidthset.rangecount = $7;
-                    bandwidthset.range = $<number>8;
-                    addeventaction(&(bandwidthset).action, $<number>11, $<number>12);
-                    addbandwidth(&(current->downloadpacketslist), &bandwidthset);
+                        bandwidthset.operator = $<number>4;
+                        bandwidthset.limit = (unsigned long long)$5;
+                        bandwidthset.rangecount = $7;
+                        bandwidthset.range = $<number>8;
+                        addeventaction(&(bandwidthset).action, $<number>11, $<number>12);
+                        addbandwidth(&(current->downloadpacketslist), &bandwidthset);
                   }
                 ;
 
