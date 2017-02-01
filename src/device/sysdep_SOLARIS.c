@@ -74,7 +74,6 @@
 #include <sys/fs/zfs.h>
 #endif
 
-
 #include "monit.h"
 #include "device_sysdep.h"
 
@@ -86,21 +85,82 @@
 /* ------------------------------------------------------------- Definitions */
 
 
+#define PATHTOINST "/etc/path_to_inst"
+
+
 typedef struct Device_T {
         char module[256];
         char name[256];
         int instance;
         char partition;
+        boolean_t (*getDiskActivity)(struct Device_T *device, Info_T inf);
 } *Device_T;
 
 
 /* ----------------------------------------------------------------- Private */
 
 
+static boolean_t _getZfsDiskActivity(Device_T device, Info_T inf) {
+        boolean_t rv = false;
+        libzfs_handle_t *z = libzfs_init();
+        libzfs_print_on_error(z, 1);
+        zpool_handle_t *zp = zpool_open_canfail(z, device->name);
+        if (zp) {
+                nvlist_t *zpoolConfig = zpool_get_config(zp, NULL);
+                nvlist_t *zpoolVdevTree = NULL;
+                if (nvlist_lookup_nvlist(zpoolConfig, ZPOOL_CONFIG_VDEV_TREE, &zpoolVdevTree) == 0) {
+                        vdev_stat_t *zpoolStatistics = NULL;
+                        uint_t zpoolStatisticsCount = 0;
+                        if (nvlist_lookup_uint64_array(zpoolVdevTree, ZPOOL_CONFIG_VDEV_STATS, (uint64_t **)&zpoolStatistics, &zpoolStatisticsCount) == 0) {
+                                //FIXME: if the zpool state has error, trigger the fs event, can also report number of read/write/checksum errors (see vdev_stat_t in /usr/include/sys/fs/zfs.h)
+                                DEBUG("ZFS pool '%s' state: %s\n", device->name, zpool_state_to_name(zpoolStatistics->vs_state, zpoolStatistics->vs_aux));
+                                uint64_t now = Time_milli();
+                                Statistics_update(&(inf->priv.filesystem.read.bytes), now, zpoolStatistics->vs_bytes[ZIO_TYPE_READ]);
+                                Statistics_update(&(inf->priv.filesystem.write.bytes), now, zpoolStatistics->vs_bytes[ZIO_TYPE_WRITE]);
+                                Statistics_update(&(inf->priv.filesystem.read.operations),  now, zpoolStatistics->vs_ops[ZIO_TYPE_READ]);
+                                Statistics_update(&(inf->priv.filesystem.write.operations), now, zpoolStatistics->vs_ops[ZIO_TYPE_WRITE]);
+                                rv = true;
+                        }
+                }
+                zpool_close(zp);
+        }
+        libzfs_fini(z);
+        return rv;
+}
+
+
+static boolean_t _getKstatDiskActivity(Device_T device, Info_T inf) {
+        boolean_t rv = false;
+        kstat_ctl_t *kctl = kstat_open();
+        if (kctl) {
+                kstat_t *kstat;
+                for (kstat = kctl->kc_chain; kstat; kstat = kstat->ks_next) {
+                        if (kstat->ks_type == KSTAT_TYPE_IO && kstat->ks_instance == device->instance && IS(kstat->ks_module, device->module) && IS(kstat->ks_name, device->name)) {
+                                static kstat_io_t kio;
+                                if (kstat_read(kctl, kstat, &kio) == -1) {
+                                        LogError("filesystem statistics error: kstat_read failed -- %s\n", STRERROR);
+                                } else {
+                                        uint64_t now = Time_milli();
+                                        Statistics_update(&(inf->priv.filesystem.read.bytes), now, kio.nread);
+                                        Statistics_update(&(inf->priv.filesystem.write.bytes), now, kio.nwritten);
+                                        Statistics_update(&(inf->priv.filesystem.read.operations),  now, kio.reads);
+                                        Statistics_update(&(inf->priv.filesystem.write.operations), now, kio.writes);
+                                        Statistics_update(&(inf->priv.filesystem.waitTime), now, kio.wtime / 1000000.);
+                                        Statistics_update(&(inf->priv.filesystem.runTime), now, kio.rtime / 1000000.);
+                                        rv = true;
+                                }
+                        }
+                }
+                kstat_close(kctl);
+        }
+        return rv;
+}
+
+
 static boolean_t _getDevice(char *mountpoint, Device_T device, Info_T inf) {
         FILE *mntfd = fopen(MNTTAB, "r");
         if (! mntfd) {
-                LogError("Cannot open %s file\n", MNTTAB);
+                LogError("Cannot open %s\n", MNTTAB);
                 return false;
         }
         struct extmnttab mnt;
@@ -113,11 +173,13 @@ static boolean_t _getDevice(char *mountpoint, Device_T device, Info_T inf) {
                                 strncpy(device->module, "nfs", sizeof(device->module) - 1);
                                 snprintf(device->name, sizeof(device->name), "nfs%d", mnt.mnt_minor);
                                 device->instance = mnt.mnt_minor;
+                                device->getDiskActivity = _getKstatDiskActivity;
                                 rv = true;
                         } else if (IS(mnt.mnt_fstype, MNTTYPE_ZFS)) {
                                 strncpy(device->module, "zfs", sizeof(device->module) - 1);
                                 char *slash = strchr(mnt.mnt_special, '/');
                                 strncpy(device->name, mnt.mnt_special, slash ? slash - mnt.mnt_special : sizeof(device->name) - 1);
+                                device->getDiskActivity = _getZfsDiskActivity;
                                 rv = true;
                         } else {
                                 char special[PATH_MAX];
@@ -136,9 +198,9 @@ static boolean_t _getDevice(char *mountpoint, Device_T device, Info_T inf) {
                                         memmove(special, special + devlen, len);
                                         special[len] = 0;
                                         char line[PATH_MAX] = {};
-                                        FILE *pti = fopen("/etc/path_to_inst", "r");
+                                        FILE *pti = fopen(PATHTOINST, "r");
                                         if (! pti) {
-                                                LogError("Cannot open /etc/path_to_inst file\n");
+                                                LogError("Cannot open %s\n", PATHTOINST);
                                                 return false;
                                         }
                                         while (fgets(line, sizeof(line), pti)) {
@@ -152,6 +214,7 @@ static boolean_t _getDevice(char *mountpoint, Device_T device, Info_T inf) {
                                                                         // use partition for other drivers
                                                                         snprintf(device->name, sizeof(device->name), "%s%d,%c", device->module, device->instance, device->partition);
                                                                 }
+                                                                device->getDiskActivity = _getKstatDiskActivity;
                                                                 rv = true;
                                                                 break;
                                                         }
@@ -172,52 +235,7 @@ static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
         boolean_t rv = true;
         struct Device_T device = {};
         if (_getDevice(mountpoint, &device, inf)) {
-                if (IS(device.module, "zfs")) {
-                        libzfs_handle_t *z = libzfs_init();
-                        libzfs_print_on_error(z, 1);
-                        zpool_handle_t *zp = zpool_open_canfail(z, device.name);
-                        if (zp) {
-                                nvlist_t *zpoolConfig = zpool_get_config(zp, NULL);
-                                nvlist_t *zpoolVdevTree = NULL;
-                                if (nvlist_lookup_nvlist(zpoolConfig, ZPOOL_CONFIG_VDEV_TREE, &zpoolVdevTree) == 0) {
-                                        vdev_stat_t *zpoolStatistics = NULL;
-                                        uint_t zpoolStatisticsCount = 0;
-                                        if (nvlist_lookup_uint64_array(zpoolVdevTree, ZPOOL_CONFIG_VDEV_STATS, (uint64_t **)&zpoolStatistics, &zpoolStatisticsCount) == 0) {
-                                                //FIXME: if the zpool state has error, trigger the fs event, can also report number of read/write/checksum errors (see vdev_stat_t in /usr/include/sys/fs/zfs.h)
-                                                DEBUG("ZFS pool '%s' state: %s\n", device.name, zpool_state_to_name(zpoolStatistics->vs_state, zpoolStatistics->vs_aux));
-                                                uint64_t now = Time_milli();
-                                                Statistics_update(&(inf->priv.filesystem.read.bytes), now, zpoolStatistics->vs_bytes[ZIO_TYPE_READ]);
-                                                Statistics_update(&(inf->priv.filesystem.write.bytes), now, zpoolStatistics->vs_bytes[ZIO_TYPE_WRITE]);
-                                                Statistics_update(&(inf->priv.filesystem.read.operations),  now, zpoolStatistics->vs_ops[ZIO_TYPE_READ]);
-                                                Statistics_update(&(inf->priv.filesystem.write.operations), now, zpoolStatistics->vs_ops[ZIO_TYPE_WRITE]);
-                                        }
-                                }
-                                zpool_close(zp);
-                        }
-                        libzfs_fini(z);
-                } else {
-                        kstat_ctl_t *kctl = kstat_open();
-                        if (kctl) {
-                                kstat_t *kstat;
-                                for (kstat = kctl->kc_chain; kstat; kstat = kstat->ks_next) {
-                                        if (kstat->ks_type == KSTAT_TYPE_IO && kstat->ks_instance == device.instance && IS(kstat->ks_module, device.module) && IS(kstat->ks_name, device.name)) {
-                                                static kstat_io_t kio;
-                                                if (kstat_read(kctl, kstat, &kio) == -1) {
-                                                        LogError("filesystem statistics error: kstat_read failed -- %s\n", STRERROR);
-                                                } else {
-                                                        uint64_t now = Time_milli();
-                                                        Statistics_update(&(inf->priv.filesystem.read.bytes), now, kio.nread);
-                                                        Statistics_update(&(inf->priv.filesystem.write.bytes), now, kio.nwritten);
-                                                        Statistics_update(&(inf->priv.filesystem.read.operations),  now, kio.reads);
-                                                        Statistics_update(&(inf->priv.filesystem.write.operations), now, kio.writes);
-                                                        Statistics_update(&(inf->priv.filesystem.waitTime), now, kio.wtime / 1000000.);
-                                                        Statistics_update(&(inf->priv.filesystem.runTime), now, kio.rtime / 1000000.);
-                                                }
-                                        }
-                                }
-                                kstat_close(kctl);
-                        }
-                }
+                rv = device.getDiskActivity(&device, inf);
         } else {
                 Statistics_reset(&(inf->priv.filesystem.read.time));
                 Statistics_reset(&(inf->priv.filesystem.read.bytes));
@@ -255,9 +273,9 @@ static boolean_t _getDiskUsage(char *mountpoint, Info_T inf) {
 char *device_mountpoint_sysdep(char *dev, char *buf, int buflen) {
         ASSERT(dev);
         ASSERT(buf);
-        FILE *mntfd = fopen("/etc/mnttab", "r");
+        FILE *mntfd = fopen(MNTTAB, "r");
         if (! mntfd) {
-                LogError("Cannot open /etc/mnttab file\n");
+                LogError("Cannot open %s\n", MNTTAB);
                 return NULL;
         }
         struct mnttab mnt;
