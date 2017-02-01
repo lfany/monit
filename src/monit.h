@@ -312,7 +312,12 @@ typedef enum {
         Resource_CpuPercentTotal,
         Resource_SwapPercent,
         Resource_SwapKbyte,
-        Resource_Threads
+        Resource_Threads,
+        Resource_ReadBytes,
+        Resource_ReadOperations,
+        Resource_WriteBytes,
+        Resource_WriteOperations,
+        Resource_ServiceTime
 } __attribute__((__packed__)) Resource_Type;
 
 

@@ -1253,6 +1253,16 @@ void Util_printService(Service_T s) {
                         } else {
                                printf(" %-20s = %s\n", "Space free limit", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %.1f%%", operatornames[o->operator], o->limit_percent)));
                         }
+                } else if (o->resource == Resource_ReadBytes) {
+                        printf(" %-20s = %s\n", "Read limit", StringBuffer_toString(Util_printRule(buf, o->action, "if read %s %s/s", operatornames[o->operator], Str_bytesToSize(o->limit_absolute, (char[10]){}))));
+                } else if (o->resource == Resource_ReadOperations) {
+                        printf(" %-20s = %s\n", "Read limit", StringBuffer_toString(Util_printRule(buf, o->action, "if read %s %llu operations/s", operatornames[o->operator], o->limit_absolute)));
+                } else if (o->resource == Resource_WriteBytes) {
+                        printf(" %-20s = %s\n", "Write limit", StringBuffer_toString(Util_printRule(buf, o->action, "if write %s %s/s", operatornames[o->operator], Str_bytesToSize(o->limit_absolute, (char[10]){}))));
+                } else if (o->resource == Resource_WriteOperations) {
+                        printf(" %-20s = %s\n", "Write limit", StringBuffer_toString(Util_printRule(buf, o->action, "if write %s %llu operations/s", operatornames[o->operator], o->limit_absolute)));
+                } else if (o->resource == Resource_ServiceTime) {
+                        printf(" %-20s = %s\n", "Service time limit", StringBuffer_toString(Util_printRule(buf, o->action, "if service time %s %s/operation", operatornames[o->operator], Str_milliToTime(o->limit_absolute, (char[23]){}))));
                 }
         }
 
@@ -1322,6 +1332,23 @@ void Util_printService(Service_T s) {
                         case Resource_MemoryPercentTotal:
                                 printf(" %-20s = ", "Memory usage limit (incl. children)");
                                 break;
+
+                        case Resource_ReadBytes:
+                                printf(" %-20s = ", "Disk read limit");
+                                break;
+
+                        case Resource_ReadOperations:
+                                printf(" %-20s = ", "Disk read limit");
+                                break;
+
+                        case Resource_WriteBytes:
+                                printf(" %-20s = ", "Disk write limit");
+                                break;
+
+                        case Resource_WriteOperations:
+                                printf(" %-20s = ", "Disk write limit");
+                                break;
+
                         default:
                                 break;
                 }
@@ -1352,6 +1379,16 @@ void Util_printService(Service_T s) {
                         case Resource_Threads:
                         case Resource_Children:
                                 printf("%s", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %.0f", operatornames[o->operator], o->limit)));
+                                break;
+
+                        case Resource_ReadBytes:
+                        case Resource_WriteBytes:
+                                printf("%s", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %s/s", operatornames[o->operator], Str_bytesToSize(o->limit, (char[10]){}))));
+                                break;
+
+                        case Resource_ReadOperations:
+                        case Resource_WriteOperations:
+                                printf("%s", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %llu operations/s", operatornames[o->operator], o->limit)));
                                 break;
 
                         default:

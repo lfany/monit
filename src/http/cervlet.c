@@ -1161,10 +1161,10 @@ static void do_home_system(HttpResponse res) {
 
         if (Run.flags & Run_ProcessEngineEnabled) {
                 StringBuffer_append(res->outputbuffer,
-                                    "<th class='right'>Load</th>"
-                                    "<th class='right'>CPU</th>"
-                                    "<th class='right'>Memory</th>"
-                                    "<th class='right'>Swap</th>");
+                                    "<th class='right column'>Load</th>"
+                                    "<th class='right column'>CPU</th>"
+                                    "<th class='right column'>Memory</th>"
+                                    "<th class='right column'>Swap</th>");
         }
         StringBuffer_append(res->outputbuffer,
                             "</tr>"
@@ -1175,8 +1175,8 @@ static void do_home_system(HttpResponse res) {
                             get_service_status(HTML, s, buf, sizeof(buf)));
         if (Run.flags & Run_ProcessEngineEnabled) {
                 StringBuffer_append(res->outputbuffer,
-                                    "<td class='right'>[%.2f]&nbsp;[%.2f]&nbsp;[%.2f]</td>"
-                                    "<td class='right'>"
+                                    "<td class='right column'>[%.2f]&nbsp;[%.2f]&nbsp;[%.2f]</td>"
+                                    "<td class='right column'>"
                                     "%.1f%%us,&nbsp;%.1f%%sy"
 #ifdef HAVE_CPU_WAIT
                                     ",&nbsp;%.1f%%wa"
@@ -1190,10 +1190,10 @@ static void do_home_system(HttpResponse res) {
 #endif
                                     );
                 StringBuffer_append(res->outputbuffer,
-                                    "<td class='right'>%.1f%% [%s]</td>",
+                                    "<td class='right column'>%.1f%% [%s]</td>",
                                     systeminfo.total_mem_percent, Str_bytesToSize(systeminfo.total_mem, buf));
                 StringBuffer_append(res->outputbuffer,
-                                    "<td class='right'>%.1f%% [%s]</td>",
+                                    "<td class='right column'>%.1f%% [%s]</td>",
                                     systeminfo.total_swap_percent, Str_bytesToSize(systeminfo.total_swap, buf));
         }
         StringBuffer_append(res->outputbuffer,
@@ -1219,8 +1219,8 @@ static void do_home_process(HttpResponse res) {
                                             "<th class='right'>Uptime</th>"
                                             "<th class='right'>CPU Total</b></th>"
                                             "<th class='right'>Memory Total</th>"
-                                            "<th class='column right'>Read</th>"
-                                            "<th class='column right'>Write</th>"
+                                            "<th class='right column'>Read</th>"
+                                            "<th class='right column'>Write</th>"
                                             "</tr>");
                         header = false;
                 }
@@ -1249,20 +1249,20 @@ static void do_home_process(HttpResponse res) {
                 boolean_t hasReadBytes = Statistics_initialized(&(s->inf->priv.process.read.bytes));
                 boolean_t hasReadOperations = Statistics_initialized(&(s->inf->priv.process.read.operations));
                 if (! (Run.flags & Run_ProcessEngineEnabled) || ! Util_hasServiceStatus(s) || (! hasReadBytes && ! hasReadOperations)) {
-                        StringBuffer_append(res->outputbuffer, "<td class='column right'>-</td>");
+                        StringBuffer_append(res->outputbuffer, "<td class='right column'>-</td>");
                 } else if (hasReadBytes) {
-                        StringBuffer_append(res->outputbuffer, "<td class='column right%s'>%s/s</td>", (s->error & Event_Resource) ? " red-text" : "", Str_bytesToSize(Statistics_deltaNormalize(&(s->inf->priv.process.read.bytes)), (char[10]){}));
+                        StringBuffer_append(res->outputbuffer, "<td class='right column%s'>%s/s</td>", (s->error & Event_Resource) ? " red-text" : "", Str_bytesToSize(Statistics_deltaNormalize(&(s->inf->priv.process.read.bytes)), (char[10]){}));
                 } else if (hasReadOperations) {
-                        StringBuffer_append(res->outputbuffer, "<td class='column right%s'>%.1f/s</td>", (s->error & Event_Resource) ? " red-text" : "", Statistics_deltaNormalize(&(s->inf->priv.process.read.operations)));
+                        StringBuffer_append(res->outputbuffer, "<td class='right column%s'>%.1f/s</td>", (s->error & Event_Resource) ? " red-text" : "", Statistics_deltaNormalize(&(s->inf->priv.process.read.operations)));
                 }
                 boolean_t hasWriteBytes = Statistics_initialized(&(s->inf->priv.process.write.bytes));
                 boolean_t hasWriteOperations = Statistics_initialized(&(s->inf->priv.process.write.operations));
                 if (! (Run.flags & Run_ProcessEngineEnabled) || ! Util_hasServiceStatus(s) || (! hasWriteBytes && ! hasWriteOperations)) {
-                        StringBuffer_append(res->outputbuffer, "<td class='column right'>-</td>");
+                        StringBuffer_append(res->outputbuffer, "<td class='right column'>-</td>");
                 } else if (hasWriteBytes) {
-                        StringBuffer_append(res->outputbuffer, "<td class='column right%s'>%s/s</td>", (s->error & Event_Resource) ? " red-text" : "", Str_bytesToSize(Statistics_deltaNormalize(&(s->inf->priv.process.write.bytes)), (char[10]){}));
+                        StringBuffer_append(res->outputbuffer, "<td class='right column%s'>%s/s</td>", (s->error & Event_Resource) ? " red-text" : "", Str_bytesToSize(Statistics_deltaNormalize(&(s->inf->priv.process.write.bytes)), (char[10]){}));
                 } else if (hasWriteOperations) {
-                        StringBuffer_append(res->outputbuffer, "<td class='column right%s'>%.1f/s</td>", (s->error & Event_Resource) ? " red-text" : "", Statistics_deltaNormalize(&(s->inf->priv.process.write.operations)));
+                        StringBuffer_append(res->outputbuffer, "<td class='right column%s'>%.1f/s</td>", (s->error & Event_Resource) ? " red-text" : "", Statistics_deltaNormalize(&(s->inf->priv.process.write.operations)));
                 }
                 StringBuffer_append(res->outputbuffer, "</tr>");
                 on = ! on;
@@ -1395,45 +1395,47 @@ static void do_home_filesystem(HttpResponse res) {
                         StringBuffer_append(res->outputbuffer,
                                             "<table id='header-row'>"
                                             "<tr>"
-                                            "<th class='column left first'>Filesystem</th>"
-                                            "<th class='column left'>Status</th>"
-                                            "<th class='column right'>Space usage</th>"
-                                            "<th class='column right'>Inodes usage</th>"
-                                            "<th class='column right'>Read</th>"
-                                            "<th class='column right'>Write</th>"
+                                            "<th class='left first'>Filesystem</th>"
+                                            "<th class='left'>Status</th>"
+                                            "<th class='right'>Space usage</th>"
+                                            "<th class='right'>Inodes usage</th>"
+                                            "<th class='right column'>Read</th>"
+                                            "<th class='right column'>Write</th>"
                                             "</tr>");
                         header = false;
                 }
                 StringBuffer_append(res->outputbuffer,
                                     "<tr %s>"
-                                    "<td class='column left'><a href='%s'>%s</a></td>"
-                                    "<td class='column left'>%s</td>",
+                                    "<td class='left'><a href='%s'>%s</a></td>"
+                                    "<td class='left'>%s</td>",
                                     on ? "class='stripe'" : "",
                                     s->name, s->name,
                                     get_service_status(HTML, s, buf, sizeof(buf)));
                 if (! Util_hasServiceStatus(s)) {
                         StringBuffer_append(res->outputbuffer,
-                                            "<td class='column right'>- [-]</td>"
-                                            "<td class='column right'>- [-]</td>"
-                                            "<td class='column right'>- [-]</td>"
-                                            "<td class='column right'>- [-]</td>");
+                                            "<td class='right'>- [-]</td>"
+                                            "<td class='right'>- [-]</td>"
+                                            "<td class='right column'>- [-]</td>"
+                                            "<td class='right column'>- [-]</td>");
                 } else {
                         StringBuffer_append(res->outputbuffer,
-                                            "<td class='column right'>%.1f%% [%s]</td>",
+                                            "<td class='right column%s'>%.1f%% [%s]</td>",
+                                            (s->error & Event_Resource) ? " red-text" : "",
                                             s->inf->priv.filesystem.space_percent,
                                             s->inf->priv.filesystem.f_bsize > 0 ? Str_bytesToSize(s->inf->priv.filesystem.space_total * s->inf->priv.filesystem.f_bsize, buf) : "0 MB");
                         if (s->inf->priv.filesystem.f_files > 0) {
                                 StringBuffer_append(res->outputbuffer,
-                                                    "<td class='column right'>%.1f%% [%lld objects]</td>",
+                                                    "<td class='right column%s'>%.1f%% [%lld objects]</td>",
+                                                    (s->error & Event_Resource) ? " red-text" : "",
                                                     s->inf->priv.filesystem.inode_percent,
                                                     s->inf->priv.filesystem.inode_total);
                         } else {
                                 StringBuffer_append(res->outputbuffer,
-                                                    "<td class='column right'>not supported by filesystem</td>");
+                                                    "<td class='right column'>not supported by filesystem</td>");
                         }
                         StringBuffer_append(res->outputbuffer,
-                                            "<td class='column right%s'>%s/s</td>"
-                                            "<td class='column right%s'>%s/s</td>",
+                                            "<td class='right column%s'>%s/s</td>"
+                                            "<td class='right column%s'>%s/s</td>",
                                             (s->error & Event_Resource) ? " red-text" : "",
                                             Str_bytesToSize(Statistics_deltaNormalize(&(s->inf->priv.filesystem.read.bytes)), (char[10]){}),
                                             (s->error & Event_Resource) ? " red-text" : "",
@@ -1984,6 +1986,26 @@ static void print_service_rules_filesystem(HttpResponse res, Service_T s) {
                                 Util_printRule(res->outputbuffer, dl->action, "If %s %.1f%%", operatornames[dl->operator], dl->limit_percent);
                         }
                         StringBuffer_append(res->outputbuffer, "</td></tr>");
+                } else if (dl->resource == Resource_ReadBytes) {
+                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Read limit</td><td>");
+                        Util_printRule(res->outputbuffer, dl->action, "If read %s %s/s", operatornames[dl->operator], Str_bytesToSize(dl->limit_absolute, (char[10]){}));
+                        StringBuffer_append(res->outputbuffer, "</td></tr>");
+                } else if (dl->resource == Resource_ReadOperations) {
+                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Read limit</td><td>");
+                        Util_printRule(res->outputbuffer, dl->action, "If read %s %llu operations/s", operatornames[dl->operator], dl->limit_absolute);
+                        StringBuffer_append(res->outputbuffer, "</td></tr>");
+                } else if (dl->resource == Resource_WriteBytes) {
+                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Write limit</td><td>");
+                        Util_printRule(res->outputbuffer, dl->action, "If write %s %s/s", operatornames[dl->operator], Str_bytesToSize(dl->limit_absolute, (char[10]){}));
+                        StringBuffer_append(res->outputbuffer, "</td></tr>");
+                } else if (dl->resource == Resource_WriteOperations) {
+                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Write limit</td><td>");
+                        Util_printRule(res->outputbuffer, dl->action, "If write %s %llu operations/s", operatornames[dl->operator], dl->limit_absolute);
+                        StringBuffer_append(res->outputbuffer, "</td></tr>");
+                } else if (dl->resource == Resource_ServiceTime) {
+                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Service time limit</td><td>");
+                        Util_printRule(res->outputbuffer, dl->action, "If service time %s %s/operation", operatornames[dl->operator], Str_milliToTime(dl->limit_absolute, (char[23]){}));
+                        StringBuffer_append(res->outputbuffer, "</td></tr>");
                 }
         }
 }
@@ -2221,6 +2243,23 @@ static void print_service_rules_resource(HttpResponse res, Service_T s) {
                         case Resource_MemoryPercentTotal:
                                 StringBuffer_append(res->outputbuffer, "Memory usage limit (incl. children)");
                                 break;
+
+                        case Resource_ReadBytes:
+                                StringBuffer_append(res->outputbuffer, "Disk read limit");
+                                break;
+
+                        case Resource_ReadOperations:
+                                StringBuffer_append(res->outputbuffer, "Disk read limit");
+                                break;
+
+                        case Resource_WriteBytes:
+                                StringBuffer_append(res->outputbuffer, "Disk write limit");
+                                break;
+
+                        case Resource_WriteOperations:
+                                StringBuffer_append(res->outputbuffer, "Disk write limit");
+                                break;
+
                         default:
                                 break;
                 }
@@ -2253,6 +2292,17 @@ static void print_service_rules_resource(HttpResponse res, Service_T s) {
                         case Resource_Children:
                                 Util_printRule(res->outputbuffer, q->action, "If %s %.0f", operatornames[q->operator], q->limit);
                                 break;
+
+                        case Resource_ReadBytes:
+                        case Resource_WriteBytes:
+                                Util_printRule(res->outputbuffer, q->action, "if %s %s", operatornames[q->operator], Str_bytesToSize(q->limit, (char[10]){}));
+                                break;
+
+                        case Resource_ReadOperations:
+                        case Resource_WriteOperations:
+                                Util_printRule(res->outputbuffer, q->action, "if %s %llu operations/s", operatornames[q->operator], q->limit);
+                                break;
+
                         default:
                                 break;
                 }

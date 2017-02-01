@@ -333,7 +333,7 @@ static void _setSSLOptions(SslOptions_T options);
 %token <number> CLEANUPLIMIT
 %token <real> REAL
 %token CHECKPROC CHECKFILESYS CHECKFILE CHECKDIR CHECKHOST CHECKSYSTEM CHECKFIFO CHECKPROGRAM CHECKNET
-%token THREADS CHILDREN STATUS ORIGIN VERSIONOPT
+%token THREADS CHILDREN STATUS ORIGIN VERSIONOPT READ WRITE OPERATION SERVICETIME DISK
 %token RESOURCE MEMORY TOTALMEMORY LOADAVG1 LOADAVG5 LOADAVG15 SWAP
 %token MODE ACTIVE PASSIVE MANUAL ONREBOOT NOSTART LASTSTATE CPU TOTALCPU CPUUSER CPUSYSTEM CPUWAIT
 %token GROUP REQUEST DEPENDS BASEDIR SLOT EVENTQUEUE SECRET HOSTHEADER
@@ -462,6 +462,9 @@ optfilesys      : start
                 | depend
                 | inode
                 | space
+                | read
+                | write
+                | servicetime
                 | fsflag
                 ;
 
@@ -2059,6 +2062,8 @@ resourceprocessopt  : resourcecpuproc
                     | resourcethreads
                     | resourcechild
                     | resourceload
+                    | resourceread
+                    | resourcewrite
                     ;
 
 resourcesystem  : IF resourcesystemlist rate1 THEN action1 recovery {
@@ -2160,6 +2165,30 @@ resourceload    : resourceloadavg operator value {
 resourceloadavg : LOADAVG1  { $<number>$ = Resource_LoadAverage1m; }
                 | LOADAVG5  { $<number>$ = Resource_LoadAverage5m; }
                 | LOADAVG15 { $<number>$ = Resource_LoadAverage15m; }
+                ;
+
+resourceread    : DISK READ operator value unit currenttime {
+                        resourceset.resource_id = Resource_ReadBytes;
+                        resourceset.operator = $<number>3;
+                        resourceset.limit = $<real>4 * $<number>5;
+                  }
+                | DISK READ operator NUMBER OPERATION {
+                        resourceset.resource_id = Resource_ReadOperations;
+                        resourceset.operator = $<number>3;
+                        resourceset.limit = $<number>4;
+                  }
+                ;
+
+resourcewrite   : DISK WRITE operator value unit currenttime {
+                        resourceset.resource_id = Resource_WriteBytes;
+                        resourceset.operator = $<number>3;
+                        resourceset.limit = $<real>4 * $<number>5;
+                  }
+                | DISK WRITE operator NUMBER OPERATION {
+                        resourceset.resource_id = Resource_WriteOperations;
+                        resourceset.operator = $<number>3;
+                        resourceset.limit = $<number>4;
+                  }
                 ;
 
 value           : REAL { $<real>$ = $1; }
@@ -2408,6 +2437,54 @@ space           : IF SPACE operator value unit rate1 THEN action1 recovery {
                         filesystemset.operator = $<number>4;
                         filesystemset.limit_percent = $<real>5;
                         addeventaction(&(filesystemset).action, $<number>9, $<number>10);
+                        addfilesystem(&filesystemset);
+                  }
+                ;
+
+read            : IF READ operator value unit currenttime rate1 THEN action1 recovery {
+                        filesystemset.resource = Resource_ReadBytes;
+                        filesystemset.operator = $<number>3;
+                        filesystemset.limit_absolute = $<real>4 * $<number>5;
+                        addeventaction(&(filesystemset).action, $<number>9, $<number>10);
+                        addfilesystem(&filesystemset);
+                  }
+                | IF READ operator NUMBER OPERATION rate1 THEN action1 recovery {
+                        filesystemset.resource = Resource_ReadOperations;
+                        filesystemset.operator = $<number>3;
+                        filesystemset.limit_absolute = $<number>4;
+                        addeventaction(&(filesystemset).action, $<number>8, $<number>9);
+                        addfilesystem(&filesystemset);
+                  }
+                ;
+
+write           : IF WRITE operator value unit currenttime rate1 THEN action1 recovery {
+                        filesystemset.resource = Resource_WriteBytes;
+                        filesystemset.operator = $<number>3;
+                        filesystemset.limit_absolute = $<real>4 * $<number>5;
+                        addeventaction(&(filesystemset).action, $<number>9, $<number>10);
+                        addfilesystem(&filesystemset);
+                  }
+                | IF WRITE operator NUMBER OPERATION rate1 THEN action1 recovery {
+                        filesystemset.resource = Resource_WriteOperations;
+                        filesystemset.operator = $<number>3;
+                        filesystemset.limit_absolute = $<number>4;
+                        addeventaction(&(filesystemset).action, $<number>8, $<number>9);
+                        addfilesystem(&filesystemset);
+                  }
+                ;
+
+servicetime     : IF SERVICETIME operator NUMBER MILLISECOND rate1 THEN action1 recovery {
+                        filesystemset.resource = Resource_ServiceTime;
+                        filesystemset.operator = $<number>3;
+                        filesystemset.limit_absolute = $<number>4;
+                        addeventaction(&(filesystemset).action, $<number>8, $<number>9);
+                        addfilesystem(&filesystemset);
+                  }
+                  | IF SERVICETIME operator value SECOND rate1 THEN action1 recovery {
+                        filesystemset.resource = Resource_ServiceTime;
+                        filesystemset.operator = $<number>3;
+                        filesystemset.limit_absolute = $<real>4 * 1000;
+                        addeventaction(&(filesystemset).action, $<number>8, $<number>9);
                         addfilesystem(&filesystemset);
                   }
                 ;
