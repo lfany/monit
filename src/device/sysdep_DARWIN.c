@@ -80,9 +80,9 @@ static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
                         if (wholeDisk) {
                                 CFDictionaryRef description = DADiskCopyDescription(disk);
                                 if (description) {
-                                        CFStringRef type = CFDictionaryGetValue(description, kDADiskDescriptionVolumeTypeKey);
-                                        if (type) {
-                                                snprintf(inf->priv.filesystem.type, sizeof(inf->priv.filesystem.type), "%s", CFStringGetCStringPtr(type, kCFStringEncodingMacRoman));
+                                        CFStringRef string = CFDictionaryGetValue(description, kDADiskDescriptionVolumeTypeKey);
+                                        if (string) {
+                                                snprintf(inf->priv.filesystem.type, sizeof(inf->priv.filesystem.type), "%s", CFStringGetCStringPtr(string, CFStringGetSystemEncoding()));
                                         }
                                         CFRelease(description);
                                 }
