@@ -110,7 +110,7 @@ static boolean_t _parseDevice(const char *path, char device[DS_DISKNAMELEN]) {
 }
 
 
-static boolean_t _getDevice(char *mountpoint, char device[DS_DISKNAMELEN]) {
+static boolean_t _getDevice(char *mountpoint, char device[DS_DISKNAMELEN], Info_T inf) {
         int countfs = getfsstat(NULL, 0, MNT_NOWAIT);
         if (countfs != -1) {
                 struct statfs *statfs = CALLOC(countfs, sizeof(struct statfs));
@@ -118,6 +118,7 @@ static boolean_t _getDevice(char *mountpoint, char device[DS_DISKNAMELEN]) {
                         for (int i = 0; i < countfs; i++) {
                                 struct statfs *sfs = statfs + i;
                                 if (IS(sfs->f_mntonname, mountpoint)) {
+                                        snprintf(inf->priv.filesystem.type, sizeof(inf->priv.filesystem.type), "%s", sfs->f_fstypename);
                                         boolean_t rv = _parseDevice(sfs->f_mntfromname, device);
                                         FREE(statfs);
                                         return rv;
@@ -159,7 +160,7 @@ static boolean_t _getStatistics(uint64_t now) {
 static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
         boolean_t rv = true;
         char device[DS_DISKNAMELEN] = {};
-        if (_getDevice(mountpoint, device)) {
+        if (_getDevice(mountpoint, device, inf)) {
                 uint64_t now = Time_milli();
                 if ((rv = _getStatistics(now))) {
                         for (int i = 0; i < _statistics.diskCount; i++)     {
