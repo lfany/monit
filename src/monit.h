@@ -964,7 +964,7 @@ typedef struct myinfo {
                         struct IOStatistics_T write;                     /**< Write statistics */
                         struct Statistics_T waitTime;       /**< Time spend in wait queue [ms] */
                         struct Statistics_T runTime;         /**< Time spend in run queue [ms] */
-                        char type[16];                                    /**< Filesystem type */
+                        char type[32];                                    /**< Filesystem type */
                 } filesystem;
 
                 struct {

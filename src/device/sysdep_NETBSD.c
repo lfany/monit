@@ -114,7 +114,7 @@ static boolean_t _parseDevice(const char *path, char device[IOSTATNAMELEN]) {
 }
 
 
-static boolean_t _getDevice(char *mountpoint, char device[IOSTATNAMELEN]) {
+static boolean_t _getDevice(char *mountpoint, char device[IOSTATNAMELEN], Info_T inf) {
         int countfs = getvfsstat(NULL, 0, MNT_NOWAIT);
         if (countfs != -1) {
                 struct statvfs *statvfs = CALLOC(countfs, sizeof(struct statvfs));
@@ -124,6 +124,7 @@ static boolean_t _getDevice(char *mountpoint, char device[IOSTATNAMELEN]) {
                                 if (IS(sfs->f_mntonname, mountpoint)) {
                                         //FIXME: NetBSD kernel has NFS statistics as well, but there is no clear mapping between the kernel label ("nfsX" style) and the NFS mount => we don't support NFS currently
                                         boolean_t rv = false;
+                                        snprintf(inf->priv.filesystem.type, sizeof(inf->priv.filesystem.type), "%s", sfs->f_fstypename);
                                         if (! IS(sfs->f_fstypename, "nfs")) {
                                                 rv = _parseDevice(sfs->f_mntfromname, device);
                                         }
@@ -166,7 +167,7 @@ static boolean_t _getStatistics(uint64_t now) {
 static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
         boolean_t rv = true;
         char device[IOSTATNAMELEN] = {};
-        if (_getDevice(mountpoint, device)) {
+        if (_getDevice(mountpoint, device, inf)) {
                 uint64_t now = Time_milli();
                 if ((rv = _getStatistics(now))) {
                         for (int i = 0; i < _statistics.diskCount; i++)     {
