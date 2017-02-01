@@ -75,7 +75,6 @@
 
 typedef struct Device_T {
         char name[PATH_MAX];
-        char type[STRLEN];
         boolean_t (*getDiskActivity)(struct Device_T *device, Info_T inf);
 } *Device_T;
 
@@ -188,7 +187,7 @@ static boolean_t _getBlockDiskActivity(Device_T device, Info_T inf) {
 }
 
 
-static boolean_t _getDevice(char *mountpoint, Device_T device) {
+static boolean_t _getDevice(char *mountpoint, Device_T device, Info_T inf) {
         FILE *f = setmntent(_PATH_MOUNTED, "r");
         if (! f) {
                 LogError("Cannot open %s\n", _PATH_MOUNTED);
@@ -197,7 +196,7 @@ static boolean_t _getDevice(char *mountpoint, Device_T device) {
         struct mntent *mnt;
         while ((mnt = getmntent(f))) {
                 if (IS(mountpoint, mnt->mnt_dir) && ! IS(mnt->mnt_fsname, "rootfs")) {
-                        strncpy(device->type, mnt->mnt_type, sizeof(device->type) - 1);
+                        snprintf(inf->priv.filesystem.type, sizeof(inf->priv.filesystem.type), "%s", mnt->mnt_type);
                         if (IS(mnt->mnt_type, "cifs")) {
                                 strncpy(device->name, mnt->mnt_fsname, sizeof(device->name) - 1);
                                 Str_replaceChar(device->name, '/', '\\');
@@ -229,7 +228,7 @@ error:
 static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
         boolean_t rv = true;
         struct Device_T device = {};
-        if (_getDevice(mountpoint, &device)) {
+        if (_getDevice(mountpoint, &device, inf)) {
                 rv = device.getDiskActivity(&device, inf);
         } else {
                 Statistics_reset(&(inf->priv.filesystem.read.time));

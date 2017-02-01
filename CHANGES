@@ -17,6 +17,8 @@ New: The filesystem read/write statistics is now displayed in Monit GUI and CLI.
 New: The per-process read/write statistics is now displayed in Monit GUI and CLI
 on Linux and MacOS.
 
+New: Report filesystem type in the status output
+
 New: The Monit HTTP interface now allows to set the SSL/TLS version as well. The
 syntax follows the generic SSL/TLS options settings, which was introduced in
 Monit 5.15, example:

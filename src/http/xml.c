@@ -263,6 +263,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
 
                         case Service_Filesystem:
                                 StringBuffer_append(B,
+                                        "<type>%s</type>"
                                         "<mode>%o</mode>"
                                         "<uid>%d</uid>"
                                         "<gid>%d</gid>"
@@ -272,6 +273,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         "<usage>%.1lf</usage>"
                                         "<total>%.1lf</total>"
                                         "</block>",
+                                        S->inf->priv.filesystem.type,
                                         S->inf->priv.filesystem.mode & 07777,
                                         (int)S->inf->priv.filesystem.uid,
                                         (int)S->inf->priv.filesystem.gid,
