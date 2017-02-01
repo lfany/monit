@@ -78,6 +78,14 @@ static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
                 if (disk) {
                         DADiskRef wholeDisk = DADiskCopyWholeDisk(disk);
                         if (wholeDisk) {
+                                CFDictionaryRef description = DADiskCopyDescription(disk);
+                                if (description) {
+                                        CFStringRef type = CFDictionaryGetValue(description, kDADiskDescriptionVolumeTypeKey);
+                                        if (type) {
+                                                snprintf(inf->priv.filesystem.type, sizeof(inf->priv.filesystem.type), "%s", CFStringGetCStringPtr(type, kCFStringEncodingMacRoman));
+                                        }
+                                        CFRelease(description);
+                                }
                                 io_service_t ioMedia = DADiskCopyIOMedia(wholeDisk);
                                 if (ioMedia) {
                                         CFTypeRef statistics = IORegistryEntrySearchCFProperty(ioMedia, kIOServicePlane, CFSTR(kIOBlockStorageDriverStatisticsKey), kCFAllocatorDefault, kIORegistryIterateRecursively | kIORegistryIterateParents);
