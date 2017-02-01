@@ -87,7 +87,6 @@
 
 typedef struct Device_T {
         char name[SPECNAMELEN];
-        char type[MFSNAMELEN];
         int instance;
 } *Device_T;
 
@@ -133,7 +132,7 @@ static boolean_t _parseDevice(const char *path, Device_T device) {
 }
 
 
-static boolean_t _getDevice(char *mountpoint, Device_T device) {
+static boolean_t _getDevice(char *mountpoint, Device_T device, Info_T inf) {
         int countfs = getfsstat(NULL, 0, MNT_NOWAIT);
         if (countfs != -1) {
                 struct statfs *statfs = CALLOC(countfs, sizeof(struct statfs));
@@ -142,7 +141,7 @@ static boolean_t _getDevice(char *mountpoint, Device_T device) {
                                 struct statfs *sfs = statfs + i;
                                 if (IS(sfs->f_mntonname, mountpoint)) {
                                         boolean_t rv = false;
-                                        strncpy(device->type, sfs->f_fstypename, sizeof(device->type) - 1);
+                                        snprintf(inf->priv.filesystem.type, sizeof(inf->priv.filesystem.type), "%s", sfs->f_fstypename);
                                         if (IS(sfs->f_fstypename, "zfs")) {
                                                 //FIXME: can add ZFS support (see sysdep_SOLARIS.c), but libzfs headers are not installed on FreeBSD by default (part of "cddl" set)
                                         } else {
@@ -176,7 +175,7 @@ static boolean_t _getStatistics(uint64_t now) {
 static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
         boolean_t rv = true;
         struct Device_T device = {};
-        if (_getDevice(mountpoint, &device)) {
+        if (_getDevice(mountpoint, &device, inf)) {
                 uint64_t now = Time_milli();
                 if ((rv = _getStatistics(now))) {
                         for (int i = 0; i < _statistics.disk.dinfo->numdevs; i++) {
