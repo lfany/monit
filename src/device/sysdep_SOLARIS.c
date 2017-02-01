@@ -97,7 +97,7 @@ typedef struct Device_T {
 /* ----------------------------------------------------------------- Private */
 
 
-static boolean_t _getDevice(char *mountpoint, Device_T device) {
+static boolean_t _getDevice(char *mountpoint, Device_T device, Info_T inf) {
         FILE *mntfd = fopen(MNTTAB, "r");
         if (! mntfd) {
                 LogError("Cannot open %s file\n", MNTTAB);
@@ -108,6 +108,7 @@ static boolean_t _getDevice(char *mountpoint, Device_T device) {
         resetmnttab(mntfd);
         while (getextmntent(mntfd, &mnt, sizeof(struct extmnttab)) == 0) {
                 if (IS(mnt.mnt_mountp, mountpoint)) {
+                        snprintf(inf->priv.filesystem.type, sizeof(inf->priv.filesystem.type), "%s", mnt.mnt_fstype);
                         if (Str_startsWith(mnt.mnt_fstype, MNTTYPE_NFS)) {
                                 strncpy(device->module, "nfs", sizeof(device->module) - 1);
                                 snprintf(device->name, sizeof(device->name), "nfs%d", mnt.mnt_minor);
@@ -170,7 +171,7 @@ static boolean_t _getDevice(char *mountpoint, Device_T device) {
 static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
         boolean_t rv = true;
         struct Device_T device = {};
-        if (_getDevice(mountpoint, &device)) {
+        if (_getDevice(mountpoint, &device, inf)) {
                 if (IS(device.module, "zfs")) {
                         libzfs_handle_t *z = libzfs_init();
                         libzfs_print_on_error(z, 1);
