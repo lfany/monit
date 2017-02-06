@@ -310,23 +310,27 @@ static boolean_t _getDevice(Info_T inf, const char *path, boolean_t (*compare)(c
 
 static void *_mountNotify(void *args) {
         // Mount/unmount notification based on /proc/self/mounts polling: need to keep /proc/self/mounts open while Monit is running, so we can use poll() to see if the mount table has changed
-        set_signal_block();
-        _statistics.fd = open(MOUNTS, O_RDONLY);
-        if (_statistics.fd != -1) {
-                while (! (Run.flags & Run_Stopped)) {
-                        struct pollfd mountNotify = {.fd = _statistics.fd, .events = POLLPRI, .revents = 0};
-                        if (poll(&mountNotify, 1, 100) != -1) {
-                                if (mountNotify.revents & POLLERR) {
-                                        DEBUG("Mount notification thread: changed detected\n");
-                                        Atomic_inc(_statistics.mountNotify.generation);
+        if (! (Run.flags & Run_Once)) {
+                LogInfo("Mount notification thread: started\n");
+                set_signal_block();
+                _statistics.fd = open(MOUNTS, O_RDONLY);
+                if (_statistics.fd != -1) {
+                        while (! (Run.flags & Run_Stopped)) {
+                                struct pollfd mountNotify = {.fd = _statistics.fd, .events = POLLPRI, .revents = 0};
+                                if (poll(&mountNotify, 1, 100) != -1) {
+                                        if (mountNotify.revents & POLLERR) {
+                                                DEBUG("Mount notification thread: changed detected\n");
+                                                Atomic_inc(_statistics.mountNotify.generation);
+                                        }
+                                } else {
+                                        LogError("Mount notification thread: table polling failed -- %s\n", STRERROR);
                                 }
-                        } else {
-                                LogError("Mount notification thread: table polling failed -- %s\n", STRERROR);
                         }
+                        close(_statistics.fd);
+                } else {
+                        LogError("Mount notification thread: cannot open %s -- %s\n", MOUNTS, STRERROR);
                 }
-                close(_statistics.fd);
-        } else {
-                LogError("Mount notification thread: cannot open %s -- %s\n", MOUNTS, STRERROR);
+                LogInfo("Mount notification thread: stopped\n");
         }
         return NULL;
 }

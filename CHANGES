@@ -30,6 +30,7 @@ on Linux and MacOS. Tests:
 New: It is now possible to use NFS/CIFS/SSHFS/etc. connection strings for filesystem path. Examples:
         check filesystem mynfs with path "192.168.1.123:/home/myuser"
         check filesystem mycifs with path "//192.168.1.123/documents"
+        check filesystem mysshfs with path "myuser@192.168.1.123:/home/myuser"
 
 New: Report filesystem type in the status output
 
