@@ -72,7 +72,6 @@
 
 
 #include "monit.h"
-#include "device_sysdep.h"
 
 // libmonit
 #include "system/Time.h"
@@ -124,7 +123,7 @@ static boolean_t _getDevice(char *mountpoint, char device[IOSTATNAMELEN], Info_T
                                 if (IS(sfs->f_mntonname, mountpoint)) {
                                         //FIXME: NetBSD kernel has NFS statistics as well, but there is no clear mapping between the kernel label ("nfsX" style) and the NFS mount => we don't support NFS currently
                                         boolean_t rv = false;
-                                        snprintf(inf->priv.filesystem.type, sizeof(inf->priv.filesystem.type), "%s", sfs->f_fstypename);
+                                        snprintf(inf->priv.filesystem.device.type, sizeof(inf->priv.filesystem.device.type), "%s", sfs->f_fstypename);
                                         if (! IS(sfs->f_fstypename, "nfs")) {
                                                 rv = _parseDevice(sfs->f_mntfromname, device);
                                         }

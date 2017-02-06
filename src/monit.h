@@ -131,6 +131,7 @@ typedef enum {
 #include "system/Link.h"
 #include "statistics/Statistics.h"
 #include "thread/Thread.h"
+#include "thread/Atomic.h"
 
 
 #define MONITRC            "monitrc"
@@ -946,6 +947,18 @@ typedef struct IOStatistics_T {
 } *IOStatistics_T;
 
 
+typedef struct Device_T {
+        boolean_t mounted;
+        int generation;
+        char device[PATH_MAX];
+        char mountpoint[PATH_MAX];
+        char key[PATH_MAX];
+        char type[64];
+        boolean_t (*getDiskUsage)(void *);
+        boolean_t (*getDiskActivity)(void *);
+} *Device_T;
+
+
 /** Defines service data */
 typedef struct myinfo {
         union {
@@ -969,7 +982,7 @@ typedef struct myinfo {
                         struct IOStatistics_T write;                     /**< Write statistics */
                         struct Statistics_T waitTime;       /**< Time spend in wait queue [ms] */
                         struct Statistics_T runTime;         /**< Time spend in run queue [ms] */
-                        char type[64];                                    /**< Filesystem type */
+                        struct Device_T object;                             /**< Device object */
                 } filesystem;
 
                 struct {

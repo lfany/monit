@@ -31,7 +31,6 @@
 #include "config.h"
 
 #include "monit.h"
-#include "device_sysdep.h"
 
 
 /* ------------------------------------------------------------------ Public */

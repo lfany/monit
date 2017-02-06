@@ -75,7 +75,6 @@
 #endif
 
 #include "monit.h"
-#include "device_sysdep.h"
 
 // libmonit
 #include "system/Time.h"
@@ -141,7 +140,7 @@ static boolean_t _getDevice(char *mountpoint, Device_T device, Info_T inf) {
                                 struct statfs *sfs = statfs + i;
                                 if (IS(sfs->f_mntonname, mountpoint)) {
                                         boolean_t rv = false;
-                                        snprintf(inf->priv.filesystem.type, sizeof(inf->priv.filesystem.type), "%s", sfs->f_fstypename);
+                                        snprintf(inf->priv.filesystem.device.type, sizeof(inf->priv.filesystem.device.type), "%s", sfs->f_fstypename);
                                         if (IS(sfs->f_fstypename, "zfs")) {
                                                 //FIXME: can add ZFS support (see sysdep_SOLARIS.c), but libzfs headers are not installed on FreeBSD by default (part of "cddl" set)
                                         } else {

@@ -63,7 +63,6 @@
 #endif
 
 #include "monit.h"
-#include "device_sysdep.h"
 
 // libmonit
 #include "system/Time.h"
@@ -82,7 +81,7 @@ static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
                                 if (description) {
                                         CFStringRef string = CFDictionaryGetValue(description, kDADiskDescriptionVolumeTypeKey);
                                         if (string) {
-                                                snprintf(inf->priv.filesystem.type, sizeof(inf->priv.filesystem.type), "%s", CFStringGetCStringPtr(string, CFStringGetSystemEncoding()));
+                                                snprintf(inf->priv.filesystem.device.type, sizeof(inf->priv.filesystem.device.type), "%s", CFStringGetCStringPtr(string, CFStringGetSystemEncoding()));
                                         }
                                         CFRelease(description);
                                 }

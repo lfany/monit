@@ -50,39 +50,84 @@
 # include <sys/statvfs.h>
 #endif
 
+#ifdef HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
+
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif
+
 #ifdef HAVE_MNTENT_H
 #include <mntent.h>
 #endif
 
-#ifdef HAVE_PATHS_H
-#include <paths.h>
+#ifdef HAVE_POLL_H
+#include <poll.h>
+#endif
+
+#ifdef HAVE_FCNTL_H
+#include <fcntl.h>
 #endif
 
 #include "monit.h"
-#include "device_sysdep.h"
 
 // libmonit
-#include "system/Time.h"
 #include "io/File.h"
+#include "system/Time.h"
+#include "exceptions/AssertException.h"
 
 
 /* ------------------------------------------------------------- Definitions */
 
 
+#define MOUNTS   "/proc/self/mounts"
 #define CIFSSTAT "/proc/fs/cifs/Stats"
 #define NFSSTAT  "/proc/self/mountstats"
 
 
-typedef struct Device_T {
-        char name[PATH_MAX];
-        boolean_t (*getDiskActivity)(struct Device_T *device, Info_T inf);
-} *Device_T;
+
+
+static struct {
+        int fd;             // /proc/self/mounts filedescriptor (needed for mount/unmount notification)
+        uint64_t timestamp; // Timestamp of last mount table change [ms]
+        // Mount notification thread (FIXME: drop when libev is added and register the mount table handler in libev):
+        struct {
+                Thread_T thread;     // Thread which is polling the mount table for changes
+                Atomic_T generation; // Increment each time the mount table is changed
+        } mountNotify;
+} _statistics = {};
 
 
 /* ----------------------------------------------------------------- Private */
 
 
-static boolean_t _getCifsDiskActivity(Device_T device, Info_T inf) {
+static boolean_t _getDiskUsage(void *_inf) {
+        Info_T inf = _inf;
+        struct statvfs usage;
+        if (statvfs(inf->priv.filesystem.object.mountpoint, &usage) != 0) {
+                LogError("Error getting usage statistics for filesystem '%s' -- %s\n", inf->priv.filesystem.object.mountpoint, STRERROR);
+                return false;
+        }
+        inf->priv.filesystem.f_bsize = usage.f_frsize;
+        inf->priv.filesystem.f_blocks = usage.f_blocks;
+        inf->priv.filesystem.f_blocksfree = usage.f_bavail;
+        inf->priv.filesystem.f_blocksfreetotal = usage.f_bfree;
+        inf->priv.filesystem.f_files = usage.f_files;
+        inf->priv.filesystem.f_filesfree = usage.f_ffree;
+        inf->priv.filesystem._flags = inf->priv.filesystem.flags;
+        inf->priv.filesystem.flags = usage.f_flag;
+        return true;
+}
+
+
+static boolean_t _getDummyDiskActivity(void *_inf) {
+        return true;
+}
+
+
+static boolean_t _getCifsDiskActivity(void *_inf) {
+        Info_T inf = _inf;
         FILE *f = fopen(CIFSSTAT, "r");
         if (! f) {
                 LogError("Cannot open %s\n", CIFSSTAT);
@@ -95,7 +140,7 @@ static boolean_t _getCifsDiskActivity(Device_T device, Info_T inf) {
                 if (! found) {
                         int index;
                         char name[PATH_MAX];
-                        if (sscanf(line, "%d) %1023s", &index, name) == 2 && IS(name, device->name)) {
+                        if (sscanf(line, "%d) %1023s", &index, name) == 2 && IS(name, inf->priv.filesystem.object.key)) {
                                 found = true;
                         }
                 } else if (found) {
@@ -120,7 +165,8 @@ static boolean_t _getCifsDiskActivity(Device_T device, Info_T inf) {
 }
 
 
-static boolean_t _getNfsDiskActivity(Device_T device, Info_T inf) {
+static boolean_t _getNfsDiskActivity(void *_inf) {
+        Info_T inf = _inf;
         FILE *f = fopen(NFSSTAT, "r");
         if (! f) {
                 LogError("Cannot open %s\n", NFSSTAT);
@@ -130,7 +176,7 @@ static boolean_t _getNfsDiskActivity(Device_T device, Info_T inf) {
         char line[PATH_MAX];
         char pattern[PATH_MAX];
         boolean_t found = false;
-        snprintf(pattern, sizeof(pattern), "device %s ", device->name);
+        snprintf(pattern, sizeof(pattern), "device %s ", inf->priv.filesystem.object.device);
         while (fgets(line, sizeof(line), f)) {
                 if (! found && Str_startsWith(line, pattern)) {
                         found = true;
@@ -159,9 +205,10 @@ static boolean_t _getNfsDiskActivity(Device_T device, Info_T inf) {
 }
 
 
-static boolean_t _getBlockDiskActivity(Device_T device, Info_T inf) {
+static boolean_t _getBlockDiskActivity(void *_inf) {
+        Info_T inf = _inf;
         char path[PATH_MAX];
-        snprintf(path, sizeof(path), "/sys/class/block/%s/stat", device->name);
+        snprintf(path, sizeof(path), "/sys/class/block/%s/stat", inf->priv.filesystem.object.key);
         FILE *f = fopen(path, "r");
         if (f) {
                 uint64_t now = Time_milli();
@@ -187,108 +234,133 @@ static boolean_t _getBlockDiskActivity(Device_T device, Info_T inf) {
 }
 
 
-static boolean_t _getDevice(char *mountpoint, Device_T device, Info_T inf) {
-        FILE *f = setmntent(_PATH_MOUNTED, "r");
+static boolean_t _compareMountpoint(const char *mountpoint, struct mntent *mnt) {
+        return IS(mountpoint, mnt->mnt_dir) && ! IS(mnt->mnt_fsname, "rootfs");
+}
+
+
+static boolean_t _compareDevice(const char *device, struct mntent *mnt) {
+        char target[PATH_MAX] = {};
+        // The device listed in /etc/mtab can be a device mapper symlink (e.g. /dev/mapper/centos-root -> /dev/dm-1) ... lookup the device as is first (support for NFS/CIFS/SSHFS/etc.) and fallback to realpath if it didn't match
+        return (IS(device, mnt->mnt_fsname) || (realpath(mnt->mnt_fsname, target) && IS(device, target)));
+}
+
+
+static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(const char *path, struct mntent *mnt)) {
+        FILE *f = setmntent(MOUNTS, "r");
         if (! f) {
-                LogError("Cannot open %s\n", _PATH_MOUNTED);
+                LogError("Cannot open %s\n", MOUNTS);
                 return false;
         }
+        inf->priv.filesystem.object.generation = Atomic_read(_statistics.mountNotify.generation);
         struct mntent *mnt;
         while ((mnt = getmntent(f))) {
-                if (IS(mountpoint, mnt->mnt_dir) && ! IS(mnt->mnt_fsname, "rootfs")) {
-                        snprintf(inf->priv.filesystem.type, sizeof(inf->priv.filesystem.type), "%s", mnt->mnt_type);
-                        if (IS(mnt->mnt_type, "cifs")) {
-                                strncpy(device->name, mnt->mnt_fsname, sizeof(device->name) - 1);
-                                Str_replaceChar(device->name, '/', '\\');
-                                device->getDiskActivity = _getCifsDiskActivity;
-                        } else if (Str_startsWith(mnt->mnt_type, "nfs")) {
-                                strncpy(device->name, mnt->mnt_fsname, sizeof(device->name) - 1);
-                                device->getDiskActivity = _getNfsDiskActivity;
+                if (compare(path, mnt)) {
+                        strncpy(inf->priv.filesystem.object.device, mnt->mnt_fsname, sizeof(inf->priv.filesystem.object.device) - 1);
+                        strncpy(inf->priv.filesystem.object.mountpoint, mnt->mnt_dir, sizeof(inf->priv.filesystem.object.mountpoint) - 1);
+                        strncpy(inf->priv.filesystem.object.type, mnt->mnt_type, sizeof(inf->priv.filesystem.object.type) - 1);
+                        inf->priv.filesystem.object.getDiskUsage = _getDiskUsage; // The disk usage method is common for all filesystem types
+                        if (Str_startsWith(mnt->mnt_type, "nfs")) {
+                                // NFS
+                                inf->priv.filesystem.object.getDiskActivity = _getNfsDiskActivity;
+                        } else if (IS(mnt->mnt_type, "cifs")) {
+                                // CIFS
+                                inf->priv.filesystem.object.getDiskActivity = _getCifsDiskActivity;
+                                // Need Windows style name - replace '/' with '\' so we can lookup the filesystem activity in /proc/fs/cifs/Stats
+                                strncpy(inf->priv.filesystem.object.key, inf->priv.filesystem.object.device, sizeof(inf->priv.filesystem.object.key) - 1);
+                                Str_replaceChar(inf->priv.filesystem.object.key, '/', '\\');
                         } else  {
-                                if (! realpath(mnt->mnt_fsname, device->name)) {
-                                        // If the file doesn't exist it's a virtual filesystem -> skip
-                                        if (errno != ENOENT && errno != ENOTDIR)
-                                                LogError("Mount point %s -- %s\n", mountpoint, STRERROR);
-                                        goto error;
+                                // Need base name for /sys/class/block/<NAME>/stat lookup:
+                                if (realpath(mnt->mnt_fsname, inf->priv.filesystem.object.key)) {
+                                        // Block device
+                                        inf->priv.filesystem.object.getDiskActivity = _getBlockDiskActivity;
+                                        snprintf(inf->priv.filesystem.object.key, sizeof(inf->priv.filesystem.object.key), "%s", File_basename(inf->priv.filesystem.object.key));
+                                } else {
+                                        // FUSE (sshfs, etc.) or virtual filesystem (procfs, tmpfs, etc.) -> ENOENT doesn't mean error
+                                        inf->priv.filesystem.object.getDiskActivity = _getDummyDiskActivity;
+                                        if (errno != ENOENT) {
+                                                LogError("Lookup for '%s' filesystem failed -- %s\n", path, STRERROR);
+                                                goto error;
+                                        }
                                 }
-                                snprintf(device->name, sizeof(device->name), "%s", File_basename(device->name));
-                                device->getDiskActivity = _getBlockDiskActivity;
                         }
                         endmntent(f);
+                        inf->priv.filesystem.object.mounted = true;
                         return true;
                 }
         }
-        LogError("Mount point %s -- not found in %s\n", mountpoint, _PATH_MOUNTED);
+        LogError("Lookup for '%s' filesystem failed  -- not found in %s\n", path, MOUNTS);
 error:
         endmntent(f);
+        inf->priv.filesystem.object.mounted = false;
         return false;
 }
 
 
-static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
-        boolean_t rv = true;
-        struct Device_T device = {};
-        if (_getDevice(mountpoint, &device, inf)) {
-                rv = device.getDiskActivity(&device, inf);
-        } else {
-                Statistics_reset(&(inf->priv.filesystem.read.time));
-                Statistics_reset(&(inf->priv.filesystem.read.bytes));
-                Statistics_reset(&(inf->priv.filesystem.read.operations));
-                Statistics_reset(&(inf->priv.filesystem.write.time));
-                Statistics_reset(&(inf->priv.filesystem.write.bytes));
-                Statistics_reset(&(inf->priv.filesystem.write.operations));
+static boolean_t _getDevice(Info_T inf, const char *path, boolean_t (*compare)(const char *path, struct mntent *mnt)) {
+        if (inf->priv.filesystem.object.generation != Atomic_read(_statistics.mountNotify.generation) || _statistics.fd == -1) {
+                _setDevice(inf, path, compare); // The mount table has changed => refresh
         }
-        return rv;
+        if (inf->priv.filesystem.object.mounted) {
+                return (inf->priv.filesystem.object.getDiskUsage(inf) && inf->priv.filesystem.object.getDiskActivity(inf));
+        }
+        return false;
 }
 
 
-static boolean_t _getDiskUsage(char *mountpoint, Info_T inf) {
-        struct statvfs usage;
-        if (statvfs(mountpoint, &usage) != 0) {
-                LogError("Error getting usage statistics for filesystem '%s' -- %s\n", mountpoint, STRERROR);
-                return false;
+static void *_mountNotify(void *args) {
+        // Mount/unmount notification based on /proc/self/mounts polling: need to keep /proc/self/mounts open while Monit is running, so we can use poll() to see if the mount table has changed
+        set_signal_block();
+        _statistics.fd = open(MOUNTS, O_RDONLY);
+        if (_statistics.fd != -1) {
+                while (! (Run.flags & Run_Stopped)) {
+                        struct pollfd mountNotify = {.fd = _statistics.fd, .events = POLLPRI, .revents = 0};
+                        if (poll(&mountNotify, 1, 100) != -1) {
+                                if (mountNotify.revents & POLLERR) {
+                                        DEBUG("Mount notification thread: changed detected\n");
+                                        Atomic_inc(_statistics.mountNotify.generation);
+                                }
+                        } else {
+                                LogError("Mount notification thread: table polling failed -- %s\n", STRERROR);
+                        }
+                }
+                close(_statistics.fd);
+        } else {
+                LogError("Mount notification thread: cannot open %s -- %s\n", MOUNTS, STRERROR);
         }
-        inf->priv.filesystem.f_bsize =           usage.f_frsize;
-        inf->priv.filesystem.f_blocks =          usage.f_blocks;
-        inf->priv.filesystem.f_blocksfree =      usage.f_bavail;
-        inf->priv.filesystem.f_blocksfreetotal = usage.f_bfree;
-        inf->priv.filesystem.f_files =           usage.f_files;
-        inf->priv.filesystem.f_filesfree =       usage.f_ffree;
-        inf->priv.filesystem._flags =            inf->priv.filesystem.flags;
-        inf->priv.filesystem.flags =             usage.f_flag;
-        return true;
+        return NULL;
+}
+
+
+/* --------------------------------------- Static constructor and destructor */
+
+
+static void __attribute__ ((constructor)) _constructor() {
+        Atomic_inc(_statistics.mountNotify.generation); // First generation
+        Thread_create(_statistics.mountNotify.thread, _mountNotify, NULL);
+}
+
+
+static void __attribute__ ((destructor)) _destructor() {
+        if (_statistics.fd > -1) {
+                Thread_join(_statistics.mountNotify.thread);
+        }
 }
 
 
 /* ------------------------------------------------------------------ Public */
 
 
-char *device_mountpoint_sysdep(char *dev, char *buf, int buflen) {
-        ASSERT(dev);
-        ASSERT(buf);
-        FILE *f = setmntent(_PATH_MOUNTED, "r");
-        if (! f) {
-                LogError("Cannot open %s\n", _PATH_MOUNTED);
-                return NULL;
-        }
-        struct mntent *mnt;
-        while ((mnt = getmntent(f))) {
-                /* Try to compare the the filesystem as is, if failed, try to use the symbolic link target */
-                if (IS(dev, mnt->mnt_fsname) || (realpath(mnt->mnt_fsname, buf) && IS(dev, buf))) {
-                        snprintf(buf, buflen, "%s", mnt->mnt_dir);
-                        endmntent(f);
-                        return buf;
-                }
-        }
-        endmntent(f);
-        LogError("Device %s not found in %s\n", dev, _PATH_MOUNTED);
-        return NULL;
+boolean_t Filesystem_getByMountpoint(Info_T inf, const char *path) {
+        ASSERT(inf);
+        ASSERT(path);
+        return _getDevice(inf, path, _compareMountpoint);
 }
 
 
-boolean_t filesystem_usage_sysdep(char *mountpoint, Info_T inf) {
-        ASSERT(mountpoint);
+boolean_t Filesystem_getByDevice(Info_T inf, const char *path) {
         ASSERT(inf);
-        return (_getDiskUsage(mountpoint, inf) && _getDiskActivity(mountpoint, inf));
+        ASSERT(path);
+        return _getDevice(inf, path, _compareDevice);
 }
 

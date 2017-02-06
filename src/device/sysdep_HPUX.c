@@ -55,7 +55,6 @@
 #endif
 
 #include "monit.h"
-#include "device_sysdep.h"
 
 
 

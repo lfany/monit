@@ -368,7 +368,7 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                 break;
 
                         case Service_Filesystem:
-                                _formatStatus("filesystem type", Event_Null, type, res, s, *(s->inf->priv.filesystem.type), "%s", s->inf->priv.filesystem.type);
+                                _formatStatus("filesystem type", Event_Null, type, res, s, *(s->inf->priv.filesystem.object.type), "%s", s->inf->priv.filesystem.object.type);
                                 _formatStatus("permission", Event_Permission, type, res, s, s->inf->priv.filesystem.mode >= 0, "%o", s->inf->priv.filesystem.mode & 07777);
                                 _formatStatus("uid", Event_Uid, type, res, s, s->inf->priv.filesystem.uid >= 0, "%d", s->inf->priv.filesystem.uid);
                                 _formatStatus("gid", Event_Gid, type, res, s, s->inf->priv.filesystem.gid >= 0, "%d", s->inf->priv.filesystem.gid);

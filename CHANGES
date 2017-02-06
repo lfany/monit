@@ -27,6 +27,10 @@ on Linux and MacOS. Tests:
         if disk read > 1 kb/s for 10 cycles then alert
         if disk write > 1 kb/s for 10 cycles then alert
 
+New: It is now possible to use NFS/CIFS/SSHFS/etc. connection strings for filesystem path. Examples:
+        check filesystem mynfs with path "192.168.1.123:/home/myuser"
+        check filesystem mycifs with path "//192.168.1.123/documents"
+
 New: Report filesystem type in the status output
 
 New: The Monit HTTP interface now allows to set the SSL/TLS version as well. The
@@ -49,6 +53,15 @@ server-side ciphers preference. Example (using monit's default ciphers string):
 
 New: The certificate minimum valid days test now triggers the timestamp event instead
 of connection event.
+
+Fixed: Previous Monit versions may be unable to detect that the filesystem is not
+mounted in the case that mountpoint was used as a filesystem path. The reason is,
+that the mountpoint itself resides on some filesystem (for example root filesystem)
+and thus even if the filesystem is not mounted, the directory may still exist - Monit
+didn't require exact match in the mount table and allowed filesystem subdirectory or even
+regular file to be used as filesystem path. The exact mountpoint match is now required,
+so Monit can check if the filesystem is mounted. This fix doesn't affect the configuration
+with block/character device.
 
 Fixed: Issue #488: Ping test may fail if the machine performs other ping tests with small payload.
 

@@ -63,7 +63,6 @@
 #endif
 
 #include "monit.h"
-#include "device_sysdep.h"
 
 // libmonit
 #include "system/Time.h"
@@ -118,7 +117,7 @@ static boolean_t _getDevice(char *mountpoint, char device[DS_DISKNAMELEN], Info_
                         for (int i = 0; i < countfs; i++) {
                                 struct statfs *sfs = statfs + i;
                                 if (IS(sfs->f_mntonname, mountpoint)) {
-                                        snprintf(inf->priv.filesystem.type, sizeof(inf->priv.filesystem.type), "%s", sfs->f_fstypename);
+                                        snprintf(inf->priv.filesystem.device.type, sizeof(inf->priv.filesystem.device.type), "%s", sfs->f_fstypename);
                                         boolean_t rv = _parseDevice(sfs->f_mntfromname, device);
                                         FREE(statfs);
                                         return rv;
