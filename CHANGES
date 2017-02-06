@@ -34,6 +34,8 @@ New: It is now possible to use NFS/CIFS/SSHFS/etc. connection strings for filesy
 
 New: Report filesystem type in the status output
 
+New: Linux: cache per-filesystem mount table status and refresh only if changed (some filesystem mounted/unmounted) //FIXME: list all platforms where mount table cache will be added/possible
+
 New: The Monit HTTP interface now allows to set the SSL/TLS version as well. The
 syntax follows the generic SSL/TLS options settings, which was introduced in
 Monit 5.15, example:
