@@ -86,11 +86,8 @@
 #define NFSSTAT  "/proc/self/mountstats"
 
 
-
-
 static struct {
-        int fd;             // /proc/self/mounts filedescriptor (needed for mount/unmount notification)
-        uint64_t timestamp; // Timestamp of last mount table change [ms]
+        int fd; // /proc/self/mounts filedescriptor (needed for mount/unmount notification)
         // Mount notification thread (FIXME: drop when libev is added and register the mount table handler in libev):
         struct {
                 Thread_T thread;     // Thread which is polling the mount table for changes
@@ -318,7 +315,7 @@ static void *_mountNotify(void *args) {
                                 struct pollfd mountNotify = {.fd = _statistics.fd, .events = POLLPRI, .revents = 0};
                                 if (poll(&mountNotify, 1, 100) != -1) {
                                         if (mountNotify.revents & POLLERR) {
-                                                DEBUG("Mount notification thread: changed detected\n");
+                                                DEBUG("Mount notification thread: change detected\n");
                                                 Atomic_inc(_statistics.mountNotify.generation);
                                         }
                                 } else {
