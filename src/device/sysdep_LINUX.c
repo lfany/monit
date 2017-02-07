@@ -311,7 +311,6 @@ static boolean_t _getDevice(Info_T inf, const char *path, boolean_t (*compare)(c
 static void *_mountNotify(void *args) {
         // Mount/unmount notification based on /proc/self/mounts polling: need to keep /proc/self/mounts open while Monit is running, so we can use poll() to see if the mount table has changed
         if (! (Run.flags & Run_Once)) {
-                LogInfo("Mount notification thread: started\n");
                 set_signal_block();
                 _statistics.fd = open(MOUNTS, O_RDONLY);
                 if (_statistics.fd != -1) {
@@ -330,7 +329,6 @@ static void *_mountNotify(void *args) {
                 } else {
                         LogError("Mount notification thread: cannot open %s -- %s\n", MOUNTS, STRERROR);
                 }
-                LogInfo("Mount notification thread: stopped\n");
         }
         return NULL;
 }
