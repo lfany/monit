@@ -36,17 +36,17 @@
 /* ------------------------------------------------------------------ Public */
 
 
-char *device_mountpoint_sysdep(char *dev, char *buf, int buflen) {
-        ASSERT(dev);
-        ASSERT(buf);
-        LogError("Unsupported mounted filesystem information method\n");
-        return NULL;
+boolean_t Filesystem_getByMountpoint(Info_T inf, const char *path) {
+        ASSERT(inf);
+        ASSERT(path);
+        LogError("Unsupported filesystem data collection method\n");
+        return false;
 }
 
 
-boolean_t filesystem_usage_sysdep(char *mountpoint, Info_T inf) {
-        ASSERT(mountpoint);
+boolean_t Filesystem_getByDevice(Info_T inf, const char *path) {
         ASSERT(inf);
+        ASSERT(path);
         LogError("Unsupported filesystem data collection method\n");
         return false;
 }
