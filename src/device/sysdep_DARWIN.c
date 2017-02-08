@@ -68,23 +68,38 @@
 #include "system/Time.h"
 
 
-static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
+/* ----------------------------------------------------------------- Private */
+
+
+static boolean_t _getDiskUsage(void *_inf) {
+        Info_T inf = _inf;
+        struct statfs usage;
+        if (statfs(inf->priv.filesystem.object.mountpoint, &usage) != 0) {
+                LogError("Error getting usage statistics for filesystem '%s' -- %s\n", inf->priv.filesystem.object.mountpoint, STRERROR);
+                return false;
+        }
+        inf->priv.filesystem.f_bsize = usage.f_bsize;
+        inf->priv.filesystem.f_blocks = usage.f_blocks;
+        inf->priv.filesystem.f_blocksfree = usage.f_bavail;
+        inf->priv.filesystem.f_blocksfreetotal = usage.f_bfree;
+        inf->priv.filesystem.f_files = usage.f_files;
+        inf->priv.filesystem.f_filesfree = usage.f_ffree;
+        inf->priv.filesystem._flags = inf->priv.filesystem.flags;
+        inf->priv.filesystem.flags = usage.f_flags;
+        return true;
+}
+
+
+static boolean_t _getDiskActivity(void *_inf) {
         int rv = false;
+        Info_T inf = _inf;
         DASessionRef session = DASessionCreate(NULL);
         if (session) {
-                CFURLRef url = CFURLCreateFromFileSystemRepresentation(NULL, (const UInt8 *)mountpoint, strlen(mountpoint), true);
+                CFURLRef url = CFURLCreateFromFileSystemRepresentation(NULL, (const UInt8 *)inf->priv.filesystem.object.mountpoint, strlen(inf->priv.filesystem.object.mountpoint), true);
                 DADiskRef disk = DADiskCreateFromVolumePath(NULL, session, url);
                 if (disk) {
                         DADiskRef wholeDisk = DADiskCopyWholeDisk(disk);
                         if (wholeDisk) {
-                                CFDictionaryRef description = DADiskCopyDescription(disk);
-                                if (description) {
-                                        CFStringRef string = CFDictionaryGetValue(description, kDADiskDescriptionVolumeTypeKey);
-                                        if (string) {
-                                                snprintf(inf->priv.filesystem.device.type, sizeof(inf->priv.filesystem.device.type), "%s", CFStringGetCStringPtr(string, CFStringGetSystemEncoding()));
-                                        }
-                                        CFRelease(description);
-                                }
                                 io_service_t ioMedia = DADiskCopyIOMedia(wholeDisk);
                                 if (ioMedia) {
                                         CFTypeRef statistics = IORegistryEntrySearchCFProperty(ioMedia, kIOServicePlane, CFSTR(kIOBlockStorageDriverStatisticsKey), kCFAllocatorDefault, kIORegistryIterateRecursively | kIORegistryIterateParents);
@@ -143,53 +158,65 @@ static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
 }
 
 
-static boolean_t _getDiskUsage(char *mountpoint, Info_T inf) {
-        struct statfs usage;
-        if (statfs(mountpoint, &usage) != 0) {
-                LogError("Error getting usage statistics for filesystem '%s' -- %s\n", mountpoint, STRERROR);
-                return false;
+static boolean_t _compareMountpoint(const char *mountpoint, struct statfs *mnt) {
+        return IS(mountpoint, mnt->f_mntonname);
+}
+
+
+static boolean_t _compareDevice(const char *device, struct statfs *mnt) {
+        return IS(device, mnt->f_mntfromname);
+}
+
+
+static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(const char *path, struct statfs *mnt)) {
+        int countfs = getfsstat(NULL, 0, MNT_NOWAIT);
+        if (countfs != -1) {
+                struct statfs *mnt = CALLOC(countfs, sizeof(struct statfs));
+                if ((countfs = getfsstat(mnt, countfs * sizeof(struct statfs), MNT_NOWAIT)) != -1) {
+                        for (int i = 0; i < countfs; i++) {
+                                struct statfs *mntItem = mnt + i;
+                                if (compare(path, mntItem)) {
+                                        strncpy(inf->priv.filesystem.object.device, mnt->f_mntfromname, sizeof(inf->priv.filesystem.object.device) - 1);
+                                        strncpy(inf->priv.filesystem.object.mountpoint, mnt->f_mntonname, sizeof(inf->priv.filesystem.object.mountpoint) - 1);
+                                        strncpy(inf->priv.filesystem.object.type, mnt->f_fstypename, sizeof(inf->priv.filesystem.object.type) - 1);
+                                        inf->priv.filesystem.object.getDiskUsage = _getDiskUsage;
+                                        inf->priv.filesystem.object.getDiskActivity = _getDiskActivity;
+                                        inf->priv.filesystem.object.mounted = true;
+                                        FREE(mnt);
+                                        return true;
+                                }
+                        }
+                }
+                FREE(mnt);
         }
-        inf->priv.filesystem.f_bsize =           usage.f_bsize;
-        inf->priv.filesystem.f_blocks =          usage.f_blocks;
-        inf->priv.filesystem.f_blocksfree =      usage.f_bavail;
-        inf->priv.filesystem.f_blocksfreetotal = usage.f_bfree;
-        inf->priv.filesystem.f_files =           usage.f_files;
-        inf->priv.filesystem.f_filesfree =       usage.f_ffree;
-        inf->priv.filesystem._flags =            inf->priv.filesystem.flags;
-        inf->priv.filesystem.flags =             usage.f_flags;
-        return true;
+        LogError("Lookup for '%s' filesystem failed\n", path);
+        inf->priv.filesystem.object.mounted = false;
+        return false;
+}
+
+
+static boolean_t _getDevice(Info_T inf, const char *path, boolean_t (*compare)(const char *path, struct statfs *mnt)) {
+        //FIXME: cache mount informations (register for mount/unmount notification)
+        if (_setDevice(inf, path, compare)) {
+                return (inf->priv.filesystem.object.getDiskUsage(inf) && inf->priv.filesystem.object.getDiskActivity(inf));
+        }
+        return false;
 }
 
 
 /* ------------------------------------------------------------------ Public */
 
 
-char *device_mountpoint_sysdep(char *dev, char *buf, int buflen) {
-        ASSERT(dev);
-        ASSERT(buf);
-        int countfs = getfsstat(NULL, 0, MNT_NOWAIT);
-        if (countfs != -1) {
-                struct statfs *statfs = CALLOC(countfs, sizeof(struct statfs));
-                if ((countfs = getfsstat(statfs, countfs * sizeof(struct statfs), MNT_NOWAIT)) != -1) {
-                        for (int i = 0; i < countfs; i++) {
-                                struct statfs *sfs = statfs + i;
-                                if (IS(sfs->f_mntfromname, dev)) {
-                                        snprintf(buf, buflen, "%s", sfs->f_mntonname);
-                                        FREE(statfs);
-                                        return buf;
-                                }
-                        }
-                }
-                FREE(statfs);
-        }
-        LogError("Error getting mountpoint for filesystem '%s' -- %s\n", dev, STRERROR);
-        return NULL;
+boolean_t Filesystem_getByMountpoint(Info_T inf, const char *path) {
+        ASSERT(inf);
+        ASSERT(path);
+        return _getDevice(inf, path, _compareMountpoint);
 }
 
 
-boolean_t filesystem_usage_sysdep(char *mountpoint, Info_T inf) {
-        ASSERT(mountpoint);
+boolean_t Filesystem_getByDevice(Info_T inf, const char *path) {
         ASSERT(inf);
-        return (_getDiskUsage(mountpoint, inf) && _getDiskActivity(mountpoint, inf));
+        ASSERT(path);
+        return _getDevice(inf, path, _compareDevice);
 }
 
