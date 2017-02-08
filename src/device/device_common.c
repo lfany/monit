@@ -66,8 +66,9 @@
 boolean_t filesystem_usage(Service_T s) {
         ASSERT(s);
         struct stat sb;
-        int rv = lstat(s->path, &sb);
-        if (rv == 0) {
+        boolean_t rv = false;
+        int st = lstat(s->path, &sb);
+        if (st == 0) {
                 if (S_ISLNK(sb.st_mode)) {
                         // Symbolic link: dereference
                         char buf[PATH_MAX] = {};
@@ -75,17 +76,31 @@ boolean_t filesystem_usage(Service_T s) {
                                 LogError("Cannot dereference filesystem '%s' (symlink) -- %s\n", s->path, STRERROR);
                                 return false;
                         }
-                        rv = stat(buf, &sb);
+                        st = stat(buf, &sb);
                 }
         }
-        if (rv != 0) {
+        if (st != 0) {
                 // The path string is not existing block/character device nor mountpoint - could be:
                 //   1. either a filesystem connection string such as NFS/CIFS/SSHFS path
                 //   2. or it is mountpoint which doesn't exist (subdirectory of parent filesystem which is not mounted itself or the mountpoint was deleted)
                 //   3. or it is a hotplug device which was unconfigured from the system
                 // Try to use the Filesystem_getByDevice() which will find case #1 above and keep the error for cases #2 and #3
-                rv = Filesystem_getByDevice(s->inf, s->path);
+                if (Filesystem_getByDevice(s->inf, s->path)) {
+                        // If the device connection string was found, get uid/gid/mode of the mountpoint (connection string itself cannot be stated)
+                        if (stat(s->inf->priv.filesystem.object.mountpoint, &sb) == 0) {
+                                rv = true;
+                        }
+                }
         } else {
+                if (S_ISDIR(sb.st_mode)) {
+                        // Directory -> mountpoint
+                        rv = Filesystem_getByMountpoint(s->inf, s->path);
+                } else if (S_ISBLK(sb.st_mode) || S_ISCHR(sb.st_mode)) {
+                        // Block or character device
+                        rv = Filesystem_getByDevice(s->inf, s->path);
+                }
+        }
+        if (rv) {
                 s->inf->priv.filesystem.mode = sb.st_mode;
                 s->inf->priv.filesystem.uid = sb.st_uid;
                 s->inf->priv.filesystem.gid = sb.st_gid;
@@ -93,24 +108,14 @@ boolean_t filesystem_usage(Service_T s) {
                 s->inf->priv.filesystem.space_total = s->inf->priv.filesystem.f_blocks - s->inf->priv.filesystem.f_blocksfreetotal;
                 s->inf->priv.filesystem.inode_percent = s->inf->priv.filesystem.f_files > 0 ? 100. * (double)s->inf->priv.filesystem.inode_total / (double)s->inf->priv.filesystem.f_files : 0.;
                 s->inf->priv.filesystem.space_percent = s->inf->priv.filesystem.f_blocks > 0 ? 100. * (double)s->inf->priv.filesystem.space_total / (double)s->inf->priv.filesystem.f_blocks : 0.;
-                if (S_ISDIR(sb.st_mode)) {
-                        // Directory -> mountpoint
-                        rv = Filesystem_getByMountpoint(s->inf, s->path);
-                } else if (S_ISBLK(sb.st_mode) || S_ISCHR(sb.st_mode)) {
-                        // Block or character device
-                        rv = Filesystem_getByDevice(s->inf, s->path);
-                } else {
-                        rv = false;
-                        LogError("Cannot get filesystem for '%s' -- not mountpoint nor device\n", s->path);
-                }
-        }
-        if (! rv) {
+        } else {
                 Statistics_reset(&(s->inf->priv.filesystem.read.time));
                 Statistics_reset(&(s->inf->priv.filesystem.read.bytes));
                 Statistics_reset(&(s->inf->priv.filesystem.read.operations));
                 Statistics_reset(&(s->inf->priv.filesystem.write.time));
                 Statistics_reset(&(s->inf->priv.filesystem.write.bytes));
                 Statistics_reset(&(s->inf->priv.filesystem.write.operations));
+                LogError("Filesystem '%s' not mounted\n", s->path);
         }
         return rv;
 }

@@ -84,12 +84,6 @@
 /* ------------------------------------------------------------- Definitions */
 
 
-typedef struct Device_T {
-        char name[SPECNAMELEN];
-        int instance;
-} *Device_T;
-
-
 static struct {
         uint64_t timestamp;
         struct statinfo disk;
@@ -122,38 +116,12 @@ static boolean_t _parseDevice(const char *path, Device_T device) {
         const char *base = File_basename(path);
         for (int i = 0; base[i]; i++) {
                 if (isdigit(*(base + i))) {
-                        strncpy(device->name, base, i < sizeof(device->name) ? i : sizeof(device->name) - 1);
+                        strncpy(device->key, base, i < sizeof(device->key) ? i : sizeof(device->key) - 1);
                         device->instance = Str_parseInt(base + i);
                         return true;
                 }
         }
-        return false;
-}
-
-
-static boolean_t _getDevice(char *mountpoint, Device_T device, Info_T inf) {
-        int countfs = getfsstat(NULL, 0, MNT_NOWAIT);
-        if (countfs != -1) {
-                struct statfs *statfs = CALLOC(countfs, sizeof(struct statfs));
-                if ((countfs = getfsstat(statfs, countfs * sizeof(struct statfs), MNT_NOWAIT)) != -1) {
-                        for (int i = 0; i < countfs; i++) {
-                                struct statfs *sfs = statfs + i;
-                                if (IS(sfs->f_mntonname, mountpoint)) {
-                                        boolean_t rv = false;
-                                        snprintf(inf->priv.filesystem.device.type, sizeof(inf->priv.filesystem.device.type), "%s", sfs->f_fstypename);
-                                        if (IS(sfs->f_fstypename, "zfs")) {
-                                                //FIXME: can add ZFS support (see sysdep_SOLARIS.c), but libzfs headers are not installed on FreeBSD by default (part of "cddl" set)
-                                        } else {
-                                                rv = _parseDevice(sfs->f_mntfromname, device);
-                                        }
-                                        FREE(statfs);
-                                        return rv;
-                                }
-                        }
-                }
-                FREE(statfs);
-        }
-        LogError("Mount point %s -- %s\n", mountpoint, STRERROR);
+        LogError("filesystem statistics error -- cannot parse device '%s'\n", path);
         return false;
 }
 
@@ -171,84 +139,119 @@ static boolean_t _getStatistics(uint64_t now) {
 }
 
 
-static boolean_t _getDiskActivity(char *mountpoint, Info_T inf) {
-        boolean_t rv = true;
-        struct Device_T device = {};
-        if (_getDevice(mountpoint, &device, inf)) {
-                uint64_t now = Time_milli();
-                if ((rv = _getStatistics(now))) {
-                        for (int i = 0; i < _statistics.disk.dinfo->numdevs; i++) {
-                                if (_statistics.disk.dinfo->devices[i].unit_number == device.instance && IS(_statistics.disk.dinfo->devices[i].device_name, device.name)) {
-                                        uint64_t now = _statistics.disk.snap_time * 1000;
-                                        Statistics_update(&(inf->priv.filesystem.read.time), now, _bintimeToMilli(&(_statistics.disk.dinfo->devices[i].duration[DEVSTAT_READ])));
-                                        Statistics_update(&(inf->priv.filesystem.read.bytes), now, _statistics.disk.dinfo->devices[i].bytes[DEVSTAT_READ]);
-                                        Statistics_update(&(inf->priv.filesystem.read.operations),  now, _statistics.disk.dinfo->devices[i].operations[DEVSTAT_READ]);
-                                        Statistics_update(&(inf->priv.filesystem.write.time), now, _bintimeToMilli(&(_statistics.disk.dinfo->devices[i].duration[DEVSTAT_WRITE])));
-                                        Statistics_update(&(inf->priv.filesystem.write.bytes), now, _statistics.disk.dinfo->devices[i].bytes[DEVSTAT_WRITE]);
-                                        Statistics_update(&(inf->priv.filesystem.write.operations), now, _statistics.disk.dinfo->devices[i].operations[DEVSTAT_WRITE]);
-                                        break;
-                                }
+static boolean_t _getDummyDiskActivity(void *_inf) {
+        return true;
+}
+
+
+static boolean_t _getBlockDiskActivity(void *_inf) {
+        Info_T inf = _inf;
+        uint64_t now = Time_milli();
+        boolean_t rv = _getStatistics(now);
+        if (rv) {
+                for (int i = 0; i < _statistics.disk.dinfo->numdevs; i++) {
+                        if (_statistics.disk.dinfo->devices[i].unit_number == inf->priv.filesystem.object.instance && IS(_statistics.disk.dinfo->devices[i].device_name, inf->priv.filesystem.object.key)) {
+                                uint64_t now = _statistics.disk.snap_time * 1000;
+                                Statistics_update(&(inf->priv.filesystem.read.time), now, _bintimeToMilli(&(_statistics.disk.dinfo->devices[i].duration[DEVSTAT_READ])));
+                                Statistics_update(&(inf->priv.filesystem.read.bytes), now, _statistics.disk.dinfo->devices[i].bytes[DEVSTAT_READ]);
+                                Statistics_update(&(inf->priv.filesystem.read.operations),  now, _statistics.disk.dinfo->devices[i].operations[DEVSTAT_READ]);
+                                Statistics_update(&(inf->priv.filesystem.write.time), now, _bintimeToMilli(&(_statistics.disk.dinfo->devices[i].duration[DEVSTAT_WRITE])));
+                                Statistics_update(&(inf->priv.filesystem.write.bytes), now, _statistics.disk.dinfo->devices[i].bytes[DEVSTAT_WRITE]);
+                                Statistics_update(&(inf->priv.filesystem.write.operations), now, _statistics.disk.dinfo->devices[i].operations[DEVSTAT_WRITE]);
+                                break;
                         }
                 }
-        } else {
-                Statistics_reset(&(inf->priv.filesystem.read.time));
-                Statistics_reset(&(inf->priv.filesystem.read.bytes));
-                Statistics_reset(&(inf->priv.filesystem.read.operations));
-                Statistics_reset(&(inf->priv.filesystem.write.time));
-                Statistics_reset(&(inf->priv.filesystem.write.bytes));
-                Statistics_reset(&(inf->priv.filesystem.write.operations));
         }
         return rv;
 }
 
 
-static boolean_t _getDiskUsage(char *mountpoint, Info_T inf) {
+static boolean_t _getDiskUsage(void *_inf) {
+        Info_T inf = _inf;
         struct statfs usage;
-        if (statfs(mountpoint, &usage) != 0) {
-                LogError("Error getting usage statistics for filesystem '%s' -- %s\n", mountpoint, STRERROR);
+        if (statfs(inf->priv.filesystem.object.mountpoint, &usage) != 0) {
+                LogError("Error getting usage statistics for filesystem '%s' -- %s\n", inf->priv.filesystem.object.mountpoint, STRERROR);
                 return false;
         }
-        inf->priv.filesystem.f_bsize =           usage.f_bsize;
-        inf->priv.filesystem.f_blocks =          usage.f_blocks;
-        inf->priv.filesystem.f_blocksfree =      usage.f_bavail;
+        inf->priv.filesystem.f_bsize = usage.f_bsize;
+        inf->priv.filesystem.f_blocks = usage.f_blocks;
+        inf->priv.filesystem.f_blocksfree = usage.f_bavail;
         inf->priv.filesystem.f_blocksfreetotal = usage.f_bfree;
-        inf->priv.filesystem.f_files =           usage.f_files;
-        inf->priv.filesystem.f_filesfree =       usage.f_ffree;
-        inf->priv.filesystem._flags =            inf->priv.filesystem.flags;
-        inf->priv.filesystem.flags =             usage.f_flags;
+        inf->priv.filesystem.f_files = usage.f_files;
+        inf->priv.filesystem.f_filesfree = usage.f_ffree;
+        inf->priv.filesystem._flags = inf->priv.filesystem.flags;
+        inf->priv.filesystem.flags = usage.f_flags;
         return true;
+}
+
+
+static boolean_t _compareMountpoint(const char *mountpoint, struct statfs *mnt) {
+        return IS(mountpoint, mnt->f_mntonname);
+}
+
+
+static boolean_t _compareDevice(const char *device, struct statfs *mnt) {
+        return IS(device, mnt->f_mntfromname);
+}
+
+
+static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(const char *path, struct statfs *mnt)) {
+        int countfs = getfsstat(NULL, 0, MNT_NOWAIT);
+        if (countfs != -1) {
+                struct statfs *mnt = CALLOC(countfs, sizeof(struct statfs));
+                if ((countfs = getfsstat(mnt, countfs * sizeof(struct statfs), MNT_NOWAIT)) != -1) {
+                        for (int i = 0; i < countfs; i++) {
+                                struct statfs *mntItem = mnt + i;
+                                if (compare(path, mntItem)) {
+                                        if (IS(mntItem->f_fstypename, "ufs")) {
+                                                inf->priv.filesystem.object.getDiskActivity = _getBlockDiskActivity;
+                                                if (! _parseDevice(mntItem->f_mntfromname, &(inf->priv.filesystem.object))) {
+                                                        goto error;
+                                                }
+                                        } else {
+                                                //FIXME: can add ZFS support (see sysdep_SOLARIS.c), but libzfs headers are not installed on FreeBSD by default (part of "cddl" set)
+                                                inf->priv.filesystem.object.getDiskActivity = _getDummyDiskActivity;
+                                        }
+                                        strncpy(inf->priv.filesystem.object.device, mntItem->f_mntfromname, sizeof(inf->priv.filesystem.object.device) - 1);
+                                        strncpy(inf->priv.filesystem.object.mountpoint, mntItem->f_mntonname, sizeof(inf->priv.filesystem.object.mountpoint) - 1);
+                                        strncpy(inf->priv.filesystem.object.type, mntItem->f_fstypename, sizeof(inf->priv.filesystem.object.type) - 1);
+                                        inf->priv.filesystem.object.getDiskUsage = _getDiskUsage;
+                                        inf->priv.filesystem.object.mounted = true;
+                                        FREE(mnt);
+                                        return true;
+                                }
+                        }
+                }
+                FREE(mnt);
+        }
+        LogError("Lookup for '%s' filesystem failed\n", path);
+error:
+        inf->priv.filesystem.object.mounted = false;
+        return false;
+}
+
+
+static boolean_t _getDevice(Info_T inf, const char *path, boolean_t (*compare)(const char *path, struct statfs *mnt)) {
+        if (_setDevice(inf, path, compare)) {
+                return (inf->priv.filesystem.object.getDiskUsage(inf) && inf->priv.filesystem.object.getDiskActivity(inf));
+        }
+        return false;
 }
 
 
 /* ------------------------------------------------------------------ Public */
 
 
-char *device_mountpoint_sysdep(char *dev, char *buf, int buflen) {
-        ASSERT(dev);
-        ASSERT(buf);
-        int countfs = getfsstat(NULL, 0, MNT_NOWAIT);
-        if (countfs != -1) {
-                struct statfs *statfs = CALLOC(countfs, sizeof(struct statfs));
-                if ((countfs = getfsstat(statfs, countfs * sizeof(struct statfs), MNT_NOWAIT)) != -1) {
-                        for (int i = 0; i < countfs; i++) {
-                                struct statfs *sfs = statfs + i;
-                                if (IS(sfs->f_mntfromname, dev)) {
-                                        snprintf(buf, buflen, "%s", sfs->f_mntonname);
-                                        FREE(statfs);
-                                        return buf;
-                                }
-                        }
-                }
-                FREE(statfs);
-        }
-        LogError("Error getting mountpoint for filesystem '%s' -- %s\n", dev, STRERROR);
-        return NULL;
+boolean_t Filesystem_getByMountpoint(Info_T inf, const char *path) {
+        ASSERT(inf);
+        ASSERT(path);
+        return _getDevice(inf, path, _compareMountpoint);
 }
 
 
-boolean_t filesystem_usage_sysdep(char *mountpoint, Info_T inf) {
-        ASSERT(mountpoint);
+boolean_t Filesystem_getByDevice(Info_T inf, const char *path) {
         ASSERT(inf);
-        return (_getDiskUsage(mountpoint, inf) && _getDiskActivity(mountpoint, inf));
+        ASSERT(path);
+        return _getDevice(inf, path, _compareDevice);
 }
 

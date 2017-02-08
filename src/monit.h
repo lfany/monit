@@ -950,6 +950,7 @@ typedef struct IOStatistics_T {
 typedef struct Device_T {
         boolean_t mounted;
         int generation;
+        int instance;
         char device[PATH_MAX];
         char mountpoint[PATH_MAX];
         char key[PATH_MAX];
