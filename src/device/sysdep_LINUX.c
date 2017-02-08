@@ -96,6 +96,54 @@ static struct {
 } _statistics = {};
 
 
+/* ----------------------------------------------- Mount notification thread */
+
+
+//FIXME: drop when libev is added and register the mount table handler in libev
+static void *_mountNotify(void *args) {
+        // Mount/unmount notification based on /proc/self/mounts polling: need to keep /proc/self/mounts open while Monit is running, so we can use poll() to see if the mount table has changed
+        if (! (Run.flags & Run_Once)) {
+                set_signal_block();
+                _statistics.fd = open(MOUNTS, O_RDONLY);
+                if (_statistics.fd != -1) {
+                        while (! (Run.flags & Run_Stopped)) {
+                                struct pollfd mountNotify = {.fd = _statistics.fd, .events = POLLPRI, .revents = 0};
+                                if (poll(&mountNotify, 1, 100) != -1) {
+                                        if (mountNotify.revents & POLLERR) {
+                                                DEBUG("Mount notification thread: change detected\n");
+                                                Atomic_inc(_statistics.mountNotify.generation);
+                                        }
+                                } else {
+                                        LogError("Mount notification thread: table polling failed -- %s\n", STRERROR);
+                                }
+                        }
+                        close(_statistics.fd);
+                } else {
+                        LogError("Mount notification thread: cannot open %s -- %s\n", MOUNTS, STRERROR);
+                }
+        }
+        return NULL;
+}
+
+
+/* --------------------------------------- Static constructor and destructor */
+
+
+static void __attribute__ ((constructor)) _constructor() {
+        //FIXME: drop when libev is added and register the mount table handler in libev
+        Atomic_inc(_statistics.mountNotify.generation); // First generation
+        Thread_create(_statistics.mountNotify.thread, _mountNotify, NULL);
+}
+
+
+static void __attribute__ ((destructor)) _destructor() {
+        //FIXME: drop when libev is added and register the mount table handler in libev
+        if (_statistics.fd > -1) {
+                Thread_join(_statistics.mountNotify.thread);
+        }
+}
+
+
 /* ----------------------------------------------------------------- Private */
 
 
@@ -302,48 +350,6 @@ static boolean_t _getDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                 return (inf->priv.filesystem.object.getDiskUsage(inf) && inf->priv.filesystem.object.getDiskActivity(inf));
         }
         return false;
-}
-
-
-static void *_mountNotify(void *args) {
-        // Mount/unmount notification based on /proc/self/mounts polling: need to keep /proc/self/mounts open while Monit is running, so we can use poll() to see if the mount table has changed
-        if (! (Run.flags & Run_Once)) {
-                set_signal_block();
-                _statistics.fd = open(MOUNTS, O_RDONLY);
-                if (_statistics.fd != -1) {
-                        while (! (Run.flags & Run_Stopped)) {
-                                struct pollfd mountNotify = {.fd = _statistics.fd, .events = POLLPRI, .revents = 0};
-                                if (poll(&mountNotify, 1, 100) != -1) {
-                                        if (mountNotify.revents & POLLERR) {
-                                                DEBUG("Mount notification thread: change detected\n");
-                                                Atomic_inc(_statistics.mountNotify.generation);
-                                        }
-                                } else {
-                                        LogError("Mount notification thread: table polling failed -- %s\n", STRERROR);
-                                }
-                        }
-                        close(_statistics.fd);
-                } else {
-                        LogError("Mount notification thread: cannot open %s -- %s\n", MOUNTS, STRERROR);
-                }
-        }
-        return NULL;
-}
-
-
-/* --------------------------------------- Static constructor and destructor */
-
-
-static void __attribute__ ((constructor)) _constructor() {
-        Atomic_inc(_statistics.mountNotify.generation); // First generation
-        Thread_create(_statistics.mountNotify.thread, _mountNotify, NULL);
-}
-
-
-static void __attribute__ ((destructor)) _destructor() {
-        if (_statistics.fd > -1) {
-                Thread_join(_statistics.mountNotify.thread);
-        }
 }
 
 
