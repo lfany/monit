@@ -90,7 +90,12 @@ static boolean_t _getDiskUsage(void *_inf) {
 }
 
 
-static boolean_t _getDiskActivity(void *_inf) {
+static boolean_t _getDummyDiskActivity(void *_inf) {
+        return true;
+}
+
+
+static boolean_t _getBlockDiskActivity(void *_inf) {
         int rv = false;
         Info_T inf = _inf;
         DASessionRef session = DASessionCreate(NULL);
@@ -176,11 +181,15 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                         for (int i = 0; i < countfs; i++) {
                                 struct statfs *mntItem = mnt + i;
                                 if (compare(path, mntItem)) {
-                                        strncpy(inf->priv.filesystem.object.device, mnt->f_mntfromname, sizeof(inf->priv.filesystem.object.device) - 1);
-                                        strncpy(inf->priv.filesystem.object.mountpoint, mnt->f_mntonname, sizeof(inf->priv.filesystem.object.mountpoint) - 1);
-                                        strncpy(inf->priv.filesystem.object.type, mnt->f_fstypename, sizeof(inf->priv.filesystem.object.type) - 1);
+                                        if (IS(mntItem->f_fstypename, "hfs")) {
+                                                inf->priv.filesystem.object.getDiskActivity = _getBlockDiskActivity;
+                                        } else {
+                                                inf->priv.filesystem.object.getDiskActivity = _getDummyDiskActivity;
+                                        }
+                                        strncpy(inf->priv.filesystem.object.device, mntItem->f_mntfromname, sizeof(inf->priv.filesystem.object.device) - 1);
+                                        strncpy(inf->priv.filesystem.object.mountpoint, mntItem->f_mntonname, sizeof(inf->priv.filesystem.object.mountpoint) - 1);
+                                        strncpy(inf->priv.filesystem.object.type, mntItem->f_fstypename, sizeof(inf->priv.filesystem.object.type) - 1);
                                         inf->priv.filesystem.object.getDiskUsage = _getDiskUsage;
-                                        inf->priv.filesystem.object.getDiskActivity = _getDiskActivity;
                                         inf->priv.filesystem.object.mounted = true;
                                         FREE(mnt);
                                         return true;
