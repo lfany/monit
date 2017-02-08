@@ -12,13 +12,14 @@ New: The filesystem read/write statistics is now displayed in Monit GUI and CLI.
         if write rate > 500 operations/s then alert
         if service time > 10 milliseconds for 3 times within 5 cycles then alert
 //FIXME: move to monit manual + document above tests
-                  Type                  No Support
-        Solaris:  per-filesystem        CIFS
-        NetBSD:   per-disk              NFS
-        OpenBSD:  per-disk              NFS
-        FreeBSD:  per-disk              NFS, ZFS
-        Linux:    per-filesystem        FUSE
-        MacOS:    per-disk
+                       Type                  No Support
+        Solaris:       per-filesystem        CIFS
+        NetBSD:        per-disk              NFS
+        OpenBSD:       per-disk              NFS
+        FreeBSD:       per-disk              NFS, ZFS
+        DragonFlyBSD:  per-disk              HAMMER, NFS
+        Linux:         per-filesystem        FUSE
+        MacOS:         per-disk
         AIX:
 
 New: The per-process read/write statistics is now displayed in Monit GUI and CLI
