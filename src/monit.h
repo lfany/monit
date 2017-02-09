@@ -951,9 +951,11 @@ typedef struct Device_T {
         boolean_t mounted;
         int generation;
         int instance;
+        char partition;
         char device[PATH_MAX];
         char mountpoint[PATH_MAX];
         char key[PATH_MAX];
+        char module[256];
         char type[64];
         boolean_t (*getDiskUsage)(void *);
         boolean_t (*getDiskActivity)(void *);
