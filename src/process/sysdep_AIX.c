@@ -135,12 +135,12 @@ boolean_t init_process_info_sysdep(void) {
         systeminfo.mem_max = (uint64_t)mem.real_total * (uint64_t)page_size;
         systeminfo.cpus    = sysconf(_SC_NPROCESSORS_ONLN);
 
-	setutxent();
-	struct utmpx _booted = {.ut_type = BOOT_TIME};
-	struct utmpx *booted = getutxid(&_booted);
-	if (booted)
-		systeminfo.booted = booted->ut_tv.tv_sec;
-	endutxent();
+        setutxent();
+        struct utmpx _booted = {.ut_type = BOOT_TIME};
+        struct utmpx *booted = getutxid(&_booted);
+        if (booted)
+                systeminfo.booted = booted->ut_tv.tv_sec;
+        endutxent();
 
         return true;
 }
