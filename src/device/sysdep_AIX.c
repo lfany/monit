@@ -89,26 +89,26 @@ static struct {
 
 
 static void __attribute__ ((constructor)) _constructor() {
-	// Check if iostat is enabled (disabled by default)
-	struct vario v;
-       	sys_parm(SYSP_GET, SYSP_V_IOSTRUN, &v);
-	_statistics.iostatEnabled = v.v.v_iostrun.value;
-	if (! _statistics.iostatEnabled) {
-		DEBUG("Enabling iostat\n");
-	       	v.v.v_iostrun.value = 1;
-	       	sys_parm(SYSP_SET, SYSP_V_IOSTRUN, &v);
-	}
+        // Check if iostat is enabled (disabled by default)
+        struct vario v;
+        sys_parm(SYSP_GET, SYSP_V_IOSTRUN, &v);
+        _statistics.iostatEnabled = v.v.v_iostrun.value;
+        if (! _statistics.iostatEnabled) {
+                DEBUG("Enabling iostat\n");
+                v.v.v_iostrun.value = 1;
+                sys_parm(SYSP_SET, SYSP_V_IOSTRUN, &v);
+        }
 }
 
 
 static void __attribute__ ((destructor)) _destructor() {
-	// Return the iostat settings back to its original settings on exit
-	if (! _statistics.iostatEnabled) {
-		DEBUG("Disabling iostat\n");
-		struct vario v;
-	       	v.v.v_iostrun.value = 0;
-	       	sys_parm(SYSP_SET, SYSP_V_IOSTRUN, &v);
-	}
+        // Return the iostat settings back to its original settings on exit
+        if (! _statistics.iostatEnabled) {
+                DEBUG("Disabling iostat\n");
+                struct vario v;
+                v.v.v_iostrun.value = 0;
+                sys_parm(SYSP_SET, SYSP_V_IOSTRUN, &v);
+        }
 }
 
 
@@ -122,52 +122,52 @@ static boolean_t _getDummyDiskActivity(void *_inf) {
 
 static boolean_t _getDiskActivity(void *_inf) {
         /*
-	 * FIXME:
-	 *
-	 * The libperfstat provides interface to the disk IO statistics per physical device (for example "hdisk0),
-	 * but the filesystem/volumes are usually part of LVM and thus we need to map physical device to LVM volume
- 	 * and reflect the RAID configuration too.
-	 *
-	 * Example of volume group rootvg, which contains only one physical volume/disk (hdisk0) and multiple logical
-	 * volumes on top:
-	 *
-	 *    # lsvg -p rootvg
-	 *    rootvg:
-	 *    PV_NAME           PV STATE          TOTAL PPs   FREE PPs    FREE DISTRIBUTION
-	 *    hdisk0            active            542         100         00..00..00..00..100
-	 *
-	 *    # lsvg -l rootvg
-	 *    rootvg:
-	 *    LV NAME             TYPE       LPs     PPs     PVs  LV STATE      MOUNT POINT
-	 *    hd5                 boot       1       1       1    closed/syncd  N/A
-	 *    hd6                 paging     16      16      1    open/syncd    N/A
-	 *    hd8                 jfs2log    1       1       1    open/syncd    N/A
-	 *    hd4                 jfs2       106     106     1    open/syncd    /
-	 *    hd2                 jfs2       152     152     1    open/syncd    /usr
-	 *    hd9var              jfs2       3       3       1    open/syncd    /var
-	 *    hd3                 jfs2       2       2       1    open/syncd    /tmp
-	 *    hd1                 jfs2       1       1       1    open/syncd    /home
-	 *    hd10opt             jfs2       124     124     1    open/syncd    /opt
-	 *    hd11admin           jfs2       4       4       1    open/syncd    /admin
-	 *    lg_dumplv           sysdump    32      32      1    open/syncd    N/A
-	 *
-	 * The mntent which we use in _setDevice() doesn't provide mapping between the physical and logical volume, example:
-	 *
-	 *    mnt_fsname=/dev/hd1, mnt_dir=/home, mnt_type=jfs2, mnt_opts=rw,log=/dev/hd8
-	 *
-	 * The libperfstat provides perfstat_disk() interface -> perfstat_disk_t entry example:
-	 *
-	 *    name=hdisk0, description=16 Bit LVD SCSI Disk Drive, vgname=rootvg, adapter=sisscsia0
-	 *
-	 * We can use liblvm (lvm_queryvgs() and lvm_queryvg()) to do the physical-logical mapping (note: it can be many-to-many
-	 * layout in the case of RAID).
-	 */
+         * FIXME:
+         *
+         * The libperfstat provides interface to the disk IO statistics per physical device (for example "hdisk0),
+         * but the filesystem/volumes are usually part of LVM and thus we need to map physical device to LVM volume
+         * and reflect the RAID configuration too.
+         *
+         * Example of volume group rootvg, which contains only one physical volume/disk (hdisk0) and multiple logical
+         * volumes on top:
+         *
+         *    # lsvg -p rootvg
+         *    rootvg:
+         *    PV_NAME           PV STATE          TOTAL PPs   FREE PPs    FREE DISTRIBUTION
+         *    hdisk0            active            542         100         00..00..00..00..100
+         *
+         *    # lsvg -l rootvg
+         *    rootvg:
+         *    LV NAME             TYPE       LPs     PPs     PVs  LV STATE      MOUNT POINT
+         *    hd5                 boot       1       1       1    closed/syncd  N/A
+         *    hd6                 paging     16      16      1    open/syncd    N/A
+         *    hd8                 jfs2log    1       1       1    open/syncd    N/A
+         *    hd4                 jfs2       106     106     1    open/syncd    /
+         *    hd2                 jfs2       152     152     1    open/syncd    /usr
+         *    hd9var              jfs2       3       3       1    open/syncd    /var
+         *    hd3                 jfs2       2       2       1    open/syncd    /tmp
+         *    hd1                 jfs2       1       1       1    open/syncd    /home
+         *    hd10opt             jfs2       124     124     1    open/syncd    /opt
+         *    hd11admin           jfs2       4       4       1    open/syncd    /admin
+         *    lg_dumplv           sysdump    32      32      1    open/syncd    N/A
+         *
+         * The mntent which we use in _setDevice() doesn't provide mapping between the physical and logical volume, example:
+         *
+         *    mnt_fsname=/dev/hd1, mnt_dir=/home, mnt_type=jfs2, mnt_opts=rw,log=/dev/hd8
+         *
+         * The libperfstat provides perfstat_disk() interface -> perfstat_disk_t entry example:
+         *
+         *    name=hdisk0, description=16 Bit LVD SCSI Disk Drive, vgname=rootvg, adapter=sisscsia0
+         *
+         * We can use liblvm (lvm_queryvgs() and lvm_queryvg()) to do the physical-logical mapping (note: it can be many-to-many
+         * layout in the case of RAID).
+         */
         return true;
 }
 
 
 static boolean_t _getDiskUsage(void *_inf) {
-	Info_T inf = _inf;
+        Info_T inf = _inf;
         struct statfs usage;
         if (statfs(inf->priv.filesystem.object.mountpoint, &usage) != 0) {
                 LogError("Error getting usage statistics for filesystem '%s' -- %s\n", inf->priv.filesystem.object.mountpoint, STRERROR);
@@ -206,11 +206,11 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                         strncpy(inf->priv.filesystem.object.mountpoint, mnt->mnt_dir, sizeof(inf->priv.filesystem.object.mountpoint) - 1);
                         strncpy(inf->priv.filesystem.object.type, mnt->mnt_type, sizeof(inf->priv.filesystem.object.type) - 1);
                         inf->priv.filesystem.object.getDiskUsage = _getDiskUsage;
-			if (Str_startsWith(mnt->mnt_type, "jfs")) {
+                        if (Str_startsWith(mnt->mnt_type, "jfs")) {
                                 inf->priv.filesystem.object.getDiskActivity = _getDiskActivity;
                         } else {
                                 inf->priv.filesystem.object.getDiskActivity = _getDummyDiskActivity;
-			}
+                        }
                         endmntent(f);
                         inf->priv.filesystem.object.mounted = true;
                         return true;
