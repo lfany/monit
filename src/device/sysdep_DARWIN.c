@@ -148,6 +148,7 @@ static boolean_t _getBlockDiskActivity(void *_inf) {
                                                         CFNumberGetValue(number, kCFNumberSInt64Type, &value);
                                                         Statistics_update(&(inf->priv.filesystem.write.time), now, value / 1048576.); // ns -> ms
                                                 }
+                                                //FIXME: add disk error statistics test: can use kIOBlockStorageDriverStatisticsWriteErrorsKey + kIOBlockStorageDriverStatisticsReadErrorsKey
                                                 CFRelease(statistics);
                                         }
                                         IOObjectRelease(ioMedia);
