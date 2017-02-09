@@ -87,59 +87,23 @@
 
 
 static struct {
-        int fd; // /proc/self/mounts filedescriptor (needed for mount/unmount notification)
-        // Mount notification thread (FIXME: drop when libev is added and register the mount table handler in libev):
-        struct {
-                Thread_T thread;     // Thread which is polling the mount table for changes
-                Atomic_T generation; // Increment each time the mount table is changed
-        } mountNotify;
+        int fd;              // /proc/self/mounts filedescriptor (needed for mount/unmount notification)
+        uint64_t generation; // Increment each time the mount table is changed
 } _statistics = {};
-
-
-/* ----------------------------------------------- Mount notification thread */
-
-
-//FIXME: drop when libev is added and register the mount table handler in libev
-static void *_mountNotify(void *args) {
-        // Mount/unmount notification based on /proc/self/mounts polling: need to keep /proc/self/mounts open while Monit is running, so we can use poll() to see if the mount table has changed
-        if (! (Run.flags & Run_Once)) {
-                set_signal_block();
-                _statistics.fd = open(MOUNTS, O_RDONLY);
-                if (_statistics.fd != -1) {
-                        while (! (Run.flags & Run_Stopped)) {
-                                struct pollfd mountNotify = {.fd = _statistics.fd, .events = POLLPRI, .revents = 0};
-                                if (poll(&mountNotify, 1, 100) != -1) {
-                                        if (mountNotify.revents & POLLERR) {
-                                                DEBUG("Mount notification thread: change detected\n");
-                                                Atomic_inc(_statistics.mountNotify.generation);
-                                        }
-                                } else {
-                                        LogError("Mount notification thread: table polling failed -- %s\n", STRERROR);
-                                }
-                        }
-                        close(_statistics.fd);
-                } else {
-                        LogError("Mount notification thread: cannot open %s -- %s\n", MOUNTS, STRERROR);
-                }
-        }
-        return NULL;
-}
 
 
 /* --------------------------------------- Static constructor and destructor */
 
 
 static void __attribute__ ((constructor)) _constructor() {
-        //FIXME: drop when libev is added and register the mount table handler in libev
-        Atomic_inc(_statistics.mountNotify.generation); // First generation
-        Thread_create(_statistics.mountNotify.thread, _mountNotify, NULL);
+        _statistics.fd = -1;
+        _statistics.generation++; // First generation
 }
 
 
 static void __attribute__ ((destructor)) _destructor() {
-        //FIXME: drop when libev is added and register the mount table handler in libev
         if (_statistics.fd > -1) {
-                Thread_join(_statistics.mountNotify.thread);
+                  close(_statistics.fd);
         }
 }
 
@@ -297,7 +261,7 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                 LogError("Cannot open %s\n", MOUNTS);
                 return false;
         }
-        inf->priv.filesystem.object.generation = Atomic_read(_statistics.mountNotify.generation);
+        inf->priv.filesystem.object.generation = _statistics.generation;
         struct mntent *mnt;
         while ((mnt = getmntent(f))) {
                 if (compare(path, mnt)) {
@@ -343,8 +307,26 @@ error:
 
 
 static boolean_t _getDevice(Info_T inf, const char *path, boolean_t (*compare)(const char *path, struct mntent *mnt)) {
-        if (inf->priv.filesystem.object.generation != Atomic_read(_statistics.mountNotify.generation) || _statistics.fd == -1) {
-                _setDevice(inf, path, compare); // The mount table has changed => refresh
+        // Mount/unmount notification: open the /proc/self/mounts file if we're in daemon mode and keep it open until monit
+        // stops, so we can poll for mount table changes
+        // FIXME: when libev is added register the mount table handler in libev and stop polling here
+        if (_statistics.fd == -1 && (Run.flags & Run_Daemon) && ! (Run.flags & Run_Once)) {
+                _statistics.fd = open(MOUNTS, O_RDONLY);
+        }
+        if (_statistics.fd != -1) {
+                struct pollfd mountNotify = {.fd = _statistics.fd, .events = POLLPRI, .revents = 0};
+                if (poll(&mountNotify, 1, 0) != -1) {
+                        if (mountNotify.revents & POLLERR) {
+                                DEBUG("Mount table change detected\n");
+                                _statistics.generation++;
+                        }
+                } else {
+                        LogError("Mount table polling failed -- %s\n", STRERROR);
+                }
+        }
+        if (inf->priv.filesystem.object.generation != _statistics.generation || _statistics.fd == -1) {
+                DEBUG("Reloading mount informations for filesystem '%s'\n", path);
+                _setDevice(inf, path, compare);
         }
         if (inf->priv.filesystem.object.mounted) {
                 return (inf->priv.filesystem.object.getDiskUsage(inf) && inf->priv.filesystem.object.getDiskActivity(inf));
