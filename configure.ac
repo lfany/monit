@@ -109,6 +109,7 @@ AC_CHECK_HEADERS([ \
 	limits.h \
 	loadavg.h \
 	locale.h \
+	lvm.h \
         mach/boolean.h \
         mach/host_info.h \
         mach/mach.h \
@@ -168,6 +169,7 @@ AC_CHECK_HEADERS([ \
 	sys/types.h \
 	sys/un.h \
 	sys/utsname.h \
+        sys/var.h \
         sys/vmmeter.h \
         sys/vm_usage.h \
 	sys/vfs.h \

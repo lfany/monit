@@ -19,8 +19,8 @@ New: The filesystem read/write statistics is now displayed in Monit GUI and CLI.
         FreeBSD:       per-disk              NFS, ZFS
         DragonFlyBSD:  per-disk              HAMMER, NFS
         Linux:         per-filesystem        FUSE
-        MacOS:         per-disk
-        AIX:
+        MacOS:         per-disk              NFS, CIFS
+        AIX:           disk io monitoring not supported
 
 New: The per-process read/write statistics is now displayed in Monit GUI and CLI
 on Linux and MacOS. Tests:
