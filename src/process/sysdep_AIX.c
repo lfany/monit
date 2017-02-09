@@ -203,14 +203,16 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), treesize);
 
         for (int i = 0; i < treesize; i++) {
-                pt[i].pid          = procs[i].pi_pid;
-                pt[i].ppid         = procs[i].pi_ppid;
-                pt[i].cred.euid    = procs[i].pi_uid;
-                pt[i].threads      = procs[i].pi_thcount;
-                pt[i].uptime       = systeminfo.time / 10. - procs[i].pi_start;
-                pt[i].memory.usage = (uint64_t)(procs[i].pi_drss + procs[i].pi_trss) * (uint64_t)page_size;
-                pt[i].cpu.time     = procs[i].pi_ru.ru_utime.tv_sec * 10 + (double)procs[i].pi_ru.ru_utime.tv_usec / 100000. + procs[i].pi_ru.ru_stime.tv_sec * 10 + (double)procs[i].pi_ru.ru_stime.tv_usec / 100000.;
-                pt[i].zombie       = procs[i].pi_state == SZOMB ? true: false;
+                pt[i].pid              = procs[i].pi_pid;
+                pt[i].ppid             = procs[i].pi_ppid;
+                pt[i].cred.euid        = procs[i].pi_uid;
+                pt[i].threads          = procs[i].pi_thcount;
+                pt[i].uptime           = systeminfo.time / 10. - procs[i].pi_start;
+                pt[i].memory.usage     = (uint64_t)(procs[i].pi_drss + procs[i].pi_trss) * (uint64_t)page_size;
+                pt[i].cpu.time         = procs[i].pi_ru.ru_utime.tv_sec * 10 + (double)procs[i].pi_ru.ru_utime.tv_usec / 100000. + procs[i].pi_ru.ru_stime.tv_sec * 10 + (double)procs[i].pi_ru.ru_stime.tv_usec / 100000.;
+                pt[i].read.operations  = procs[i].pi_ru.ru_inblock;
+                pt[i].write.operations = procs[i].pi_ru.ru_inblock;
+                pt[i].zombie           = procs[i].pi_state == SZOMB ? true: false;
 
                 char filename[STRLEN];
                 snprintf(filename, sizeof(filename), "/proc/%d/psinfo", pt[i].pid);
