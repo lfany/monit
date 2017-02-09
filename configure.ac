@@ -578,6 +578,7 @@ then
    ARCH="DRAGONFLY"
    CFLAGS="$CFLAGS -D _REENTRANT"
    AC_CHECK_LIB([kvm], [kvm_open])
+   AC_CHECK_LIB([devstat], [getnumdevs])
 elif test "$architecture" = "Darwin"
 then
    ARCH="DARWIN"
