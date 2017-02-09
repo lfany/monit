@@ -131,7 +131,6 @@ typedef enum {
 #include "system/Link.h"
 #include "statistics/Statistics.h"
 #include "thread/Thread.h"
-#include "thread/Atomic.h"
 
 
 #define MONITRC            "monitrc"

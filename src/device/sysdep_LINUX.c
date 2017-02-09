@@ -87,8 +87,8 @@
 
 
 static struct {
-        int fd;              // /proc/self/mounts filedescriptor (needed for mount/unmount notification)
-        uint64_t generation; // Increment each time the mount table is changed
+        int fd;         // /proc/self/mounts filedescriptor (needed for mount/unmount notification)
+        int generation; // Increment each time the mount table is changed
 } _statistics = {};
 
 
