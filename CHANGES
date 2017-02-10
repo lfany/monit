@@ -6,27 +6,22 @@ Version 5.21.0
 
 New: The filesystem read/write statistics is now displayed in Monit GUI and CLI. Tests:
     check filesystem myfs with path /dev/sda1
-        if read rate > 1MB/s then alert
-        if read rate > 500 operations/s then alert
-        if write rate > 1MB/s then alert
-        if write rate > 500 operations/s then alert
+        if read rate > 1MB/s for 5 cycles then alert
+        if read rate > 5000 operations/s for 5 cycles then alert
+        if write rate > 1MB/s for 5 cycles then alert
+        if write rate > 5000 operations/s for 5 cycles then alert
         if service time > 10 milliseconds for 3 times within 5 cycles then alert
-//FIXME: move to monit manual + document above tests
-                       Type                  No Support
-        Solaris:       per-filesystem        CIFS
-        NetBSD:        per-disk              NFS
-        OpenBSD:       per-disk              NFS
-        FreeBSD:       per-disk              NFS, ZFS
-        DragonFlyBSD:  per-disk              HAMMER, NFS
-        Linux:         per-filesystem        FUSE
-        MacOS:         per-disk              NFS, CIFS
-        AIX:           disk io monitoring not supported
 
-New: The per-process read/write statistics is now displayed in Monit GUI and CLI
-on Linux and MacOS. Tests:
+New: The per-process read/write statistics is now displayed in Monit GUI and CLI. The available
+statistics depends on platform.
+Example for Linux and MacOS:
     check process myprocess matching "myprocess"
-        if disk read > 1 kb/s for 10 cycles then alert
-        if disk write > 1 kb/s for 10 cycles then alert
+        if disk read > 500 kb/s for 10 cycles then alert
+        if disk write > 500 kb/s for 10 cycles then alert
+Example for AIX, DragonFlyBSD, FreeBSD, NetBSD, OpenBSD and Solaris:
+    check process myprocess matching "myprocess"
+        if disk read > 100 operations/s for 10 cycles then alert
+        if disk write > 100 operations/s for 10 cycles then alert
 
 New: It is now possible to use NFS/CIFS/SSHFS/etc. connection strings for filesystem path. Examples:
         check filesystem mynfs with path "192.168.1.123:/home/myuser"
@@ -35,7 +30,7 @@ New: It is now possible to use NFS/CIFS/SSHFS/etc. connection strings for filesy
 
 New: Report filesystem type in the status output
 
-New: Linux: cache per-filesystem mount table status and refresh only if changed (some filesystem mounted/unmounted) //FIXME: list all platforms where mount table cache will be added/possible
+New: Linux and Solaris: cache per-filesystem mount table status and refresh only if changed (some filesystem mounted/unmounted).
 
 New: The Monit HTTP interface now allows to set the SSL/TLS version as well. The
 syntax follows the generic SSL/TLS options settings, which was introduced in

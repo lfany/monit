@@ -2480,7 +2480,7 @@ servicetime     : IF SERVICETIME operator NUMBER MILLISECOND rate1 THEN action1 
                         addeventaction(&(filesystemset).action, $<number>8, $<number>9);
                         addfilesystem(&filesystemset);
                   }
-                  | IF SERVICETIME operator value SECOND rate1 THEN action1 recovery {
+                | IF SERVICETIME operator value SECOND rate1 THEN action1 recovery {
                         filesystemset.resource = Resource_ServiceTime;
                         filesystemset.operator = $<number>3;
                         filesystemset.limit_absolute = $<real>4 * 1000;

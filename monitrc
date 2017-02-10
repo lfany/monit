@@ -212,18 +212,18 @@ set httpd port 2812 and
 #    if totalmem > 200.0 MB for 5 cycles then restart
 #    if children > 250 then restart
 #    if loadavg(5min) greater than 10 for 8 cycles then stop
-#    if failed host www.tildeslash.com port 80 protocol http
-#       and request "/somefile.html"
-#    then restart
+#    if disk read > 500 kb/s for 10 cycles then alert
+#    if disk write > 500 kb/s for 10 cycles then alert
+#    if failed host www.tildeslash.com port 80 protocol http and request "/somefile.html" then restart
 #    if failed port 443 protocol https with timeout 15 seconds then restart
 #    if 3 restarts within 5 cycles then unmonitor
 #    depends on apache_bin
 #    group server
 #
 #
-## Check filesystem permissions, uid, gid, space and inode usage. Other services,
-## such as databases, may depend on this resource and an automatically graceful
-## stop may be cascaded to them before the filesystem will become full and data
+## Check filesystem permissions, uid, gid, space usage, inode usage and disk I/O.
+## Other services, such as databases, may depend on this resource and an automatically
+## graceful stop may be cascaded to them before the filesystem will become full and data
 ## lost.
 #
 #  check filesystem datafs with path /dev/sdb1
@@ -236,6 +236,11 @@ set httpd port 2812 and
 #    if space usage > 99% then stop
 #    if inode usage > 30000 then alert
 #    if inode usage > 99% then stop
+#    if read rate > 1MB/s for 5 cycles then alert
+#    if read rate > 5000 operations/s for 5 cycles then alert
+#    if write rate > 1MB/s for 5 cycles then alert
+#    if write rate > 5000 operations/s for 5 cycles then alert
+#    if service time > 10 milliseconds for 3 times within 5 cycles then alert
 #    group server
 #
 #
