@@ -155,6 +155,34 @@ static void document_foot(StringBuffer_T B) {
 }
 
 
+static void _ioStatistics(StringBuffer_T B, const char *name, IOStatistics_T statistics) {
+        StringBuffer_append(B, "<%s>", name);
+        if (Statistics_initialized(&(statistics->bytes))) {
+                StringBuffer_append(B,
+                        "<bytes>"
+                        "<count>%.0lf</count>" // bytes per second
+                        "<total>%"PRIu64"</total>"  // bytes since boot
+                        "</bytes>",
+                        Statistics_deltaNormalize(&(statistics->bytes)),
+                        Statistics_raw(&(statistics->bytes)));
+        }
+        if (Statistics_initialized(&(statistics->operations))) {
+                double deltaOperations = Statistics_delta(&(statistics->operations));
+                StringBuffer_append(B,
+                        "<operations>"
+                        "<count>%.0lf</count>" // operations per second
+                        "<total>%"PRIu64"</total>", // operations since boot
+                        Statistics_deltaNormalize(&(statistics->operations)),
+                        Statistics_raw(&(statistics->operations)));
+                if (Statistics_initialized(&(statistics->time)))
+                        StringBuffer_append(B, "<servicetime>%.3f</servicetime>", deltaOperations > 0. ? Statistics_delta(&(statistics->time)) / deltaOperations : 0.);
+                StringBuffer_append(B,
+                        "</operations>");
+        }
+        StringBuffer_append(B, "</%s>", name);
+}
+
+
 /**
  * Prints a service status into the given buffer.
  * @param S Service object
@@ -235,6 +263,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
 
                         case Service_Filesystem:
                                 StringBuffer_append(B,
+                                        "<type>%s</type>"
                                         "<mode>%o</mode>"
                                         "<uid>%d</uid>"
                                         "<gid>%d</gid>"
@@ -244,6 +273,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         "<usage>%.1lf</usage>"
                                         "<total>%.1lf</total>"
                                         "</block>",
+                                        S->inf->priv.filesystem.object.type,
                                         S->inf->priv.filesystem.mode & 07777,
                                         (int)S->inf->priv.filesystem.uid,
                                         (int)S->inf->priv.filesystem.gid,
@@ -261,6 +291,18 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                                 S->inf->priv.filesystem.inode_percent,
                                                 S->inf->priv.filesystem.inode_total,
                                                 S->inf->priv.filesystem.f_files);
+                                }
+                                _ioStatistics(B, "read", &(S->inf->priv.filesystem.read));
+                                _ioStatistics(B, "write", &(S->inf->priv.filesystem.write));
+                                boolean_t hasWaitTime = Statistics_initialized(&(S->inf->priv.filesystem.waitTime));
+                                boolean_t hasRunTime = Statistics_initialized(&(S->inf->priv.filesystem.runTime));
+                                if (hasWaitTime || hasRunTime) {
+                                        StringBuffer_append(B, "<servicetime>");
+                                        if (hasWaitTime)
+                                                StringBuffer_append(B, "<wait>%.3f</wait>", Statistics_deltaNormalize(&(S->inf->priv.filesystem.waitTime)));
+                                        if (hasRunTime)
+                                                StringBuffer_append(B, "<run>%.3f</run>", Statistics_deltaNormalize(&(S->inf->priv.filesystem.runTime)));
+                                        StringBuffer_append(B, "</servicetime>");
                                 }
                                 break;
 
@@ -353,6 +395,8 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                                 S->inf->priv.process.cpu_percent,
                                                 S->inf->priv.process.total_cpu_percent);
                                 }
+                                _ioStatistics(B, "read", &(S->inf->priv.process.read));
+                                _ioStatistics(B, "write", &(S->inf->priv.process.write));
                                 break;
 
                         default:

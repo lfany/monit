@@ -53,6 +53,9 @@
 #include "ProcessTree.h"
 #include "process_sysdep.h"
 
+// libmonit
+#include "system/Time.h"
+
 
 /**
  *  System dependent resource data collecting code for MacOS X.
@@ -186,6 +189,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         }
                 }
                 if (! pt[i].zombie) {
+                        // CPU, memory, threads
                         struct proc_taskinfo tinfo;
                         int rv = proc_pidinfo(pt[i].pid, PROC_PIDTASKINFO, 0, &tinfo, sizeof(tinfo)); // If the process is zombie, skip this
                         if (rv <= 0) {
@@ -197,6 +201,16 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                                 pt[i].memory.usage = (uint64_t)tinfo.pti_resident_size;
                                 pt[i].cpu.time     = (double)(tinfo.pti_total_user + tinfo.pti_total_system) / 100000000.; // The time is in nanoseconds, we store it as 1/10s
                                 pt[i].threads      = tinfo.pti_threadnum;
+                        }
+                        // Disk IO
+                        rusage_info_current rusage;
+                        if (proc_pid_rusage(pt[i].pid, RUSAGE_INFO_CURRENT, (rusage_info_t *)&rusage) < 0) {
+                                if (errno != EPERM)
+                                        DEBUG("proc_pid_rusage for pid %d failed -- %s\n", pt[i].pid, STRERROR);
+                        } else {
+                                pt[i].read.time = pt[i].write.time = Time_milli();
+                                pt[i].read.bytes = rusage.ri_diskio_bytesread;
+                                pt[i].write.bytes = rusage.ri_diskio_byteswritten;
                         }
                 }
         }

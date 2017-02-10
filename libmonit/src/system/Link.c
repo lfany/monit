@@ -83,7 +83,7 @@
 
 static struct {
         struct ifaddrs *addrs;
-        time_t timestamp;
+        uint64_t timestamp;
 } _stats = {};
 
 
@@ -280,15 +280,16 @@ static void _updateHistory(T L) {
 
 static void _updateCache() {
 #ifdef HAVE_IFADDRS_H
-        time_t now = Time_now();
-        if (_stats.timestamp != now) {
+        uint64_t now = Time_milli();
+        // Refresh only if the statistics are older then 1 second (handle also backward time jumps)
+        if (now > _stats.timestamp + 1000 || now < _stats.timestamp - 1000) {
                 _stats.timestamp = now;
                 if (_stats.addrs) {
                         freeifaddrs(_stats.addrs);
                         _stats.addrs = NULL;
                 }
                 if (getifaddrs(&(_stats.addrs)) == -1) {
-                        _stats.timestamp = 0;
+                        _stats.timestamp = 0ULL;
                         THROW(AssertException, "Cannot get network statistics -- %s", System_getError(errno));
                 }
         }

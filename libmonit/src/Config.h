@@ -41,6 +41,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <string.h>
+#include <sys/types.h>
 #ifdef HAVE_MACH_BOOLEAN_H
 #include <mach/boolean.h>
 #endif

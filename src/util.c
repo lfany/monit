@@ -1253,6 +1253,16 @@ void Util_printService(Service_T s) {
                         } else {
                                printf(" %-20s = %s\n", "Space free limit", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %.1f%%", operatornames[o->operator], o->limit_percent)));
                         }
+                } else if (o->resource == Resource_ReadBytes) {
+                        printf(" %-20s = %s\n", "Read limit", StringBuffer_toString(Util_printRule(buf, o->action, "if read %s %s/s", operatornames[o->operator], Str_bytesToSize(o->limit_absolute, (char[10]){}))));
+                } else if (o->resource == Resource_ReadOperations) {
+                        printf(" %-20s = %s\n", "Read limit", StringBuffer_toString(Util_printRule(buf, o->action, "if read %s %llu operations/s", operatornames[o->operator], o->limit_absolute)));
+                } else if (o->resource == Resource_WriteBytes) {
+                        printf(" %-20s = %s\n", "Write limit", StringBuffer_toString(Util_printRule(buf, o->action, "if write %s %s/s", operatornames[o->operator], Str_bytesToSize(o->limit_absolute, (char[10]){}))));
+                } else if (o->resource == Resource_WriteOperations) {
+                        printf(" %-20s = %s\n", "Write limit", StringBuffer_toString(Util_printRule(buf, o->action, "if write %s %llu operations/s", operatornames[o->operator], o->limit_absolute)));
+                } else if (o->resource == Resource_ServiceTime) {
+                        printf(" %-20s = %s\n", "Service time limit", StringBuffer_toString(Util_printRule(buf, o->action, "if service time %s %s/operation", operatornames[o->operator], Str_milliToTime(o->limit_absolute, (char[23]){}))));
                 }
         }
 
@@ -1322,6 +1332,23 @@ void Util_printService(Service_T s) {
                         case Resource_MemoryPercentTotal:
                                 printf(" %-20s = ", "Memory usage limit (incl. children)");
                                 break;
+
+                        case Resource_ReadBytes:
+                                printf(" %-20s = ", "Disk read limit");
+                                break;
+
+                        case Resource_ReadOperations:
+                                printf(" %-20s = ", "Disk read limit");
+                                break;
+
+                        case Resource_WriteBytes:
+                                printf(" %-20s = ", "Disk write limit");
+                                break;
+
+                        case Resource_WriteOperations:
+                                printf(" %-20s = ", "Disk write limit");
+                                break;
+
                         default:
                                 break;
                 }
@@ -1352,6 +1379,16 @@ void Util_printService(Service_T s) {
                         case Resource_Threads:
                         case Resource_Children:
                                 printf("%s", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %.0f", operatornames[o->operator], o->limit)));
+                                break;
+
+                        case Resource_ReadBytes:
+                        case Resource_WriteBytes:
+                                printf("%s", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %s/s", operatornames[o->operator], Str_bytesToSize(o->limit, (char[10]){}))));
+                                break;
+
+                        case Resource_ReadOperations:
+                        case Resource_WriteOperations:
+                                printf("%s", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %llu operations/s", operatornames[o->operator], o->limit)));
                                 break;
 
                         default:
@@ -1655,6 +1692,13 @@ boolean_t Util_checkCredentials(char *uname, char *outside) {
 }
 
 
+static void _resetIOStatistics(IOStatistics_T S) {
+        Statistics_reset(&(S->operations));
+        Statistics_reset(&(S->bytes));
+        Statistics_reset(&(S->time));
+}
+
+
 void Util_resetInfo(Service_T s) {
         switch (s->type) {
                 case Service_Filesystem:
@@ -1673,6 +1717,10 @@ void Util_resetInfo(Service_T s) {
                         s->inf->priv.filesystem.mode = -1;
                         s->inf->priv.filesystem.uid = -1;
                         s->inf->priv.filesystem.gid = -1;
+                        _resetIOStatistics(&(s->inf->priv.filesystem.read));
+                        _resetIOStatistics(&(s->inf->priv.filesystem.write));
+                        Statistics_reset(&(s->inf->priv.filesystem.waitTime));
+                        Statistics_reset(&(s->inf->priv.filesystem.runTime));
                         break;
                 case Service_File:
                         // persistent: st_inode, readpos
@@ -1714,6 +1762,8 @@ void Util_resetInfo(Service_T s) {
                         s->inf->priv.process.cpu_percent = -1.;
                         s->inf->priv.process.total_cpu_percent = -1.;
                         s->inf->priv.process.uptime = -1;
+                        _resetIOStatistics(&(s->inf->priv.process.read));
+                        _resetIOStatistics(&(s->inf->priv.process.write));
                         break;
                 case Service_Net:
                         if (s->inf->priv.net.stats)

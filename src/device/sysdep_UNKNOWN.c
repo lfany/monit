@@ -31,15 +31,22 @@
 #include "config.h"
 
 #include "monit.h"
-#include "device_sysdep.h"
 
-char *device_mountpoint_sysdep(char *dev, char *buf, int buflen) {
-        LogError("Unsupported mounted filesystem information method\n");
-        return NULL;
+
+/* ------------------------------------------------------------------ Public */
+
+
+boolean_t Filesystem_getByMountpoint(Info_T inf, const char *path) {
+        ASSERT(inf);
+        ASSERT(path);
+        LogError("Unsupported filesystem data collection method\n");
+        return false;
 }
 
 
-boolean_t filesystem_usage_sysdep(Info_T inf) {
+boolean_t Filesystem_getByDevice(Info_T inf, const char *path) {
+        ASSERT(inf);
+        ASSERT(path);
         LogError("Unsupported filesystem data collection method\n");
         return false;
 }

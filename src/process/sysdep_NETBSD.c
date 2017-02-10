@@ -169,16 +169,18 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         if (pflags & ProcessEngine_CollectCommandLine)
                 cmdline = StringBuffer_create(64);
         for (int i = 0; i < treesize; i++) {
-                pt[i].pid          = pinfo[i].p_pid;
-                pt[i].ppid         = pinfo[i].p_ppid;
-                pt[i].cred.uid     = pinfo[i].p_ruid;
-                pt[i].cred.euid    = pinfo[i].p_uid;
-                pt[i].cred.gid     = pinfo[i].p_rgid;
-                pt[i].threads      = pinfo[i].p_nlwps;
-                pt[i].uptime       = systeminfo.time / 10. - pinfo[i].p_ustart_sec;
-                pt[i].cpu.time     = pinfo[i].p_rtime_sec * 10 + (double)pinfo[i].p_rtime_usec / 100000.;
-                pt[i].memory.usage = (uint64_t)pinfo[i].p_vm_rssize * (uint64_t)pagesize;
-                pt[i].zombie       = pinfo[i].p_stat == SZOMB ? true : false;
+                pt[i].pid              = pinfo[i].p_pid;
+                pt[i].ppid             = pinfo[i].p_ppid;
+                pt[i].cred.uid         = pinfo[i].p_ruid;
+                pt[i].cred.euid        = pinfo[i].p_uid;
+                pt[i].cred.gid         = pinfo[i].p_rgid;
+                pt[i].threads          = pinfo[i].p_nlwps;
+                pt[i].uptime           = systeminfo.time / 10. - pinfo[i].p_ustart_sec;
+                pt[i].cpu.time         = pinfo[i].p_rtime_sec * 10 + (double)pinfo[i].p_rtime_usec / 100000.;
+                pt[i].memory.usage     = (uint64_t)pinfo[i].p_vm_rssize * (uint64_t)pagesize;
+                pt[i].zombie           = pinfo[i].p_stat == SZOMB ? true : false;
+                pt[i].read.operations  = pinfo[i].p_uru_inblock;
+                pt[i].write.operations = pinfo[i].p_uru_oublock;
                 if (pflags & ProcessEngine_CollectCommandLine) {
                         char **args = kvm_getargv2(kvm_handle, &pinfo[i], 0);
                         if (args) {

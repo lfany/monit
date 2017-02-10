@@ -179,6 +179,7 @@ does              {/* EMPTY */}
 per               {/* EMPTY */}
 in                {/* EMPTY */}
 last              {/* EMPTY */}
+rate              {/* EMPTY */}
 capacity          {/* EMPTY */}
 option(s)?        {/* EMPTY */}
 ssl[ \t]+disable  {/* EMPTY */}
@@ -243,6 +244,11 @@ init              { return INIT; }
 allow             { return ALLOW; }
 reject            { return REJECTOPT; }
 read[-]?only      { return READONLY; }
+disk              { return DISK; }
+read              { return READ; }
+write             { return WRITE; }
+service[ ]?time   { return SERVICETIME; }
+operation(s)?("/s")? { return OPERATION; }
 pidfile           { return PIDFILE; }
 idfile            { return IDFILE; }
 statefile         { return STATEFILE; }

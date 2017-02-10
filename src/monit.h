@@ -129,6 +129,7 @@ typedef enum {
 #include "util/Str.h"
 #include "util/StringBuffer.h"
 #include "system/Link.h"
+#include "statistics/Statistics.h"
 #include "thread/Thread.h"
 
 
@@ -311,7 +312,12 @@ typedef enum {
         Resource_CpuPercentTotal,
         Resource_SwapPercent,
         Resource_SwapKbyte,
-        Resource_Threads
+        Resource_Threads,
+        Resource_ReadBytes,
+        Resource_ReadOperations,
+        Resource_WriteBytes,
+        Resource_WriteOperations,
+        Resource_ServiceTime
 } __attribute__((__packed__)) Resource_Type;
 
 
@@ -933,6 +939,28 @@ typedef struct myfilesystem {
 } *Filesystem_T;
 
 
+typedef struct IOStatistics_T {
+        struct Statistics_T operations;        /**< Number of operations completed */
+        struct Statistics_T bytes;      /**< Number of bytes handled by operations */
+        struct Statistics_T time;               /**< Time spend by operations [ms] */
+} *IOStatistics_T;
+
+
+typedef struct Device_T {
+        boolean_t mounted;
+        int generation;
+        int instance;
+        char partition;
+        char device[PATH_MAX];
+        char mountpoint[PATH_MAX];
+        char key[PATH_MAX];
+        char module[256];
+        char type[64];
+        boolean_t (*getDiskUsage)(void *);
+        boolean_t (*getDiskActivity)(void *);
+} *Device_T;
+
+
 /** Defines service data */
 typedef struct myinfo {
         union {
@@ -952,6 +980,11 @@ typedef struct myinfo {
                         int uid;                                              /**< Owner's uid */
                         int gid;                                              /**< Owner's gid */
                         int mode;                                              /**< Permission */
+                        struct IOStatistics_T read;                       /**< Read statistics */
+                        struct IOStatistics_T write;                     /**< Write statistics */
+                        struct Statistics_T waitTime;       /**< Time spend in wait queue [ms] */
+                        struct Statistics_T runTime;         /**< Time spend in run queue [ms] */
+                        struct Device_T object;                             /**< Device object */
                 } filesystem;
 
                 struct {
@@ -998,6 +1031,8 @@ typedef struct myinfo {
                         float cpu_percent;                                     /**< percentage */
                         float total_cpu_percent;                               /**< percentage */
                         time_t uptime;                                     /**< Process uptime */
+                        struct IOStatistics_T read;                       /**< Read statistics */
+                        struct IOStatistics_T write;                     /**< Write statistics */
                 } process;
 
                 struct {

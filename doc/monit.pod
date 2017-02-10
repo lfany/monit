@@ -383,18 +383,11 @@ method is not defined, Monit will just send an alert on error.
 
 =head3 Filesystem
 
-    CHECK FILESYSTEM <unique name> PATH <path>
+    CHECK FILESYSTEM <unique name> PATH <string>
 
-<path> is the path to the device/disk, mount point, file or a directory
-which is part of a filesystem. It is recommended to use a block special
-file directly (for example /dev/hda1 on Linux or /dev/dsk/c0t0d0s1 on
-Solaris, etc.) If you use a mount point (for example /data), note if
-the filesystem is unmounted the test will still be true because the
-mount point exist.
-
-If the filesystem becomes unavailable, Monit will call the entry's
-start method if defined. if <path> does not point to a filesystem,
-Monit will disable monitoring of this entry. If Monit runs in passive
+<path> is the path to the device/disk, mount point or NFS/CIFS/FUSE
+connection string. If the filesystem becomes unavailable, Monit will
+call the service's start method if defined.  If Monit runs in passive
 mode or the start method is not defined, Monit will just send an alert
 on error.
 
@@ -410,11 +403,11 @@ defined, Monit will just send an alert on error.
 
 =head3 Remote host
 
-    CHECK HOST <unique name> ADDRESS <host address>
+    CHECK HOST <unique name> ADDRESS <host>
 
 The host address can be specified as a hostname string or as an
 IP-address string on a dotted decimal format. Such as,
-tildeslash.com or "64.87.72.95".
+"tildeslash.com" or "64.87.72.95".
 
 =head3 System
 
@@ -1720,7 +1713,7 @@ Options legend:
  | programTimeout    | timeout for check program                        | 300 s   |
  | stopTimeout       | timeout for service stop                         | 30 s    |
  | startTimeout      | timeout for service start                        | 30 s    |
- | startTimeout      | timeout for service restart                      | 30 s    |
+ | restartTimeout    | timeout for service restart                      | 30 s    |
  ----------------------------------------------------------------------------------
 
 
@@ -1967,6 +1960,110 @@ does, Monit will restart the service:
  if cpu is greater than 50% for 5 cycles then restart
 
 
+=head2 PROCESS DISK I/O TESTING
+
+Monit can test process' filesystem read and write activity. This test
+may only be used in the context of a process service type.
+
+The platform usually supports the per-process I/O activity statistics
+either by bytes or by operations.
+
+Per-process I/O activity statistics by platform:
+
+ -----------------------------------
+ | Platform     | Operation | Byte |
+ -----------------------------------
+ | AIX          |     x     |      |
+ | DragonFlyBSD |     x     |      |
+ | FreeBSD      |     x     |      |
+ | Linux        |           |  x   |
+ | MacOS        |           |  x   |
+ | NetBSD       |     x     |      |
+ | OpenBSD      |     x     |      |
+ | Solaris      |     x     |      |
+ -----------------------------------
+
+=head3 Read: bytes per second
+
+Syntax:
+
+ IF DISK READ [RATE] <operator> <number> <unit>/S THEN action
+
+I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
+"lt", "eq", "ne" in shell sh notation and "greater", "less",
+"equal", "notequal" in human readable form (if not specified,
+default is EQUAL).
+
+I<unit> is a choice of "B","KB","MB","GB" or long
+alternatives "byte", "kilobyte", "megabyte", "gigabyte",
+"percent".
+
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
+"EXEC" or "UNMONITOR".
+
+Example:
+
+        if disk read > 1MB/s then alert
+
+=head3 Read: operations per second
+
+Syntax:
+
+ IF DISK READ <operator> <number> operations/S THEN action
+
+I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
+"lt", "eq", "ne" in shell sh notation and "greater", "less",
+"equal", "notequal" in human readable form (if not specified,
+default is EQUAL).
+
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
+"EXEC" or "UNMONITOR".
+
+Example:
+
+        if disk read rate > 500 operations/s then alert
+
+=head3 Write: bytes per second
+
+Syntax:
+
+ IF DISK WRITE <operator> <number> <unit>/S THEN action
+
+I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
+"lt", "eq", "ne" in shell sh notation and "greater", "less",
+"equal", "notequal" in human readable form (if not specified,
+default is EQUAL).
+
+I<unit> is a choice of "B","KB","MB","GB" or long
+alternatives "byte", "kilobyte", "megabyte", "gigabyte",
+"percent".
+
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
+"EXEC" or "UNMONITOR".
+
+Example:
+
+        if disk write rate > 1MB/s then alert
+
+=head3 Write: operations per second
+
+Syntax:
+
+ IF DISK WRITE <operator> <number> operations/S THEN action
+
+I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
+"lt", "eq", "ne" in shell sh notation and "greater", "less",
+"equal", "notequal" in human readable form (if not specified,
+default is EQUAL).
+
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
+"EXEC" or "UNMONITOR".
+
+Example:
+
+        if disk write rate > 500 operations/s then alert
+
+
 =head2 FILE CHECKSUM TESTING
 
 The checksum statement may only be used in a file service
@@ -2126,9 +2223,9 @@ For example:
         if content = "^mrcoffee" then alert
 
 
-=head2 FILESYSTEM FLAGS TESTING
+=head2 FILESYSTEM MOUNT FLAGS TESTING
 
-Monit can test the flags of a filesystem for changes. This test is
+Monit can test the filesystem mount flags for changes. This test is
 implicit and Monit will send alert in case of failure by default.
 
 This test is useful for detecting changes of filesystem flags such as
@@ -2148,7 +2245,7 @@ Example:
        if changed fsflags then exec "/my/script"
 
 
-=head2 SPACE TESTING
+=head2 SPACE USAGE TESTING
 
 Monit can test a filesystem or a disk for space usage. This test may
 only be used in the context of a filesystem service type.
@@ -2187,7 +2284,7 @@ Example:
        if space usage > 90% then alert
 
 
-=head2 INODE TESTING
+=head2 INODE USAGE TESTING
 
 Monit can test filesystem inode usage. This test may only be used
 in the context of a filesystem service type.
@@ -2216,6 +2313,132 @@ Example:
 
  check filesystem rootfs with path /
        if inode usage > 90% then alert
+
+
+=head2 DISK I/O TESTING
+
+Monit can test a filesystem read and write activity. This test may
+only be used in the context of a filesystem service type.
+
+The I/O granularity and supported filesystems depend on the platform
+API. Some platforms allow to get I/O activity for specific pertition,
+other just for the whole disk. Some allow to get statistics for
+network filesystems too, others just for block devices.
+
+Platforms I/O statistics granularity and filesystem support:
+
+ ---------------------------------------------------------------------------------------
+ | Platform     | Granularity    | Supported filesystems                      | TBD    |
+ ---------------------------------------------------------------------------------------
+ | AIX          | per-disk       | disk io monitoring not supported currently | JFSx   |
+ | DragonFlyBSD | per-disk       | UFS                                        | HAMMER |
+ | FreeBSD      | per-disk       | UFS                                        | ZFS    |
+ | Linux        | per-filesystem | EXTx, XFS, NFS, CIFS                       |        |
+ | MacOS        | per-disk       | HFS                                        |        |
+ | NetBSD       | per-disk       | FFS                                        | NFS    |
+ | OpenBSD      | per-disk       | FFS                                        |        |
+ | Solaris      | per-filesystem | ZFS, UFS, NFS                              |        |
+ ---------------------------------------------------------------------------------------
+
+=head3 Read: bytes per second
+
+Syntax:
+
+ IF READ [RATE] <operator> <number> <unit>/S THEN action
+
+I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
+"lt", "eq", "ne" in shell sh notation and "greater", "less",
+"equal", "notequal" in human readable form (if not specified,
+default is EQUAL).
+
+I<unit> is a choice of "B","KB","MB","GB" or long
+alternatives "byte", "kilobyte", "megabyte", "gigabyte",
+"percent".
+
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
+"EXEC" or "UNMONITOR".
+
+Example:
+
+        if read rate > 1MB/s then alert
+
+=head3 Read: operations per second
+
+Syntax:
+
+ IF READ [RATE] <operator> <number> operations/S THEN action
+
+I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
+"lt", "eq", "ne" in shell sh notation and "greater", "less",
+"equal", "notequal" in human readable form (if not specified,
+default is EQUAL).
+
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
+"EXEC" or "UNMONITOR".
+
+Example:
+
+        if read rate > 500 operations/s then alert
+
+=head3 Write: bytes per second
+
+Syntax:
+
+ IF WRITE [RATE] <operator> <number> <unit>/S THEN action
+
+I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
+"lt", "eq", "ne" in shell sh notation and "greater", "less",
+"equal", "notequal" in human readable form (if not specified,
+default is EQUAL).
+
+I<unit> is a choice of "B","KB","MB","GB" or long
+alternatives "byte", "kilobyte", "megabyte", "gigabyte",
+"percent".
+
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
+"EXEC" or "UNMONITOR".
+
+Example:
+
+        if write rate > 1MB/s then alert
+
+=head3 Write: operations per second
+
+Syntax:
+
+ IF WRITE [RATE] <operator> <number> operations/S THEN action
+
+I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
+"lt", "eq", "ne" in shell sh notation and "greater", "less",
+"equal", "notequal" in human readable form (if not specified,
+default is EQUAL).
+
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
+"EXEC" or "UNMONITOR".
+
+Example:
+
+        if write rate > 500 operations/s then alert
+
+=head3 Service time
+
+Syntax:
+
+ IF SERVICE TIME <operator> <number> <unit> THEN action
+
+I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
+"lt", "eq", "ne" in shell sh notation and "greater", "less",
+"equal", "notequal" in human readable form (if not specified,
+default is EQUAL).
+
+I<unit> is "MS" (millisecond) or "S" (second)
+
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
+"EXEC" or "UNMONITOR".
+
+Example:
+
+        if service time > 10 milliseconds for 3 times within 5 cycles then alert
 
 
 =head2 PERMISSION TESTING

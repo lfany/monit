@@ -25,7 +25,11 @@
 #ifndef MONIT_DEVICE_H
 #define MONIT_DEVICE_H
 
+
 boolean_t filesystem_usage(Service_T);
+boolean_t Filesystem_getByMountpoint(Info_T inf, const char *path);
+boolean_t Filesystem_getByDevice(Info_T inf, const char *path);
+
 
 #endif
 

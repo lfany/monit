@@ -54,6 +54,16 @@ typedef struct ProcessTree_T {
                 uint64_t usage;
                 uint64_t usage_total;
         } memory;
+        struct {
+                uint64_t time;
+                uint64_t bytes;
+                uint64_t operations;
+        } read;
+        struct {
+                uint64_t time;
+                uint64_t bytes;
+                uint64_t operations;
+        } write;
         time_t uptime;
         char *cmdline;
 } ProcessTree_T;
