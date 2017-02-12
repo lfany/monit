@@ -83,29 +83,15 @@
 
 #define MOUNTS   "/proc/self/mounts"
 #define CIFSSTAT "/proc/fs/cifs/Stats"
+#define DISKSTAT "/proc/diskstats"
 #define NFSSTAT  "/proc/self/mountstats"
 
 
 static struct {
-        int fd;         // /proc/self/mounts filedescriptor (needed for mount/unmount notification)
-        int generation; // Increment each time the mount table is changed
+        int fd;                                    // /proc/self/mounts filedescriptor (needed for mount/unmount notification)
+        int generation;                            // Increment each time the mount table is changed
+        boolean_t (*getBlockDiskActivity)(void *); // Disk activity callback: _getProcfsBlockDiskActivity (old kernels), _getSysfsBlockDiskActivity (new kernels)
 } _statistics = {};
-
-
-/* --------------------------------------- Static constructor and destructor */
-
-
-static void __attribute__ ((constructor)) _constructor() {
-        _statistics.fd = -1;
-        _statistics.generation++; // First generation
-}
-
-
-static void __attribute__ ((destructor)) _destructor() {
-        if (_statistics.fd > -1) {
-                  close(_statistics.fd);
-        }
-}
 
 
 /* ----------------------------------------------------------------- Private */
@@ -214,7 +200,7 @@ static boolean_t _getNfsDiskActivity(void *_inf) {
 }
 
 
-static boolean_t _getBlockDiskActivity(void *_inf) {
+static boolean_t _getSysfsBlockDiskActivity(void *_inf) {
         Info_T inf = _inf;
         char path[PATH_MAX];
         snprintf(path, sizeof(path), "/sys/class/block/%s/stat", inf->priv.filesystem.object.key);
@@ -235,8 +221,36 @@ static boolean_t _getBlockDiskActivity(void *_inf) {
                 Statistics_update(&(inf->priv.filesystem.write.bytes), now, writeSectors * 512);
                 Statistics_update(&(inf->priv.filesystem.write.operations), now, writeOperations);
                 fclose(f);
+                return true;
+        }
+        LogError("filesystem statistic error: cannot read %s -- %s\n", path, STRERROR);
+        return false;
+}
+
+
+static boolean_t _getProcfsBlockDiskActivity(void *_inf) {
+        Info_T inf = _inf;
+        FILE *f = fopen(DISKSTAT, "r");
+        if (f) {
+                uint64_t now = Time_milli();
+                uint64_t readOperations = 0ULL, readSectors = 0ULL, readTime = 0ULL;
+                uint64_t writeOperations = 0ULL, writeSectors = 0ULL, writeTime = 0ULL;
+                char line[PATH_MAX];
+                while (fgets(line, sizeof(line), f)) {
+                        char name[256] = {};
+                        if (fscanf(f, " %*d %*d %255s %"PRIu64" %*u %"PRIu64" %"PRIu64" %"PRIu64" %*u %"PRIu64" %"PRIu64" %*u %*u %*u", name, &readOperations, &readSectors, &readTime, &writeOperations, &writeSectors, &writeTime) == 7 && IS(name, inf->priv.filesystem.object.key)) {
+                                Statistics_update(&(inf->priv.filesystem.read.time), now, readTime);
+                                Statistics_update(&(inf->priv.filesystem.read.bytes), now, readSectors * 512);
+                                Statistics_update(&(inf->priv.filesystem.read.operations), now, readOperations);
+                                Statistics_update(&(inf->priv.filesystem.write.time), now, writeTime);
+                                Statistics_update(&(inf->priv.filesystem.write.bytes), now, writeSectors * 512);
+                                Statistics_update(&(inf->priv.filesystem.write.operations), now, writeOperations);
+                                fclose(f);
+                                return true;
+                        }
+                }
         } else {
-                LogError("filesystem statistic error: cannot read %s -- %s\n", path, STRERROR);
+                LogError("filesystem statistic error: cannot read %s -- %s\n", DISKSTAT, STRERROR);
                 return false;
         }
         return true;
@@ -282,7 +296,7 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                                 // Need base name for /sys/class/block/<NAME>/stat lookup:
                                 if (realpath(mnt->mnt_fsname, inf->priv.filesystem.object.key)) {
                                         // Block device
-                                        inf->priv.filesystem.object.getDiskActivity = _getBlockDiskActivity;
+                                        inf->priv.filesystem.object.getDiskActivity = _statistics.getBlockDiskActivity;
                                         snprintf(inf->priv.filesystem.object.key, sizeof(inf->priv.filesystem.object.key), "%s", File_basename(inf->priv.filesystem.object.key));
                                 } else {
                                         // FUSE (sshfs, etc.) or virtual filesystem (procfs, tmpfs, etc.) -> ENOENT doesn't mean error
@@ -332,6 +346,24 @@ static boolean_t _getDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                 return (inf->priv.filesystem.object.getDiskUsage(inf) && inf->priv.filesystem.object.getDiskActivity(inf));
         }
         return false;
+}
+
+
+/* --------------------------------------- Static constructor and destructor */
+
+
+static void __attribute__ ((constructor)) _constructor() {
+        struct stat sb;
+        _statistics.fd = -1;
+        _statistics.generation++; // First generation
+        _statistics.getBlockDiskActivity = stat("/sys/class/block", &sb) == 0 ? _getSysfsBlockDiskActivity : _getProcfsBlockDiskActivity;
+}
+
+
+static void __attribute__ ((destructor)) _destructor() {
+        if (_statistics.fd > -1) {
+                  close(_statistics.fd);
+        }
 }
 
 
