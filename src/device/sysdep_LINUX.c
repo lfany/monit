@@ -294,20 +294,15 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                                 // Need Windows style name - replace '/' with '\' so we can lookup the filesystem activity in /proc/fs/cifs/Stats
                                 strncpy(inf->priv.filesystem.object.key, inf->priv.filesystem.object.device, sizeof(inf->priv.filesystem.object.key) - 1);
                                 Str_replaceChar(inf->priv.filesystem.object.key, '/', '\\');
-                        } else  {
+                        } else if (Str_startsWith(mnt->mnt_type, "ext") || IS(mnt->mnt_type, "xfs")) {
                                 // Need base name for /sys/class/block/<NAME>/stat lookup:
                                 if (realpath(mnt->mnt_fsname, inf->priv.filesystem.object.key)) {
                                         // Block device
                                         inf->priv.filesystem.object.getDiskActivity = _statistics.getBlockDiskActivity;
                                         snprintf(inf->priv.filesystem.object.key, sizeof(inf->priv.filesystem.object.key), "%s", File_basename(inf->priv.filesystem.object.key));
-                                } else {
-                                        // FUSE (sshfs, etc.) or virtual filesystem (procfs, tmpfs, etc.) -> ENOENT doesn't mean error
-                                        inf->priv.filesystem.object.getDiskActivity = _getDummyDiskActivity;
-                                        if (errno != ENOENT) {
-                                                LogError("Lookup for '%s' filesystem failed -- %s\n", path, STRERROR);
-                                                goto error;
-                                        }
                                 }
+                        } else {
+                                inf->priv.filesystem.object.getDiskActivity = _getDummyDiskActivity;
                         }
                         endmntent(f);
                         inf->priv.filesystem.object.mounted = true;
