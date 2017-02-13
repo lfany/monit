@@ -92,12 +92,15 @@ boolean_t filesystem_usage(Service_T s) {
                         }
                 }
         } else {
-                if (S_ISDIR(sb.st_mode)) {
-                        // Directory -> mountpoint
-                        rv = Filesystem_getByMountpoint(s->inf, s->path);
-                } else if (S_ISBLK(sb.st_mode) || S_ISCHR(sb.st_mode)) {
-                        // Block or character device
-                        rv = Filesystem_getByDevice(s->inf, s->path);
+                char buf[PATH_MAX] = {};
+                if (realpath(s->path, buf)) {
+                        if (S_ISDIR(sb.st_mode)) {
+                                // Directory -> mountpoint
+                                rv = Filesystem_getByMountpoint(s->inf, buf);
+                        } else if (S_ISBLK(sb.st_mode) || S_ISCHR(sb.st_mode)) {
+                                // Block or character device
+                                rv = Filesystem_getByDevice(s->inf, buf);
+                        }
                 }
         }
         if (rv) {
