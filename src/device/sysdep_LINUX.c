@@ -290,7 +290,7 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                                 inf->priv.filesystem.object.getDiskActivity = _getNfsDiskActivity;
                         } else if (IS(mnt->mnt_type, "cifs")) {
                                 // CIFS
-                                inf->priv.filesystem.object.getDiskActivity = _getCifsDiskActivity;
+                                inf->priv.filesystem.object.getDiskActivity = _statistics.getCifsDiskActivity;
                                 // Need Windows style name - replace '/' with '\' so we can lookup the filesystem activity in /proc/fs/cifs/Stats
                                 strncpy(inf->priv.filesystem.object.key, inf->priv.filesystem.object.device, sizeof(inf->priv.filesystem.object.key) - 1);
                                 Str_replaceChar(inf->priv.filesystem.object.key, '/', '\\');
