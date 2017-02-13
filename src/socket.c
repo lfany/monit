@@ -358,7 +358,7 @@ T Socket_createUnix(const char *path, Socket_Type type, int timeout) {
                 struct sockaddr_un unixsocket_client = {};
                 if (type == Socket_Udp) {
                         unixsocket_client.sun_family = AF_UNIX;
-                        snprintf(unixsocket_client.sun_path, sizeof(unixsocket_client.sun_path), "/tmp/monit_%llx.sock", (long long unsigned)&unixsocket_client);
+                        snprintf(unixsocket_client.sun_path, sizeof(unixsocket_client.sun_path), "/tmp/monit_%p.sock", &unixsocket_client);
                         if (bind(s, (struct sockaddr *) &unixsocket_client, sizeof(unixsocket_client)) != 0) {
                                 LogError("Unix socket %s bind error -- %s\n", unixsocket_client.sun_path, STRERROR);
                                 goto error;
