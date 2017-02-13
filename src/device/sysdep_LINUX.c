@@ -91,6 +91,7 @@ static struct {
         int fd;                                    // /proc/self/mounts filedescriptor (needed for mount/unmount notification)
         int generation;                            // Increment each time the mount table is changed
         boolean_t (*getBlockDiskActivity)(void *); // Disk activity callback: _getProcfsBlockDiskActivity (old kernels), _getSysfsBlockDiskActivity (new kernels)
+        boolean_t (*getCifsDiskActivity)(void *);  // Disk activity callback: _getCifsDiskActivity if /proc/fs/cifs/Stats is present, otherwise _getDummyDiskActivity
 } _statistics = {};
 
 
@@ -358,6 +359,7 @@ static void __attribute__ ((constructor)) _constructor() {
         _statistics.fd = -1;
         _statistics.generation++; // First generation
         _statistics.getBlockDiskActivity = stat("/sys/class/block", &sb) == 0 ? _getSysfsBlockDiskActivity : _getProcfsBlockDiskActivity;
+        _statistics.getCifsDiskActivity = stat(CIFSSTAT, &sb) == 0 ? _getCifsDiskActivity : _getDummyDiskActivity;
 }
 
 
