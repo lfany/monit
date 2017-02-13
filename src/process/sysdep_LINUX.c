@@ -87,6 +87,23 @@
  */
 
 
+/* ------------------------------------------------------------- Definitions */
+
+
+static struct {
+        int hasIOStatistics; // True if /proc/<PID>/io is present
+} _statistics = {};
+
+
+/* --------------------------------------- Static constructor and destructor */
+
+
+static void __attribute__ ((constructor)) _constructor() {
+        struct stat sb;
+        _statistics.hasIOStatistics = stat("/proc/self/io", &sb) == 0 ? true : false;
+}
+
+
 /* ----------------------------------------------------------------- Private */
 
 
@@ -273,25 +290,27 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 }
 
                 /********** /proc/PID/io **********/
-                if (file_readProc(buf, sizeof(buf), "io", stat_pid, NULL)) {
-                        if (! (tmp = strstr(buf, "read_bytes:"))) {
-                                DEBUG("system statistic error -- cannot find process read_bytes\n");
-                                continue;
+                if (_statistics.hasIOStatistics) {
+                        if (file_readProc(buf, sizeof(buf), "io", stat_pid, NULL)) {
+                                if (! (tmp = strstr(buf, "read_bytes:"))) {
+                                        DEBUG("system statistic error -- cannot find process read_bytes\n");
+                                        continue;
+                                }
+                                if (sscanf(tmp + 11, "\t%"PRIu64, &stat_read_bytes) != 1) {
+                                        DEBUG("system statistic error -- cannot get process read bytes\n");
+                                        continue;
+                                }
+                                if (! (tmp = strstr(buf, "write_bytes:"))) {
+                                        DEBUG("system statistic error -- cannot find process write_bytes\n");
+                                        continue;
+                                }
+                                if (sscanf(tmp + 12, "\t%"PRIu64, &stat_write_bytes) != 1) {
+                                        DEBUG("system statistic error -- cannot get process write bytes\n");
+                                        continue;
+                                }
+                        } else {
+                                DEBUG("system statistic error -- cannot read /proc/%d/io\n", stat_pid);
                         }
-                        if (sscanf(tmp + 11, "\t%"PRIu64, &stat_read_bytes) != 1) {
-                                DEBUG("system statistic error -- cannot get process read bytes\n");
-                                continue;
-                        }
-                        if (! (tmp = strstr(buf, "write_bytes:"))) {
-                                DEBUG("system statistic error -- cannot find process write_bytes\n");
-                                continue;
-                        }
-                        if (sscanf(tmp + 12, "\t%"PRIu64, &stat_write_bytes) != 1) {
-                                DEBUG("system statistic error -- cannot get process write bytes\n");
-                                continue;
-                        }
-                } else {
-                        DEBUG("system statistic error -- cannot read /proc/%d/io\n", stat_pid);
                 }
 
                 /********** /proc/PID/cmdline **********/
