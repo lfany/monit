@@ -233,16 +233,17 @@ static boolean_t _getProcfsBlockDiskActivity(void *_inf) {
         FILE *f = fopen(DISKSTAT, "r");
         if (f) {
                 uint64_t now = Time_milli();
-                uint64_t readOperations = 0ULL, readSectors = 0ULL, readTime = 0ULL;
-                uint64_t writeOperations = 0ULL, writeSectors = 0ULL, writeTime = 0ULL;
+                uint64_t readOperations = 0ULL, readSectors = 0ULL;
+                uint64_t writeOperations = 0ULL, writeSectors = 0ULL;
                 char line[PATH_MAX];
                 while (fgets(line, sizeof(line), f)) {
                         char name[256] = {};
-                        if (fscanf(f, " %*d %*d %255s %"PRIu64" %*u %"PRIu64" %"PRIu64" %"PRIu64" %*u %"PRIu64" %"PRIu64" %*u %*u %*u", name, &readOperations, &readSectors, &readTime, &writeOperations, &writeSectors, &writeTime) == 7 && IS(name, inf->priv.filesystem.object.key)) {
-                                Statistics_update(&(inf->priv.filesystem.read.time), now, readTime);
+                        // Fallback for kernels < 2.6.25: the /proc/diskstats used to have just 4 statistics, the file is present on >= 2.6.25 too and has 11 fields (same format as /sys/class/block/<NAME>/stat), but we use sysfs for it
+                        // as we read the given partition directly instead of traversing the whole filesystems list. In this function we expect the old 4-statistics format - if it should be ever used as main data collector, it needs to
+                        // be modified to support >= 2.6.25 format too.
+                        if (fscanf(f, " %*d %*d %255s %"PRIu64" %"PRIu64" %"PRIu64" %"PRIu64, name, &readOperations, &readSectors, &writeOperations, &writeSectors) == 5 && IS(name, inf->priv.filesystem.object.key)) {
                                 Statistics_update(&(inf->priv.filesystem.read.bytes), now, readSectors * 512);
                                 Statistics_update(&(inf->priv.filesystem.read.operations), now, readOperations);
-                                Statistics_update(&(inf->priv.filesystem.write.time), now, writeTime);
                                 Statistics_update(&(inf->priv.filesystem.write.bytes), now, writeSectors * 512);
                                 Statistics_update(&(inf->priv.filesystem.write.operations), now, writeOperations);
                                 fclose(f);
