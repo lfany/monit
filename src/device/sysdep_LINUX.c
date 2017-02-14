@@ -294,15 +294,24 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                                 // Need Windows style name - replace '/' with '\' so we can lookup the filesystem activity in /proc/fs/cifs/Stats
                                 strncpy(inf->priv.filesystem.object.key, inf->priv.filesystem.object.device, sizeof(inf->priv.filesystem.object.key) - 1);
                                 Str_replaceChar(inf->priv.filesystem.object.key, '/', '\\');
-                        } else if (Str_startsWith(mnt->mnt_type, "ext") || IS(mnt->mnt_type, "xfs")) {
-                                // Need base name for /sys/class/block/<NAME>/stat lookup:
-                                if (realpath(mnt->mnt_fsname, inf->priv.filesystem.object.key)) {
-                                        // Block device
-                                        inf->priv.filesystem.object.getDiskActivity = _statistics.getBlockDiskActivity;
-                                        snprintf(inf->priv.filesystem.object.key, sizeof(inf->priv.filesystem.object.key), "%s", File_basename(inf->priv.filesystem.object.key));
-                                }
                         } else {
-                                inf->priv.filesystem.object.getDiskActivity = _getDummyDiskActivity;
+                                if (realpath(mnt->mnt_fsname, inf->priv.filesystem.object.key)) {
+                                        // Need base name for /sys/class/block/<NAME>/stat lookup:
+                                        struct stat sb;
+                                        char stats[PATH_MAX];
+                                        snprintf(stats, sizeof(stats), "/sys/class/block/%s/stat", File_basename(inf->priv.filesystem.object.key));
+                                        if (stat(stats, &sb) == 0) {
+                                                // Block device
+                                                snprintf(inf->priv.filesystem.object.key, sizeof(inf->priv.filesystem.object.key), "%s", File_basename(inf->priv.filesystem.object.key));
+                                                inf->priv.filesystem.object.getDiskActivity = _statistics.getBlockDiskActivity;
+                                        } else {
+                                                // Device type with no known IO statistics method
+                                                inf->priv.filesystem.object.getDiskActivity = _getDummyDiskActivity;
+                                        }
+                                } else {
+                                        // Device type with no known IO statistics method
+                                        inf->priv.filesystem.object.getDiskActivity = _getDummyDiskActivity;
+                                }
                         }
                         endmntent(f);
                         inf->priv.filesystem.object.mounted = true;
