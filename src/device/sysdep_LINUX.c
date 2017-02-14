@@ -285,6 +285,7 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                         strncpy(inf->priv.filesystem.object.mountpoint, mnt->mnt_dir, sizeof(inf->priv.filesystem.object.mountpoint) - 1);
                         strncpy(inf->priv.filesystem.object.type, mnt->mnt_type, sizeof(inf->priv.filesystem.object.type) - 1);
                         inf->priv.filesystem.object.getDiskUsage = _getDiskUsage; // The disk usage method is common for all filesystem types
+                        inf->priv.filesystem.object.getDiskActivity = _getDummyDiskActivity; // Set to dummy IO statistics method by default (can be overriden bellow if statistics method is available for this filesystem)
                         if (Str_startsWith(mnt->mnt_type, "nfs")) {
                                 // NFS
                                 inf->priv.filesystem.object.getDiskActivity = _getNfsDiskActivity;
@@ -296,21 +297,13 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                                 Str_replaceChar(inf->priv.filesystem.object.key, '/', '\\');
                         } else {
                                 if (realpath(mnt->mnt_fsname, inf->priv.filesystem.object.key)) {
-                                        // Need base name for /sys/class/block/<NAME>/stat lookup:
-                                        struct stat sb;
-                                        char stats[PATH_MAX];
-                                        snprintf(stats, sizeof(stats), "/sys/class/block/%s/stat", File_basename(inf->priv.filesystem.object.key));
-                                        if (stat(stats, &sb) == 0) {
+                                        // Need base name for /sys/class/block/<NAME>/stat or /proc/diskstats lookup:
+                                        snprintf(inf->priv.filesystem.object.key, sizeof(inf->priv.filesystem.object.key), "%s", File_basename(inf->priv.filesystem.object.key));
+                                        // Test if block device statistics are available for the given filesystem
+                                        if (_statistics.getBlockDiskActivity(inf)) {
                                                 // Block device
-                                                snprintf(inf->priv.filesystem.object.key, sizeof(inf->priv.filesystem.object.key), "%s", File_basename(inf->priv.filesystem.object.key));
                                                 inf->priv.filesystem.object.getDiskActivity = _statistics.getBlockDiskActivity;
-                                        } else {
-                                                // Device type with no known IO statistics method
-                                                inf->priv.filesystem.object.getDiskActivity = _getDummyDiskActivity;
                                         }
-                                } else {
-                                        // Device type with no known IO statistics method
-                                        inf->priv.filesystem.object.getDiskActivity = _getDummyDiskActivity;
                                 }
                         }
                         endmntent(f);
