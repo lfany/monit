@@ -2003,7 +2003,7 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 
 Example:
 
-        if disk read > 1MB/s then alert
+        if disk read > 1 MB/s then alert
 
 =head3 Read: operations per second
 
@@ -2043,7 +2043,7 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 
 Example:
 
-        if disk write rate > 1MB/s then alert
+        if disk write rate > 1 MB/s then alert
 
 =head3 Write: operations per second
 
@@ -2360,7 +2360,7 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 
 Example:
 
-        if read rate > 1MB/s then alert
+        if read rate > 1 MB/s then alert
 
 =head3 Read: operations per second
 
@@ -2400,7 +2400,7 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 
 Example:
 
-        if write rate > 1MB/s then alert
+        if write rate > 1 MB/s then alert
 
 =head3 Write: operations per second
 
