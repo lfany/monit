@@ -53,6 +53,8 @@ server-side ciphers preference. Example (using monit's default ciphers string):
 New: The certificate minimum valid days test now triggers the timestamp event instead
 of connection event.
 
+New: M/Monit: show MacOS version instead of Darwin kernel version.
+
 Fixed: Previous Monit versions may be unable to detect that the filesystem is not
 mounted in the case that mountpoint was used as a filesystem path. The reason is,
 that the mountpoint itself resides on some filesystem (for example root filesystem)

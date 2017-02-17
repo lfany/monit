@@ -87,6 +87,7 @@ AC_CHECK_HEADERS([ \
 	crt_externs.h \
 	ctype.h \
 	crypt.h \
+	CoreFoundation/CoreFoundation.h \
 	devstat.h \
 	dirent.h \
 	DiskArbitration/DiskArbitration.h \

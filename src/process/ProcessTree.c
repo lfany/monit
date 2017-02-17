@@ -60,6 +60,10 @@
 #include <unistd.h>
 #endif
 
+#ifdef HAVE_COREFOUNDATION_COREFOUNDATION_H
+#include <CoreFoundation/CoreFoundation.h>
+#endif
+
 #include "monit.h"
 #include "event.h"
 #include "ProcessTree.h"
@@ -421,6 +425,29 @@ boolean_t init_system_info(void) {
                 LogError("'%s' resource monitoring initialization error -- uname failed: %s\n", Run.system->name, STRERROR);
                 return false;
         }
+#ifdef HAVE_COREFOUNDATION_COREFOUNDATION_H
+        CFURLRef url = CFURLCreateWithFileSystemPath(NULL, CFSTR("/System/Library/CoreServices/SystemVersion.plist"), kCFURLPOSIXPathStyle, false);
+        if (url) {
+                CFReadStreamRef stream = CFReadStreamCreateWithFile(NULL, url);
+                if (CFReadStreamOpen(stream)) {
+                        CFPropertyListRef propertyList = CFPropertyListCreateWithStream(NULL, stream, 0, kCFPropertyListImmutable, NULL, NULL);
+                        if (propertyList) {
+                                CFStringRef value = CFDictionaryGetValue(propertyList, CFSTR("ProductName"));
+                                if (value) {
+                                        snprintf(systeminfo.uname.sysname, sizeof(systeminfo.uname.sysname), "%s", CFStringGetCStringPtr(value, CFStringGetSystemEncoding()));
+                                }
+                                value = CFDictionaryGetValue(propertyList, CFSTR("ProductVersion"));
+                                if (value) {
+                                        snprintf(systeminfo.uname.release, sizeof(systeminfo.uname.release), "%s", CFStringGetCStringPtr(value, CFStringGetSystemEncoding()));
+                                }
+                                CFRelease(propertyList);
+                        }
+                        CFReadStreamClose(stream);
+                        CFRelease(stream);
+                }
+                CFRelease(url);
+        }
+#endif
         systeminfo.total_cpu_user_percent = -1.;
         systeminfo.total_cpu_syst_percent = -1.;
         systeminfo.total_cpu_wait_percent = -1.;
