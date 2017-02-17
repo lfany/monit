@@ -280,15 +280,8 @@ static void _formatStatus(const char *name, Event_Type errorType, Output_Type ty
 
 static void _printIOStatistics(Output_Type type, HttpResponse res, Service_T s, IOStatistics_T io, const char *header, const char *name) {
         boolean_t hasOps = Statistics_initialized(&(io->operations));
-        boolean_t hasTime = Statistics_initialized(&(io->time));
         boolean_t hasBytes = Statistics_initialized(&(io->bytes));
-        if (hasTime && hasOps && hasBytes) {
-                double deltaBytesPerSec = Statistics_deltaNormalize(&(io->bytes));
-                double deltaOps = Statistics_delta(&(io->operations));
-                double deltaOpsPerSec = Statistics_deltaNormalize(&(io->operations));
-                double deltaTime = Statistics_delta(&(io->time));
-                _formatStatus(header, Event_Resource, type, res, s, true, "%s/s [%s total], %.1f %ss/s [%"PRIu64" %ss total], avg. service time %.3f ms/%s", Str_bytesToSize(deltaBytesPerSec, (char[10]){}), Str_bytesToSize(Statistics_raw(&(io->bytes)), (char[10]){}), deltaOpsPerSec, name, Statistics_raw(&(io->operations)), name, deltaOps > 0. ? deltaTime / deltaOps : 0., name);
-        } else if (hasOps && hasBytes) {
+        if (hasOps && hasBytes) {
                 double deltaBytesPerSec = Statistics_deltaNormalize(&(io->bytes));
                 double deltaOpsPerSec = Statistics_deltaNormalize(&(io->operations));
                 _formatStatus(header, Event_Resource, type, res, s, true, "%s/s [%s total], %.1f %ss/s [%"PRIu64" %ss total]", Str_bytesToSize(deltaBytesPerSec, (char[10]){}), Str_bytesToSize(Statistics_raw(&(io->bytes)), (char[10]){}), deltaOpsPerSec, name, Statistics_raw(&(io->operations)), name);
@@ -389,18 +382,25 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                 }
                                 _printIOStatistics(type, res, s, &(s->inf->priv.filesystem.read), "read", "read");
                                 _printIOStatistics(type, res, s, &(s->inf->priv.filesystem.write), "write", "write");
-                                boolean_t hasWaitTime = Statistics_initialized(&(s->inf->priv.filesystem.waitTime));
-                                boolean_t hasRunTime = Statistics_initialized(&(s->inf->priv.filesystem.runTime));
-                                if (hasWaitTime && hasRunTime) {
-                                        double waitTime = Statistics_deltaNormalize(&(s->inf->priv.filesystem.waitTime));
-                                        double runTime = Statistics_deltaNormalize(&(s->inf->priv.filesystem.runTime));
-                                        _formatStatus("service time", Event_Null, type, res, s, true, "%.3fms (of which queue time %.3fms, active time %.3fms)", waitTime + runTime, waitTime, runTime);
+                                boolean_t hasReadTime = Statistics_initialized(&(s->inf->priv.filesystem.time.read));
+                                boolean_t hasWriteTime = Statistics_initialized(&(s->inf->priv.filesystem.time.write));
+                                boolean_t hasWaitTime = Statistics_initialized(&(s->inf->priv.filesystem.time.wait));
+                                boolean_t hasRunTime = Statistics_initialized(&(s->inf->priv.filesystem.time.run));
+                                double deltaOperations = Statistics_delta(&(s->inf->priv.filesystem.read.operations)) + Statistics_delta(&(s->inf->priv.filesystem.write.operations));
+                                if (hasReadTime && hasWriteTime) {
+                                        double readTime = deltaOperations > 0. ? Statistics_deltaNormalize(&(s->inf->priv.filesystem.time.read)) / deltaOperations : 0.;
+                                        double writeTime = deltaOperations > 0. ? Statistics_deltaNormalize(&(s->inf->priv.filesystem.time.write)) / deltaOperations : 0.;
+                                        _formatStatus("service time", Event_Null, type, res, s, true, "%.3fms/operation (of which read %.3fms, write %.3fms)", readTime + writeTime, readTime, writeTime);
+                                } else if (hasWaitTime && hasRunTime) {
+                                        double waitTime = deltaOperations > 0. ? Statistics_deltaNormalize(&(s->inf->priv.filesystem.time.wait)) / deltaOperations : 0.;
+                                        double runTime = deltaOperations > 0. ? Statistics_deltaNormalize(&(s->inf->priv.filesystem.time.run)) / deltaOperations : 0.;
+                                        _formatStatus("service time", Event_Null, type, res, s, true, "%.3fms/operation (of which queue %.3fms, active %.3fms)", waitTime + runTime, waitTime, runTime);
                                 } else if (hasWaitTime) {
-                                        double waitTime = Statistics_deltaNormalize(&(s->inf->priv.filesystem.waitTime));
-                                        _formatStatus("service time", Event_Null, type, res, s, true, "%.3fms", waitTime);
+                                        double waitTime = deltaOperations > 0. ? Statistics_deltaNormalize(&(s->inf->priv.filesystem.time.wait)) / deltaOperations : 0.;
+                                        _formatStatus("service time", Event_Null, type, res, s, true, "%.3fms/operation", waitTime);
                                 } else if (hasRunTime) {
-                                        double runTime = Statistics_deltaNormalize(&(s->inf->priv.filesystem.runTime));
-                                        _formatStatus("service time", Event_Null, type, res, s, true, "%.3fms", runTime);
+                                        double runTime = deltaOperations > 0. ? Statistics_deltaNormalize(&(s->inf->priv.filesystem.time.run)) / deltaOperations : 0.;
+                                        _formatStatus("service time", Event_Null, type, res, s, true, "%.3fms/operation", runTime);
                                 }
                                 break;
 

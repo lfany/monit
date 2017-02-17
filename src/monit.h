@@ -942,7 +942,6 @@ typedef struct myfilesystem {
 typedef struct IOStatistics_T {
         struct Statistics_T operations;        /**< Number of operations completed */
         struct Statistics_T bytes;      /**< Number of bytes handled by operations */
-        struct Statistics_T time;               /**< Time spend by operations [ms] */
 } *IOStatistics_T;
 
 
@@ -982,8 +981,12 @@ typedef struct myinfo {
                         int mode;                                              /**< Permission */
                         struct IOStatistics_T read;                       /**< Read statistics */
                         struct IOStatistics_T write;                     /**< Write statistics */
-                        struct Statistics_T waitTime;       /**< Time spend in wait queue [ms] */
-                        struct Statistics_T runTime;         /**< Time spend in run queue [ms] */
+                        struct {
+                                struct Statistics_T read;         /**< Time spend by read [ms] */
+                                struct Statistics_T write;       /**< Time spend by write [ms] */
+                                struct Statistics_T wait;   /**< Time spend in wait queue [ms] */
+                                struct Statistics_T run;     /**< Time spend in run queue [ms] */
+                        } time;
                         struct Device_T object;                             /**< Device object */
                 } filesystem;
 

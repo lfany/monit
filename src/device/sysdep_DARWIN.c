@@ -124,12 +124,6 @@ static boolean_t _getBlockDiskActivity(void *_inf) {
                                                         CFNumberGetValue(number, kCFNumberSInt64Type, &value);
                                                         Statistics_update(&(inf->priv.filesystem.read.operations), now, value);
                                                 }
-                                                // Total read time
-                                                number = CFDictionaryGetValue(statistics, CFSTR(kIOBlockStorageDriverStatisticsTotalReadTimeKey));
-                                                if (number) {
-                                                        CFNumberGetValue(number, kCFNumberSInt64Type, &value);
-                                                        Statistics_update(&(inf->priv.filesystem.read.time), now, value / 1048576.); // ns -> ms
-                                                }
                                                 // Total write bytes
                                                 number = (CFNumberRef)CFDictionaryGetValue(statistics, CFSTR(kIOBlockStorageDriverStatisticsBytesWrittenKey));
                                                 if (number) {
@@ -142,11 +136,17 @@ static boolean_t _getBlockDiskActivity(void *_inf) {
                                                         CFNumberGetValue(number, kCFNumberSInt64Type, &value);
                                                         Statistics_update(&(inf->priv.filesystem.write.operations), now, value);
                                                 }
+                                                // Total read time
+                                                number = CFDictionaryGetValue(statistics, CFSTR(kIOBlockStorageDriverStatisticsTotalReadTimeKey));
+                                                if (number) {
+                                                        CFNumberGetValue(number, kCFNumberSInt64Type, &value);
+                                                        Statistics_update(&(inf->priv.filesystem.time.read), now, value / 1048576.); // ns -> ms
+                                                }
                                                 // Total write time
                                                 number = CFDictionaryGetValue(statistics, CFSTR(kIOBlockStorageDriverStatisticsTotalWriteTimeKey));
                                                 if (number) {
                                                         CFNumberGetValue(number, kCFNumberSInt64Type, &value);
-                                                        Statistics_update(&(inf->priv.filesystem.write.time), now, value / 1048576.); // ns -> ms
+                                                        Statistics_update(&(inf->priv.filesystem.time.write), now, value / 1048576.); // ns -> ms
                                                 }
                                                 //FIXME: add disk error statistics test: can use kIOBlockStorageDriverStatisticsWriteErrorsKey + kIOBlockStorageDriverStatisticsReadErrorsKey
                                                 CFRelease(statistics);

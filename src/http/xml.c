@@ -160,24 +160,20 @@ static void _ioStatistics(StringBuffer_T B, const char *name, IOStatistics_T sta
         if (Statistics_initialized(&(statistics->bytes))) {
                 StringBuffer_append(B,
                         "<bytes>"
-                        "<count>%.0lf</count>" // bytes per second
-                        "<total>%"PRIu64"</total>"  // bytes since boot
+                        "<count>%.0lf</count>"     // bytes per second
+                        "<total>%"PRIu64"</total>" // bytes since boot
                         "</bytes>",
                         Statistics_deltaNormalize(&(statistics->bytes)),
                         Statistics_raw(&(statistics->bytes)));
         }
         if (Statistics_initialized(&(statistics->operations))) {
-                double deltaOperations = Statistics_delta(&(statistics->operations));
                 StringBuffer_append(B,
                         "<operations>"
-                        "<count>%.0lf</count>" // operations per second
-                        "<total>%"PRIu64"</total>", // operations since boot
+                        "<count>%.0lf</count>"     // operations per second
+                        "<total>%"PRIu64"</total>" // operations since boot
+                        "</operations>",
                         Statistics_deltaNormalize(&(statistics->operations)),
                         Statistics_raw(&(statistics->operations)));
-                if (Statistics_initialized(&(statistics->time)))
-                        StringBuffer_append(B, "<servicetime>%.3f</servicetime>", deltaOperations > 0. ? Statistics_delta(&(statistics->time)) / deltaOperations : 0.);
-                StringBuffer_append(B,
-                        "</operations>");
         }
         StringBuffer_append(B, "</%s>", name);
 }
@@ -294,14 +290,20 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                 }
                                 _ioStatistics(B, "read", &(S->inf->priv.filesystem.read));
                                 _ioStatistics(B, "write", &(S->inf->priv.filesystem.write));
-                                boolean_t hasWaitTime = Statistics_initialized(&(S->inf->priv.filesystem.waitTime));
-                                boolean_t hasRunTime = Statistics_initialized(&(S->inf->priv.filesystem.runTime));
-                                if (hasWaitTime || hasRunTime) {
+                                boolean_t hasReadTime = Statistics_initialized(&(S->inf->priv.filesystem.time.read));
+                                boolean_t hasWriteTime = Statistics_initialized(&(S->inf->priv.filesystem.time.write));
+                                boolean_t hasWaitTime = Statistics_initialized(&(S->inf->priv.filesystem.time.wait));
+                                boolean_t hasRunTime = Statistics_initialized(&(S->inf->priv.filesystem.time.run));
+                                if (hasReadTime || hasWriteTime || hasWaitTime || hasRunTime) {
                                         StringBuffer_append(B, "<servicetime>");
+                                        if (hasReadTime)
+                                                StringBuffer_append(B, "<read>%.3f</read>", Statistics_deltaNormalize(&(S->inf->priv.filesystem.time.read)));
+                                        if (hasWriteTime)
+                                                StringBuffer_append(B, "<write>%.3f</write>", Statistics_deltaNormalize(&(S->inf->priv.filesystem.time.write)));
                                         if (hasWaitTime)
-                                                StringBuffer_append(B, "<wait>%.3f</wait>", Statistics_deltaNormalize(&(S->inf->priv.filesystem.waitTime)));
+                                                StringBuffer_append(B, "<wait>%.3f</wait>", Statistics_deltaNormalize(&(S->inf->priv.filesystem.time.wait)));
                                         if (hasRunTime)
-                                                StringBuffer_append(B, "<run>%.3f</run>", Statistics_deltaNormalize(&(S->inf->priv.filesystem.runTime)));
+                                                StringBuffer_append(B, "<run>%.3f</run>", Statistics_deltaNormalize(&(S->inf->priv.filesystem.time.run)));
                                         StringBuffer_append(B, "</servicetime>");
                                 }
                                 break;

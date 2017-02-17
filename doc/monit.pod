@@ -2420,7 +2420,7 @@ Example:
 
         if write rate > 500 operations/s then alert
 
-=head3 Service time
+=head3 Service time per operation
 
 Syntax:
 

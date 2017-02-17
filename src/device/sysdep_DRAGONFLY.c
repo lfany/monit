@@ -156,7 +156,7 @@ static boolean_t _getBlockDiskActivity(void *_inf) {
                                 Statistics_update(&(inf->priv.filesystem.read.operations),  now, _statistics.disk.dinfo->devices[i].num_reads);
                                 Statistics_update(&(inf->priv.filesystem.write.bytes), now, _statistics.disk.dinfo->devices[i].bytes_written);
                                 Statistics_update(&(inf->priv.filesystem.write.operations), now, _statistics.disk.dinfo->devices[i].num_writes);
-                                Statistics_update(&(inf->priv.filesystem.runTime), now, _timevalToMilli(&(_statistics.disk.dinfo->devices[i].busy_time)));
+                                Statistics_update(&(inf->priv.filesystem.time.run), now, _timevalToMilli(&(_statistics.disk.dinfo->devices[i].busy_time)));
                                 break;
                         }
                 }

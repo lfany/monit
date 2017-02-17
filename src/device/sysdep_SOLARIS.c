@@ -148,8 +148,8 @@ static boolean_t _getKstatDiskActivity(void *_inf) {
                                         Statistics_update(&(inf->priv.filesystem.write.bytes), now, kio.nwritten);
                                         Statistics_update(&(inf->priv.filesystem.read.operations),  now, kio.reads);
                                         Statistics_update(&(inf->priv.filesystem.write.operations), now, kio.writes);
-                                        Statistics_update(&(inf->priv.filesystem.waitTime), now, kio.wtime / 1000000.);
-                                        Statistics_update(&(inf->priv.filesystem.runTime), now, kio.rtime / 1000000.);
+                                        Statistics_update(&(inf->priv.filesystem.time.wait), now, kio.wtime / 1000000.);
+                                        Statistics_update(&(inf->priv.filesystem.time.run), now, kio.rtime / 1000000.);
                                         rv = true;
                                 }
                         }

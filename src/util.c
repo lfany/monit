@@ -1695,7 +1695,6 @@ boolean_t Util_checkCredentials(char *uname, char *outside) {
 static void _resetIOStatistics(IOStatistics_T S) {
         Statistics_reset(&(S->operations));
         Statistics_reset(&(S->bytes));
-        Statistics_reset(&(S->time));
 }
 
 
@@ -1719,8 +1718,10 @@ void Util_resetInfo(Service_T s) {
                         s->inf->priv.filesystem.gid = -1;
                         _resetIOStatistics(&(s->inf->priv.filesystem.read));
                         _resetIOStatistics(&(s->inf->priv.filesystem.write));
-                        Statistics_reset(&(s->inf->priv.filesystem.waitTime));
-                        Statistics_reset(&(s->inf->priv.filesystem.runTime));
+                        Statistics_reset(&(s->inf->priv.filesystem.time.read));
+                        Statistics_reset(&(s->inf->priv.filesystem.time.write));
+                        Statistics_reset(&(s->inf->priv.filesystem.time.wait));
+                        Statistics_reset(&(s->inf->priv.filesystem.time.run));
                         break;
                 case Service_File:
                         // persistent: st_inode, readpos

@@ -112,12 +112,14 @@ boolean_t filesystem_usage(Service_T s) {
                 s->inf->priv.filesystem.inode_percent = s->inf->priv.filesystem.f_files > 0 ? 100. * (double)s->inf->priv.filesystem.inode_total / (double)s->inf->priv.filesystem.f_files : 0.;
                 s->inf->priv.filesystem.space_percent = s->inf->priv.filesystem.f_blocks > 0 ? 100. * (double)s->inf->priv.filesystem.space_total / (double)s->inf->priv.filesystem.f_blocks : 0.;
         } else {
-                Statistics_reset(&(s->inf->priv.filesystem.read.time));
                 Statistics_reset(&(s->inf->priv.filesystem.read.bytes));
                 Statistics_reset(&(s->inf->priv.filesystem.read.operations));
-                Statistics_reset(&(s->inf->priv.filesystem.write.time));
                 Statistics_reset(&(s->inf->priv.filesystem.write.bytes));
                 Statistics_reset(&(s->inf->priv.filesystem.write.operations));
+                Statistics_reset(&(s->inf->priv.filesystem.time.read));
+                Statistics_reset(&(s->inf->priv.filesystem.time.write));
+                Statistics_reset(&(s->inf->priv.filesystem.time.wait));
+                Statistics_reset(&(s->inf->priv.filesystem.time.run));
                 LogError("Filesystem '%s' not mounted\n", s->path);
         }
         return rv;

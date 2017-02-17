@@ -1077,18 +1077,26 @@ static State_Type _checkFilesystemResources(Service_T s, Filesystem_T td) {
                 case Resource_ServiceTime:
                         {
                                 double deltaTime = 0.;
-                                boolean_t hasReadTime = Statistics_initialized(&(s->inf->priv.filesystem.read.time));
-                                boolean_t hasWriteTime = Statistics_initialized(&(s->inf->priv.filesystem.write.time));
-                                boolean_t hasWaitTime = Statistics_initialized(&(s->inf->priv.filesystem.waitTime));
-                                boolean_t hasRunTime = Statistics_initialized(&(s->inf->priv.filesystem.runTime));
+                                boolean_t hasReadTime = Statistics_initialized(&(s->inf->priv.filesystem.time.read));
+                                boolean_t hasWriteTime = Statistics_initialized(&(s->inf->priv.filesystem.time.write));
+                                boolean_t hasWaitTime = Statistics_initialized(&(s->inf->priv.filesystem.time.wait));
+                                boolean_t hasRunTime = Statistics_initialized(&(s->inf->priv.filesystem.time.run));
                                 // Some platforms have detailed R/W time (Linux, MacOS), other just total R/W time (*BSD), Solaris has total R/W time with wait/run granularity. To make the test cross-platform and simple, we operate on sum
-                                if (hasReadTime || hasWriteTime) {
-                                        deltaTime = Statistics_delta(&(s->inf->priv.filesystem.read.time)) + Statistics_delta(&(s->inf->priv.filesystem.write.time));
-                                } else if (hasWaitTime || hasRunTime) {
-                                        deltaTime = Statistics_delta(&(s->inf->priv.filesystem.waitTime)) + Statistics_delta(&(s->inf->priv.filesystem.runTime));
-                                } else {
+                                if (! hasReadTime && ! hasWriteTime && ! hasWaitTime && ! hasRunTime) {
                                         DEBUG("'%s' warning -- no data are available for service time test\n", s->name);
                                         return State_Succeeded;
+                                }
+                                if (hasReadTime) {
+                                        deltaTime += Statistics_delta(&(s->inf->priv.filesystem.time.read));
+                                }
+                                if (hasWriteTime) {
+                                        deltaTime += Statistics_delta(&(s->inf->priv.filesystem.time.write));
+                                }
+                                if (hasWaitTime) {
+                                        deltaTime += Statistics_delta(&(s->inf->priv.filesystem.time.wait));
+                                }
+                                if (hasRunTime) {
+                                        deltaTime += Statistics_delta(&(s->inf->priv.filesystem.time.run));
                                 }
                                 double deltaOperations = Statistics_delta(&(s->inf->priv.filesystem.read.operations)) + Statistics_delta(&(s->inf->priv.filesystem.write.operations));
                                 double serviceTime = deltaOperations > 0. ? deltaTime / deltaOperations : 0.;
