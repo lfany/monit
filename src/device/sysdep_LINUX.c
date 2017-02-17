@@ -184,11 +184,11 @@ static boolean_t _getNfsDiskActivity(void *_inf) {
                         uint64_t time;
                         if (sscanf(line, " %255[^:]: %"PRIu64" %*u %*u %"PRIu64 " %"PRIu64" %*u %*u %"PRIu64, name, &operations, &bytesSent, &bytesReceived, &time) == 5) {
                                 if (IS(name, "READ")) {
-                                        Statistics_update(&(inf->priv.filesystem.read.time), now, time / 1000.); // us -> ms
+                                        Statistics_update(&(inf->priv.filesystem.time.read), now, time / 1000.); // us -> ms
                                         Statistics_update(&(inf->priv.filesystem.read.bytes), now, bytesReceived);
                                         Statistics_update(&(inf->priv.filesystem.read.operations), now, operations);
                                 } else if (IS(name, "WRITE")) {
-                                        Statistics_update(&(inf->priv.filesystem.write.time), now, time / 1000.); // us -> ms
+                                        Statistics_update(&(inf->priv.filesystem.time.write), now, time / 1000.); // us -> ms
                                         Statistics_update(&(inf->priv.filesystem.write.bytes), now, bytesSent);
                                         Statistics_update(&(inf->priv.filesystem.write.operations), now, operations);
                                         break;
@@ -215,10 +215,10 @@ static boolean_t _getSysfsBlockDiskActivity(void *_inf) {
                         LogError("filesystem statistic error: cannot parse %s -- %s\n", path, STRERROR);
                         return false;
                 }
-                Statistics_update(&(inf->priv.filesystem.read.time), now, readTime);
+                Statistics_update(&(inf->priv.filesystem.time.read), now, readTime);
                 Statistics_update(&(inf->priv.filesystem.read.bytes), now, readSectors * 512);
                 Statistics_update(&(inf->priv.filesystem.read.operations), now, readOperations);
-                Statistics_update(&(inf->priv.filesystem.write.time), now, writeTime);
+                Statistics_update(&(inf->priv.filesystem.time.write), now, writeTime);
                 Statistics_update(&(inf->priv.filesystem.write.bytes), now, writeSectors * 512);
                 Statistics_update(&(inf->priv.filesystem.write.operations), now, writeOperations);
                 fclose(f);

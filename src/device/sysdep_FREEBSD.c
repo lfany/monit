@@ -152,10 +152,10 @@ static boolean_t _getBlockDiskActivity(void *_inf) {
                 for (int i = 0; i < _statistics.disk.dinfo->numdevs; i++) {
                         if (_statistics.disk.dinfo->devices[i].unit_number == inf->priv.filesystem.object.instance && IS(_statistics.disk.dinfo->devices[i].device_name, inf->priv.filesystem.object.key)) {
                                 uint64_t now = _statistics.disk.snap_time * 1000;
-                                Statistics_update(&(inf->priv.filesystem.read.time), now, _bintimeToMilli(&(_statistics.disk.dinfo->devices[i].duration[DEVSTAT_READ])));
+                                Statistics_update(&(inf->priv.filesystem.time.read), now, _bintimeToMilli(&(_statistics.disk.dinfo->devices[i].duration[DEVSTAT_READ])));
                                 Statistics_update(&(inf->priv.filesystem.read.bytes), now, _statistics.disk.dinfo->devices[i].bytes[DEVSTAT_READ]);
                                 Statistics_update(&(inf->priv.filesystem.read.operations),  now, _statistics.disk.dinfo->devices[i].operations[DEVSTAT_READ]);
-                                Statistics_update(&(inf->priv.filesystem.write.time), now, _bintimeToMilli(&(_statistics.disk.dinfo->devices[i].duration[DEVSTAT_WRITE])));
+                                Statistics_update(&(inf->priv.filesystem.time.write), now, _bintimeToMilli(&(_statistics.disk.dinfo->devices[i].duration[DEVSTAT_WRITE])));
                                 Statistics_update(&(inf->priv.filesystem.write.bytes), now, _statistics.disk.dinfo->devices[i].bytes[DEVSTAT_WRITE]);
                                 Statistics_update(&(inf->priv.filesystem.write.operations), now, _statistics.disk.dinfo->devices[i].operations[DEVSTAT_WRITE]);
                                 break;
