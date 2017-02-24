@@ -4075,7 +4075,7 @@ static void addmailserver(MailServer_T mailserver) {
         s->password    = mailserver->password;
 
         if (sslset.flags && (mailserver->port == 25 || mailserver->port == 587))
-                s->ssl.flags = SSL_StartTLS;
+                sslset.flags = SSL_StartTLS;
         _setSSLOptions(&(s->ssl));
 
         s->next = NULL;

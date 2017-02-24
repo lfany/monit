@@ -81,6 +81,8 @@ Fixed: Issue #515: The compression may fail of response body is empty and zlib v
 
 Fixed: Issue #537: Monit HTTP server could not start if no network interface available
 
+Fixed: Issue #549: Mailserver on port 587 doesn't work with STARTTLS.
+
 Fixed: Monit HTTP GUI: Safari may fail to load the page if SSL is enabled.
 
 Fixed: If the connection timed out, Monit reported incorrect error: "Resource temporarily unavailable".
