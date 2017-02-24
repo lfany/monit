@@ -74,18 +74,18 @@
 static boolean_t _getDiskUsage(void *_inf) {
         Info_T inf = _inf;
         struct statfs usage;
-        if (statfs(inf->priv.filesystem.object.mountpoint, &usage) != 0) {
-                LogError("Error getting usage statistics for filesystem '%s' -- %s\n", inf->priv.filesystem.object.mountpoint, STRERROR);
+        if (statfs(inf->filesystem->object.mountpoint, &usage) != 0) {
+                LogError("Error getting usage statistics for filesystem '%s' -- %s\n", inf->filesystem->object.mountpoint, STRERROR);
                 return false;
         }
-        inf->priv.filesystem.f_bsize = usage.f_bsize;
-        inf->priv.filesystem.f_blocks = usage.f_blocks;
-        inf->priv.filesystem.f_blocksfree = usage.f_bavail;
-        inf->priv.filesystem.f_blocksfreetotal = usage.f_bfree;
-        inf->priv.filesystem.f_files = usage.f_files;
-        inf->priv.filesystem.f_filesfree = usage.f_ffree;
-        inf->priv.filesystem._flags = inf->priv.filesystem.flags;
-        inf->priv.filesystem.flags = usage.f_flags;
+        inf->filesystem->f_bsize = usage.f_bsize;
+        inf->filesystem->f_blocks = usage.f_blocks;
+        inf->filesystem->f_blocksfree = usage.f_bavail;
+        inf->filesystem->f_blocksfreetotal = usage.f_bfree;
+        inf->filesystem->f_files = usage.f_files;
+        inf->filesystem->f_filesfree = usage.f_ffree;
+        inf->filesystem->_flags = inf->filesystem->flags;
+        inf->filesystem->flags = usage.f_flags;
         return true;
 }
 
@@ -100,7 +100,7 @@ static boolean_t _getBlockDiskActivity(void *_inf) {
         Info_T inf = _inf;
         DASessionRef session = DASessionCreate(NULL);
         if (session) {
-                CFURLRef url = CFURLCreateFromFileSystemRepresentation(NULL, (const UInt8 *)inf->priv.filesystem.object.mountpoint, strlen(inf->priv.filesystem.object.mountpoint), true);
+                CFURLRef url = CFURLCreateFromFileSystemRepresentation(NULL, (const UInt8 *)inf->filesystem->object.mountpoint, strlen(inf->filesystem->object.mountpoint), true);
                 DADiskRef disk = DADiskCreateFromVolumePath(NULL, session, url);
                 if (disk) {
                         DADiskRef wholeDisk = DADiskCopyWholeDisk(disk);
@@ -116,37 +116,37 @@ static boolean_t _getBlockDiskActivity(void *_inf) {
                                                 CFNumberRef number = CFDictionaryGetValue(statistics, CFSTR(kIOBlockStorageDriverStatisticsBytesReadKey));
                                                 if (number) {
                                                         CFNumberGetValue(number, kCFNumberSInt64Type, &value);
-                                                        Statistics_update(&(inf->priv.filesystem.read.bytes), now, value);
+                                                        Statistics_update(&(inf->filesystem->read.bytes), now, value);
                                                 }
                                                 // Total read operations
                                                 number = CFDictionaryGetValue(statistics, CFSTR(kIOBlockStorageDriverStatisticsReadsKey));
                                                 if (number) {
                                                         CFNumberGetValue(number, kCFNumberSInt64Type, &value);
-                                                        Statistics_update(&(inf->priv.filesystem.read.operations), now, value);
+                                                        Statistics_update(&(inf->filesystem->read.operations), now, value);
                                                 }
                                                 // Total write bytes
                                                 number = (CFNumberRef)CFDictionaryGetValue(statistics, CFSTR(kIOBlockStorageDriverStatisticsBytesWrittenKey));
                                                 if (number) {
                                                         CFNumberGetValue(number, kCFNumberSInt64Type, &value);
-                                                        Statistics_update(&(inf->priv.filesystem.write.bytes), now, value);
+                                                        Statistics_update(&(inf->filesystem->write.bytes), now, value);
                                                 }
                                                 // Total write operations
                                                 number = CFDictionaryGetValue(statistics, CFSTR(kIOBlockStorageDriverStatisticsWritesKey));
                                                 if (number) {
                                                         CFNumberGetValue(number, kCFNumberSInt64Type, &value);
-                                                        Statistics_update(&(inf->priv.filesystem.write.operations), now, value);
+                                                        Statistics_update(&(inf->filesystem->write.operations), now, value);
                                                 }
                                                 // Total read time
                                                 number = CFDictionaryGetValue(statistics, CFSTR(kIOBlockStorageDriverStatisticsTotalReadTimeKey));
                                                 if (number) {
                                                         CFNumberGetValue(number, kCFNumberSInt64Type, &value);
-                                                        Statistics_update(&(inf->priv.filesystem.time.read), now, value / 1048576.); // ns -> ms
+                                                        Statistics_update(&(inf->filesystem->time.read), now, value / 1048576.); // ns -> ms
                                                 }
                                                 // Total write time
                                                 number = CFDictionaryGetValue(statistics, CFSTR(kIOBlockStorageDriverStatisticsTotalWriteTimeKey));
                                                 if (number) {
                                                         CFNumberGetValue(number, kCFNumberSInt64Type, &value);
-                                                        Statistics_update(&(inf->priv.filesystem.time.write), now, value / 1048576.); // ns -> ms
+                                                        Statistics_update(&(inf->filesystem->time.write), now, value / 1048576.); // ns -> ms
                                                 }
                                                 //FIXME: add disk error statistics test: can use kIOBlockStorageDriverStatisticsWriteErrorsKey + kIOBlockStorageDriverStatisticsReadErrorsKey
                                                 CFRelease(statistics);
@@ -183,15 +183,15 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                                 struct statfs *mntItem = mnt + i;
                                 if (compare(path, mntItem)) {
                                         if (IS(mntItem->f_fstypename, "hfs")) {
-                                                inf->priv.filesystem.object.getDiskActivity = _getBlockDiskActivity;
+                                                inf->filesystem->object.getDiskActivity = _getBlockDiskActivity;
                                         } else {
-                                                inf->priv.filesystem.object.getDiskActivity = _getDummyDiskActivity;
+                                                inf->filesystem->object.getDiskActivity = _getDummyDiskActivity;
                                         }
-                                        strncpy(inf->priv.filesystem.object.device, mntItem->f_mntfromname, sizeof(inf->priv.filesystem.object.device) - 1);
-                                        strncpy(inf->priv.filesystem.object.mountpoint, mntItem->f_mntonname, sizeof(inf->priv.filesystem.object.mountpoint) - 1);
-                                        strncpy(inf->priv.filesystem.object.type, mntItem->f_fstypename, sizeof(inf->priv.filesystem.object.type) - 1);
-                                        inf->priv.filesystem.object.getDiskUsage = _getDiskUsage;
-                                        inf->priv.filesystem.object.mounted = true;
+                                        strncpy(inf->filesystem->object.device, mntItem->f_mntfromname, sizeof(inf->filesystem->object.device) - 1);
+                                        strncpy(inf->filesystem->object.mountpoint, mntItem->f_mntonname, sizeof(inf->filesystem->object.mountpoint) - 1);
+                                        strncpy(inf->filesystem->object.type, mntItem->f_fstypename, sizeof(inf->filesystem->object.type) - 1);
+                                        inf->filesystem->object.getDiskUsage = _getDiskUsage;
+                                        inf->filesystem->object.mounted = true;
                                         FREE(mnt);
                                         return true;
                                 }
@@ -200,7 +200,7 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                 FREE(mnt);
         }
         LogError("Lookup for '%s' filesystem failed\n", path);
-        inf->priv.filesystem.object.mounted = false;
+        inf->filesystem->object.mounted = false;
         return false;
 }
 
@@ -208,7 +208,7 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
 static boolean_t _getDevice(Info_T inf, const char *path, boolean_t (*compare)(const char *path, struct statfs *mnt)) {
         //FIXME: cache mount informations (register for mount/unmount notification)
         if (_setDevice(inf, path, compare)) {
-                return (inf->priv.filesystem.object.getDiskUsage(inf) && inf->priv.filesystem.object.getDiskActivity(inf));
+                return (inf->filesystem->object.getDiskUsage(inf) && inf->filesystem->object.getDiskActivity(inf));
         }
         return false;
 }

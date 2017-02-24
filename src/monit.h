@@ -960,88 +960,100 @@ typedef struct Device_T {
 } *Device_T;
 
 
+typedef struct FilesystemInfo_T {
+        long long  f_blocks;              /**< Total data blocks in filesystem */
+        long long  f_blocksfree;   /**< Free blocks available to non-superuser */
+        long long  f_blocksfreetotal;           /**< Free blocks in filesystem */
+        long long  f_files;                /**< Total file nodes in filesystem */
+        long long  f_filesfree;             /**< Free file nodes in filesystem */
+        long long  inode_total;                  /**< Used inode total objects */
+        long long  space_total;                   /**< Used space total blocks */
+        float inode_percent;                        /**< Used inode percentage */
+        float space_percent;                        /**< Used space percentage */
+        int f_bsize;                                  /**< Transfer block size */
+        int _flags;                      /**< Filesystem flags from last cycle */
+        int flags;                     /**< Filesystem flags from actual cycle */
+        int uid;                                              /**< Owner's uid */
+        int gid;                                              /**< Owner's gid */
+        int mode;                                              /**< Permission */
+        struct IOStatistics_T read;                       /**< Read statistics */
+        struct IOStatistics_T write;                     /**< Write statistics */
+        struct {
+                struct Statistics_T read;         /**< Time spend by read [ms] */
+                struct Statistics_T write;       /**< Time spend by write [ms] */
+                struct Statistics_T wait;   /**< Time spend in wait queue [ms] */
+                struct Statistics_T run;     /**< Time spend in run queue [ms] */
+        } time;
+        struct Device_T object;                             /**< Device object */
+} *FilesystemInfo_T;
+
+
+typedef struct FileInfo_T {
+        time_t timestamp;                                       /**< Timestamp */
+        int mode;                                              /**< Permission */
+        int uid;                                              /**< Owner's uid */
+        int gid;                                              /**< Owner's gid */
+        off_t size;                                                  /**< Size */
+        off_t readpos;                        /**< Position for regex matching */
+        ino_t inode;                                                /**< Inode */
+        ino_t inode_prev;               /**< Previous inode for regex matching */
+        MD_T  cs_sum;                                            /**< Checksum */ //FIXME: allocate dynamically only when necessary
+} *FileInfo_T;
+
+
+typedef struct DirectoryInfo_T {
+        time_t timestamp;                                       /**< Timestamp */
+        int mode;                                              /**< Permission */
+        int uid;                                              /**< Owner's uid */
+        int gid;                                              /**< Owner's gid */
+} *DirectoryInfo_T;
+
+
+typedef struct FifoInfo_T {
+        time_t timestamp;                                       /**< Timestamp */
+        int mode;                                              /**< Permission */
+        int uid;                                              /**< Owner's uid */
+        int gid;                                              /**< Owner's gid */
+} *FifoInfo_T;
+
+
+typedef struct ProcessInfo_T {
+        boolean_t zombie;
+        pid_t _pid;                           /**< Process PID from last cycle */
+        pid_t _ppid;                   /**< Process parent PID from last cycle */
+        pid_t pid;                          /**< Process PID from actual cycle */
+        pid_t ppid;                  /**< Process parent PID from actual cycle */
+        int uid;                                              /**< Process UID */
+        int euid;                                   /**< Effective Process UID */
+        int gid;                                              /**< Process GID */
+        int threads;
+        int children;
+        uint64_t mem;
+        uint64_t total_mem;
+        float mem_percent;                                     /**< percentage */
+        float total_mem_percent;                               /**< percentage */
+        float cpu_percent;                                     /**< percentage */
+        float total_cpu_percent;                               /**< percentage */
+        time_t uptime;                                     /**< Process uptime */
+        struct IOStatistics_T read;                       /**< Read statistics */
+        struct IOStatistics_T write;                     /**< Write statistics */
+} *ProcessInfo_T;
+
+
+typedef struct NetInfo_T {
+        Link_T stats;
+} *NetInfo_T;
+
+
 /** Defines service data */
-typedef struct myinfo {
-        union {
-                struct {
-                        long long  f_blocks;              /**< Total data blocks in filesystem */
-                        long long  f_blocksfree;   /**< Free blocks available to non-superuser */
-                        long long  f_blocksfreetotal;           /**< Free blocks in filesystem */
-                        long long  f_files;                /**< Total file nodes in filesystem */
-                        long long  f_filesfree;             /**< Free file nodes in filesystem */
-                        long long  inode_total;                  /**< Used inode total objects */
-                        long long  space_total;                   /**< Used space total blocks */
-                        float inode_percent;                        /**< Used inode percentage */
-                        float space_percent;                        /**< Used space percentage */
-                        int f_bsize;                                  /**< Transfer block size */
-                        int _flags;                      /**< Filesystem flags from last cycle */
-                        int flags;                     /**< Filesystem flags from actual cycle */
-                        int uid;                                              /**< Owner's uid */
-                        int gid;                                              /**< Owner's gid */
-                        int mode;                                              /**< Permission */
-                        struct IOStatistics_T read;                       /**< Read statistics */
-                        struct IOStatistics_T write;                     /**< Write statistics */
-                        struct {
-                                struct Statistics_T read;         /**< Time spend by read [ms] */
-                                struct Statistics_T write;       /**< Time spend by write [ms] */
-                                struct Statistics_T wait;   /**< Time spend in wait queue [ms] */
-                                struct Statistics_T run;     /**< Time spend in run queue [ms] */
-                        } time;
-                        struct Device_T object;                             /**< Device object */
-                } filesystem;
-
-                struct {
-                        time_t timestamp;                                       /**< Timestamp */
-                        int mode;                                              /**< Permission */
-                        int uid;                                              /**< Owner's uid */
-                        int gid;                                              /**< Owner's gid */
-                        off_t size;                                                  /**< Size */
-                        off_t readpos;                        /**< Position for regex matching */
-                        ino_t inode;                                                /**< Inode */
-                        ino_t inode_prev;               /**< Previous inode for regex matching */
-                        MD_T  cs_sum;                                            /**< Checksum */ //FIXME: allocate dynamically only when necessary
-                } file;
-
-                struct {
-                        time_t timestamp;                                       /**< Timestamp */
-                        int mode;                                              /**< Permission */
-                        int uid;                                              /**< Owner's uid */
-                        int gid;                                              /**< Owner's gid */
-                } directory;
-
-                struct {
-                        time_t timestamp;                                       /**< Timestamp */
-                        int mode;                                              /**< Permission */
-                        int uid;                                              /**< Owner's uid */
-                        int gid;                                              /**< Owner's gid */
-                } fifo;
-
-                struct {
-                        boolean_t zombie;
-                        pid_t _pid;                           /**< Process PID from last cycle */
-                        pid_t _ppid;                   /**< Process parent PID from last cycle */
-                        pid_t pid;                          /**< Process PID from actual cycle */
-                        pid_t ppid;                  /**< Process parent PID from actual cycle */
-                        int uid;                                              /**< Process UID */
-                        int euid;                                   /**< Effective Process UID */
-                        int gid;                                              /**< Process GID */
-                        int threads;
-                        int children;
-                        uint64_t mem;
-                        uint64_t total_mem;
-                        float mem_percent;                                     /**< percentage */
-                        float total_mem_percent;                               /**< percentage */
-                        float cpu_percent;                                     /**< percentage */
-                        float total_cpu_percent;                               /**< percentage */
-                        time_t uptime;                                     /**< Process uptime */
-                        struct IOStatistics_T read;                       /**< Read statistics */
-                        struct IOStatistics_T write;                     /**< Write statistics */
-                } process;
-
-                struct {
-                        Link_T stats;
-                } net;
-        } priv;
+typedef union Info_T {
+        //FIXME: move global SystemInfo_T systeminfo here (for System service context)
+        DirectoryInfo_T  directory;
+        FifoInfo_T       fifo;
+        FileInfo_T       file;
+        FilesystemInfo_T filesystem;
+        NetInfo_T        net;
+        ProcessInfo_T    process;
 } *Info_T;
 
 
@@ -1112,7 +1124,7 @@ typedef struct myservice {
         /** Runtime parameters */
         int                error;                          /**< Error flags bitmap */
         int                error_hint;   /**< Failed/Changed hint for error bitmap */
-        Info_T             inf;                          /**< Service check result */
+        union Info_T       inf;                          /**< Service check result */
         struct timeval     collected;                /**< When were data collected */ //FIXME: replace with uint64_t? (all places where timeval is used) ... Time_milli()?
         char              *token;                                /**< Action token */
 

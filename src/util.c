@@ -1237,8 +1237,8 @@ void Util_printService(Service_T s) {
                                );
                 } else if (o->resource == Resource_Space) {
                         if (o->limit_absolute > -1) {
-                               if (s->inf->priv.filesystem.f_bsize > 0)
-                                       printf(" %-20s = %s\n", "Space usage limit", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %s", operatornames[o->operator], Str_bytesToSize(o->limit_absolute * s->inf->priv.filesystem.f_bsize, buffer))));
+                               if (s->inf.filesystem->f_bsize > 0)
+                                       printf(" %-20s = %s\n", "Space usage limit", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %s", operatornames[o->operator], Str_bytesToSize(o->limit_absolute * s->inf.filesystem->f_bsize, buffer))));
                                 else
                                        printf(" %-20s = %s\n", "Space usage limit", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %lld blocks", operatornames[o->operator], o->limit_absolute)));
                         } else {
@@ -1246,8 +1246,8 @@ void Util_printService(Service_T s) {
                         }
                 } else if (o->resource == Resource_SpaceFree) {
                         if (o->limit_absolute > -1) {
-                               if (s->inf->priv.filesystem.f_bsize > 0)
-                                       printf(" %-20s = %s\n", "Space free limit", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %s", operatornames[o->operator], Str_bytesToSize(o->limit_absolute * s->inf->priv.filesystem.f_bsize, buffer))));
+                               if (s->inf.filesystem->f_bsize > 0)
+                                       printf(" %-20s = %s\n", "Space free limit", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %s", operatornames[o->operator], Str_bytesToSize(o->limit_absolute * s->inf.filesystem->f_bsize, buffer))));
                                 else
                                        printf(" %-20s = %s\n", "Space free limit", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %lld blocks", operatornames[o->operator], o->limit_absolute)));
                         } else {
@@ -1701,74 +1701,74 @@ static void _resetIOStatistics(IOStatistics_T S) {
 void Util_resetInfo(Service_T s) {
         switch (s->type) {
                 case Service_Filesystem:
-                        s->inf->priv.filesystem.f_bsize = 0LL;
-                        s->inf->priv.filesystem.f_blocks = 0LL;
-                        s->inf->priv.filesystem.f_blocksfree = 0LL;
-                        s->inf->priv.filesystem.f_blocksfreetotal = 0LL;
-                        s->inf->priv.filesystem.f_files = 0LL;
-                        s->inf->priv.filesystem.f_filesfree = 0LL;
-                        s->inf->priv.filesystem.inode_percent = 0.;
-                        s->inf->priv.filesystem.inode_total = 0LL;
-                        s->inf->priv.filesystem.space_percent = 0.;
-                        s->inf->priv.filesystem.space_total = 0LL;
-                        s->inf->priv.filesystem._flags = -1;
-                        s->inf->priv.filesystem.flags = -1;
-                        s->inf->priv.filesystem.mode = -1;
-                        s->inf->priv.filesystem.uid = -1;
-                        s->inf->priv.filesystem.gid = -1;
-                        _resetIOStatistics(&(s->inf->priv.filesystem.read));
-                        _resetIOStatistics(&(s->inf->priv.filesystem.write));
-                        Statistics_reset(&(s->inf->priv.filesystem.time.read));
-                        Statistics_reset(&(s->inf->priv.filesystem.time.write));
-                        Statistics_reset(&(s->inf->priv.filesystem.time.wait));
-                        Statistics_reset(&(s->inf->priv.filesystem.time.run));
+                        s->inf.filesystem->f_bsize = 0LL;
+                        s->inf.filesystem->f_blocks = 0LL;
+                        s->inf.filesystem->f_blocksfree = 0LL;
+                        s->inf.filesystem->f_blocksfreetotal = 0LL;
+                        s->inf.filesystem->f_files = 0LL;
+                        s->inf.filesystem->f_filesfree = 0LL;
+                        s->inf.filesystem->inode_percent = 0.;
+                        s->inf.filesystem->inode_total = 0LL;
+                        s->inf.filesystem->space_percent = 0.;
+                        s->inf.filesystem->space_total = 0LL;
+                        s->inf.filesystem->_flags = -1;
+                        s->inf.filesystem->flags = -1;
+                        s->inf.filesystem->mode = -1;
+                        s->inf.filesystem->uid = -1;
+                        s->inf.filesystem->gid = -1;
+                        _resetIOStatistics(&(s->inf.filesystem->read));
+                        _resetIOStatistics(&(s->inf.filesystem->write));
+                        Statistics_reset(&(s->inf.filesystem->time.read));
+                        Statistics_reset(&(s->inf.filesystem->time.write));
+                        Statistics_reset(&(s->inf.filesystem->time.wait));
+                        Statistics_reset(&(s->inf.filesystem->time.run));
                         break;
                 case Service_File:
                         // persistent: st_inode, readpos
-                        s->inf->priv.file.size  = -1;
-                        s->inf->priv.file.inode_prev = 0;
-                        s->inf->priv.file.mode = -1;
-                        s->inf->priv.file.uid = -1;
-                        s->inf->priv.file.gid = -1;
-                        s->inf->priv.file.timestamp = 0;
-                        *s->inf->priv.file.cs_sum = 0;
+                        s->inf.file->size  = -1;
+                        s->inf.file->inode_prev = 0;
+                        s->inf.file->mode = -1;
+                        s->inf.file->uid = -1;
+                        s->inf.file->gid = -1;
+                        s->inf.file->timestamp = 0;
+                        *s->inf.file->cs_sum = 0;
                         break;
                 case Service_Directory:
-                        s->inf->priv.directory.mode = -1;
-                        s->inf->priv.directory.uid = -1;
-                        s->inf->priv.directory.gid = -1;
-                        s->inf->priv.directory.timestamp = 0;
+                        s->inf.directory->mode = -1;
+                        s->inf.directory->uid = -1;
+                        s->inf.directory->gid = -1;
+                        s->inf.directory->timestamp = 0;
                         break;
                 case Service_Fifo:
-                        s->inf->priv.fifo.mode = -1;
-                        s->inf->priv.fifo.uid = -1;
-                        s->inf->priv.fifo.gid = -1;
-                        s->inf->priv.fifo.timestamp = 0;
+                        s->inf.fifo->mode = -1;
+                        s->inf.fifo->uid = -1;
+                        s->inf.fifo->gid = -1;
+                        s->inf.fifo->timestamp = 0;
                         break;
                 case Service_Process:
-                        s->inf->priv.process._pid = -1;
-                        s->inf->priv.process._ppid = -1;
-                        s->inf->priv.process.pid = -1;
-                        s->inf->priv.process.ppid = -1;
-                        s->inf->priv.process.uid = -1;
-                        s->inf->priv.process.euid = -1;
-                        s->inf->priv.process.gid = -1;
-                        s->inf->priv.process.zombie = false;
-                        s->inf->priv.process.threads = -1;
-                        s->inf->priv.process.children = -1;
-                        s->inf->priv.process.mem = 0ULL;
-                        s->inf->priv.process.total_mem = 0ULL;
-                        s->inf->priv.process.mem_percent = -1.;
-                        s->inf->priv.process.total_mem_percent = -1.;
-                        s->inf->priv.process.cpu_percent = -1.;
-                        s->inf->priv.process.total_cpu_percent = -1.;
-                        s->inf->priv.process.uptime = -1;
-                        _resetIOStatistics(&(s->inf->priv.process.read));
-                        _resetIOStatistics(&(s->inf->priv.process.write));
+                        s->inf.process->_pid = -1;
+                        s->inf.process->_ppid = -1;
+                        s->inf.process->pid = -1;
+                        s->inf.process->ppid = -1;
+                        s->inf.process->uid = -1;
+                        s->inf.process->euid = -1;
+                        s->inf.process->gid = -1;
+                        s->inf.process->zombie = false;
+                        s->inf.process->threads = -1;
+                        s->inf.process->children = -1;
+                        s->inf.process->mem = 0ULL;
+                        s->inf.process->total_mem = 0ULL;
+                        s->inf.process->mem_percent = -1.;
+                        s->inf.process->total_mem_percent = -1.;
+                        s->inf.process->cpu_percent = -1.;
+                        s->inf.process->total_cpu_percent = -1.;
+                        s->inf.process->uptime = -1;
+                        _resetIOStatistics(&(s->inf.process->read));
+                        _resetIOStatistics(&(s->inf.process->write));
                         break;
                 case Service_Net:
-                        if (s->inf->priv.net.stats)
-                                Link_reset(s->inf->priv.net.stats);
+                        if (s->inf.net->stats)
+                                Link_reset(s->inf.net->stats);
                         break;
                 default:
                         break;

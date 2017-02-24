@@ -106,7 +106,7 @@ static boolean_t _getZfsDiskActivity(void *_inf) {
         boolean_t rv = false;
         libzfs_handle_t *z = libzfs_init();
         libzfs_print_on_error(z, 1);
-        zpool_handle_t *zp = zpool_open_canfail(z, inf->priv.filesystem.object.key);
+        zpool_handle_t *zp = zpool_open_canfail(z, inf->filesystem->object.key);
         if (zp) {
                 nvlist_t *zpoolConfig = zpool_get_config(zp, NULL);
                 nvlist_t *zpoolVdevTree = NULL;
@@ -115,12 +115,12 @@ static boolean_t _getZfsDiskActivity(void *_inf) {
                         uint_t zpoolStatisticsCount = 0;
                         if (nvlist_lookup_uint64_array(zpoolVdevTree, ZPOOL_CONFIG_VDEV_STATS, (uint64_t **)&zpoolStatistics, &zpoolStatisticsCount) == 0) {
                                 //FIXME: if the zpool state has error, trigger the fs event, can also report number of read/write/checksum errors (see vdev_stat_t in /usr/include/sys/fs/zfs.h)
-                                DEBUG("ZFS pool '%s' state: %s\n", inf->priv.filesystem.object.key, zpool_state_to_name(zpoolStatistics->vs_state, zpoolStatistics->vs_aux));
+                                DEBUG("ZFS pool '%s' state: %s\n", inf->filesystem->object.key, zpool_state_to_name(zpoolStatistics->vs_state, zpoolStatistics->vs_aux));
                                 uint64_t now = Time_milli();
-                                Statistics_update(&(inf->priv.filesystem.read.bytes), now, zpoolStatistics->vs_bytes[ZIO_TYPE_READ]);
-                                Statistics_update(&(inf->priv.filesystem.write.bytes), now, zpoolStatistics->vs_bytes[ZIO_TYPE_WRITE]);
-                                Statistics_update(&(inf->priv.filesystem.read.operations),  now, zpoolStatistics->vs_ops[ZIO_TYPE_READ]);
-                                Statistics_update(&(inf->priv.filesystem.write.operations), now, zpoolStatistics->vs_ops[ZIO_TYPE_WRITE]);
+                                Statistics_update(&(inf->filesystem->read.bytes), now, zpoolStatistics->vs_bytes[ZIO_TYPE_READ]);
+                                Statistics_update(&(inf->filesystem->write.bytes), now, zpoolStatistics->vs_bytes[ZIO_TYPE_WRITE]);
+                                Statistics_update(&(inf->filesystem->read.operations),  now, zpoolStatistics->vs_ops[ZIO_TYPE_READ]);
+                                Statistics_update(&(inf->filesystem->write.operations), now, zpoolStatistics->vs_ops[ZIO_TYPE_WRITE]);
                                 rv = true;
                         }
                 }
@@ -138,18 +138,18 @@ static boolean_t _getKstatDiskActivity(void *_inf) {
         if (kctl) {
                 kstat_t *kstat;
                 for (kstat = kctl->kc_chain; kstat; kstat = kstat->ks_next) {
-                        if (kstat->ks_type == KSTAT_TYPE_IO && kstat->ks_instance == inf->priv.filesystem.object.instance && IS(kstat->ks_module, inf->priv.filesystem.object.module) && IS(kstat->ks_name, inf->priv.filesystem.object.key)) {
+                        if (kstat->ks_type == KSTAT_TYPE_IO && kstat->ks_instance == inf->filesystem->object.instance && IS(kstat->ks_module, inf->filesystem->object.module) && IS(kstat->ks_name, inf->filesystem->object.key)) {
                                 static kstat_io_t kio;
                                 if (kstat_read(kctl, kstat, &kio) == -1) {
                                         LogError("filesystem statistics error: kstat_read failed -- %s\n", STRERROR);
                                 } else {
                                         uint64_t now = Time_milli();
-                                        Statistics_update(&(inf->priv.filesystem.read.bytes), now, kio.nread);
-                                        Statistics_update(&(inf->priv.filesystem.write.bytes), now, kio.nwritten);
-                                        Statistics_update(&(inf->priv.filesystem.read.operations),  now, kio.reads);
-                                        Statistics_update(&(inf->priv.filesystem.write.operations), now, kio.writes);
-                                        Statistics_update(&(inf->priv.filesystem.time.wait), now, kio.wtime / 1000000.);
-                                        Statistics_update(&(inf->priv.filesystem.time.run), now, kio.rtime / 1000000.);
+                                        Statistics_update(&(inf->filesystem->read.bytes), now, kio.nread);
+                                        Statistics_update(&(inf->filesystem->write.bytes), now, kio.nwritten);
+                                        Statistics_update(&(inf->filesystem->read.operations),  now, kio.reads);
+                                        Statistics_update(&(inf->filesystem->write.operations), now, kio.writes);
+                                        Statistics_update(&(inf->filesystem->time.wait), now, kio.wtime / 1000000.);
+                                        Statistics_update(&(inf->filesystem->time.run), now, kio.rtime / 1000000.);
                                         rv = true;
                                 }
                         }
@@ -163,19 +163,19 @@ static boolean_t _getKstatDiskActivity(void *_inf) {
 static boolean_t _getDiskUsage(void *_inf) {
         Info_T inf = _inf;
         struct statvfs usage;
-        if (statvfs(inf->priv.filesystem.object.mountpoint, &usage) != 0) {
-                LogError("Error getting usage statistics for filesystem '%s' -- %s\n", inf->priv.filesystem.object.mountpoint, STRERROR);
+        if (statvfs(inf->filesystem->object.mountpoint, &usage) != 0) {
+                LogError("Error getting usage statistics for filesystem '%s' -- %s\n", inf->filesystem->object.mountpoint, STRERROR);
                 return false;
         }
         int size = usage.f_frsize ? (usage.f_bsize / usage.f_frsize) : 1;
-        inf->priv.filesystem.f_bsize = usage.f_bsize;
-        inf->priv.filesystem.f_blocks = usage.f_blocks / size;
-        inf->priv.filesystem.f_blocksfree = usage.f_bavail / size;
-        inf->priv.filesystem.f_blocksfreetotal = usage.f_bfree  / size;
-        inf->priv.filesystem.f_files = usage.f_files;
-        inf->priv.filesystem.f_filesfree = usage.f_ffree;
-        inf->priv.filesystem._flags = inf->priv.filesystem.flags;
-        inf->priv.filesystem.flags = usage.f_flag;
+        inf->filesystem->f_bsize = usage.f_bsize;
+        inf->filesystem->f_blocks = usage.f_blocks / size;
+        inf->filesystem->f_blocksfree = usage.f_bavail / size;
+        inf->filesystem->f_blocksfreetotal = usage.f_bfree  / size;
+        inf->filesystem->f_files = usage.f_files;
+        inf->filesystem->f_filesfree = usage.f_ffree;
+        inf->filesystem->_flags = inf->filesystem->flags;
+        inf->filesystem->flags = usage.f_flag;
         return true;
 }
 
@@ -200,24 +200,24 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
         resetmnttab(f);
         struct extmnttab mnt;
         boolean_t rv = false;
-        inf->priv.filesystem.object.generation = _statistics.generation;
+        inf->filesystem->object.generation = _statistics.generation;
         while (getextmntent(f, &mnt, sizeof(struct extmnttab)) == 0) {
                 if (compare(path, &mnt)) {
-                        strncpy(inf->priv.filesystem.object.device, mnt.mnt_special, sizeof(inf->priv.filesystem.object.device) - 1);
-                        strncpy(inf->priv.filesystem.object.mountpoint, mnt.mnt_mountp, sizeof(inf->priv.filesystem.object.mountpoint) - 1);
-                        strncpy(inf->priv.filesystem.object.type, mnt.mnt_fstype, sizeof(inf->priv.filesystem.object.type) - 1);
-                        inf->priv.filesystem.object.getDiskUsage = _getDiskUsage; // The disk usage method is common for all filesystem types
+                        strncpy(inf->filesystem->object.device, mnt.mnt_special, sizeof(inf->filesystem->object.device) - 1);
+                        strncpy(inf->filesystem->object.mountpoint, mnt.mnt_mountp, sizeof(inf->filesystem->object.mountpoint) - 1);
+                        strncpy(inf->filesystem->object.type, mnt.mnt_fstype, sizeof(inf->filesystem->object.type) - 1);
+                        inf->filesystem->object.getDiskUsage = _getDiskUsage; // The disk usage method is common for all filesystem types
                         if (Str_startsWith(mnt.mnt_fstype, MNTTYPE_NFS)) {
-                                strncpy(inf->priv.filesystem.object.module, "nfs", sizeof(inf->priv.filesystem.object.module) - 1);
-                                snprintf(inf->priv.filesystem.object.key, sizeof(inf->priv.filesystem.object.key), "nfs%d", mnt.mnt_minor);
-                                inf->priv.filesystem.object.instance = mnt.mnt_minor;
-                                inf->priv.filesystem.object.getDiskActivity = _getKstatDiskActivity;
+                                strncpy(inf->filesystem->object.module, "nfs", sizeof(inf->filesystem->object.module) - 1);
+                                snprintf(inf->filesystem->object.key, sizeof(inf->filesystem->object.key), "nfs%d", mnt.mnt_minor);
+                                inf->filesystem->object.instance = mnt.mnt_minor;
+                                inf->filesystem->object.getDiskActivity = _getKstatDiskActivity;
                                 rv = true;
                         } else if (IS(mnt.mnt_fstype, MNTTYPE_ZFS)) {
-                                strncpy(inf->priv.filesystem.object.module, "zfs", sizeof(inf->priv.filesystem.object.module) - 1);
+                                strncpy(inf->filesystem->object.module, "zfs", sizeof(inf->filesystem->object.module) - 1);
                                 char *slash = strchr(mnt.mnt_special, '/');
-                                strncpy(inf->priv.filesystem.object.key, mnt.mnt_special, slash ? slash - mnt.mnt_special : sizeof(inf->priv.filesystem.object.key) - 1);
-                                inf->priv.filesystem.object.getDiskActivity = _getZfsDiskActivity;
+                                strncpy(inf->filesystem->object.key, mnt.mnt_special, slash ? slash - mnt.mnt_special : sizeof(inf->filesystem->object.key) - 1);
+                                inf->filesystem->object.getDiskActivity = _getZfsDiskActivity;
                                 rv = true;
                         } else if (IS(mnt.mnt_fstype, MNTTYPE_UFS)) {
                                 char special[PATH_MAX];
@@ -232,7 +232,7 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                                         int speclen = strlen(special);
                                         int devlen = strlen("/devices");
                                         int len = speclen - devlen - 2;
-                                        inf->priv.filesystem.object.partition = *(special + speclen - 1);
+                                        inf->filesystem->object.partition = *(special + speclen - 1);
                                         memmove(special, special + devlen, len);
                                         special[len] = 0;
                                         char line[PATH_MAX] = {};
@@ -242,16 +242,16 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                                         } else {
                                                 while (fgets(line, sizeof(line), pti)) {
                                                         char path[1024] = {};
-                                                        if (sscanf(line, "\"%1023[^\"]\" %d \"%255[^\"]\"", path, &(inf->priv.filesystem.object.instance), inf->priv.filesystem.object.module) == 3) {
+                                                        if (sscanf(line, "\"%1023[^\"]\" %d \"%255[^\"]\"", path, &(inf->filesystem->object.instance), inf->filesystem->object.module) == 3) {
                                                                 if (IS(path, special)) {
-                                                                        if (IS(inf->priv.filesystem.object.module, "cmdk")) {
+                                                                        if (IS(inf->filesystem->object.module, "cmdk")) {
                                                                                 // the "common disk driver" has no "partition" iostat class, only whole "disk" (at least on Solaris 10)
-                                                                                snprintf(inf->priv.filesystem.object.key, sizeof(inf->priv.filesystem.object.key), "%s%d", inf->priv.filesystem.object.module, inf->priv.filesystem.object.instance);
+                                                                                snprintf(inf->filesystem->object.key, sizeof(inf->filesystem->object.key), "%s%d", inf->filesystem->object.module, inf->filesystem->object.instance);
                                                                         } else {
                                                                                 // use partition for other drivers
-                                                                                snprintf(inf->priv.filesystem.object.key, sizeof(inf->priv.filesystem.object.key), "%s%d,%c", inf->priv.filesystem.object.module, inf->priv.filesystem.object.instance, inf->priv.filesystem.object.partition);
+                                                                                snprintf(inf->filesystem->object.key, sizeof(inf->filesystem->object.key), "%s%d,%c", inf->filesystem->object.module, inf->filesystem->object.instance, inf->filesystem->object.partition);
                                                                         }
-                                                                        inf->priv.filesystem.object.getDiskActivity = _getKstatDiskActivity;
+                                                                        inf->filesystem->object.getDiskActivity = _getKstatDiskActivity;
                                                                         rv = true;
                                                                         break;
                                                                 }
@@ -261,17 +261,17 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                                         }
                                 }
                         } else {
-                                inf->priv.filesystem.object.getDiskActivity = _getDummyDiskActivity;
+                                inf->filesystem->object.getDiskActivity = _getDummyDiskActivity;
                                 rv = true;
                         }
                         fclose(f);
-                        inf->priv.filesystem.object.mounted = rv;
+                        inf->filesystem->object.mounted = rv;
                         return rv;
                 }
         }
         LogError("Lookup for '%s' filesystem failed  -- not found in %s\n", path, MNTTAB);
         fclose(f);
-        inf->priv.filesystem.object.mounted = false;
+        inf->filesystem->object.mounted = false;
         return false;
 }
 
@@ -283,11 +283,11 @@ static boolean_t _getDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                 _statistics.timestamp = (double)sb.st_mtim.tv_sec * 1000. + (double)sb.st_mtim.tv_nsec / 1000000.;
                 _statistics.generation++; // Increment, so all other filesystems can see the generation has changed
         }
-        if (inf->priv.filesystem.object.generation != _statistics.generation) {
+        if (inf->filesystem->object.generation != _statistics.generation) {
                 _setDevice(inf, path, compare); // The mount table has changed => refresh
         }
-        if (inf->priv.filesystem.object.mounted) {
-                return (inf->priv.filesystem.object.getDiskUsage(inf) && inf->priv.filesystem.object.getDiskActivity(inf));
+        if (inf->filesystem->object.mounted) {
+                return (inf->filesystem->object.getDiskUsage(inf) && inf->filesystem->object.getDiskActivity(inf));
         }
         return false;
 }

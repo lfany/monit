@@ -85,9 +85,9 @@ boolean_t filesystem_usage(Service_T s) {
                 //   2. or it is mountpoint which doesn't exist (subdirectory of parent filesystem which is not mounted itself or the mountpoint was deleted)
                 //   3. or it is a hotplug device which was unconfigured from the system
                 // Try to use the Filesystem_getByDevice() which will find case #1 above and keep the error for cases #2 and #3
-                if (Filesystem_getByDevice(s->inf, s->path)) {
+                if (Filesystem_getByDevice(&(s->inf), s->path)) {
                         // If the device connection string was found, get uid/gid/mode of the mountpoint (connection string itself cannot be stated)
-                        if (stat(s->inf->priv.filesystem.object.mountpoint, &sb) == 0) {
+                        if (stat(s->inf.filesystem->object.mountpoint, &sb) == 0) {
                                 rv = true;
                         }
                 }
@@ -96,30 +96,30 @@ boolean_t filesystem_usage(Service_T s) {
                 if (realpath(s->path, buf)) {
                         if (S_ISDIR(sb.st_mode)) {
                                 // Directory -> mountpoint
-                                rv = Filesystem_getByMountpoint(s->inf, buf);
+                                rv = Filesystem_getByMountpoint(&(s->inf), buf);
                         } else if (S_ISBLK(sb.st_mode) || S_ISCHR(sb.st_mode)) {
                                 // Block or character device
-                                rv = Filesystem_getByDevice(s->inf, buf);
+                                rv = Filesystem_getByDevice(&(s->inf), buf);
                         }
                 }
         }
         if (rv) {
-                s->inf->priv.filesystem.mode = sb.st_mode;
-                s->inf->priv.filesystem.uid = sb.st_uid;
-                s->inf->priv.filesystem.gid = sb.st_gid;
-                s->inf->priv.filesystem.inode_total = s->inf->priv.filesystem.f_files - s->inf->priv.filesystem.f_filesfree;
-                s->inf->priv.filesystem.space_total = s->inf->priv.filesystem.f_blocks - s->inf->priv.filesystem.f_blocksfreetotal;
-                s->inf->priv.filesystem.inode_percent = s->inf->priv.filesystem.f_files > 0 ? 100. * (double)s->inf->priv.filesystem.inode_total / (double)s->inf->priv.filesystem.f_files : 0.;
-                s->inf->priv.filesystem.space_percent = s->inf->priv.filesystem.f_blocks > 0 ? 100. * (double)s->inf->priv.filesystem.space_total / (double)s->inf->priv.filesystem.f_blocks : 0.;
+                s->inf.filesystem->mode = sb.st_mode;
+                s->inf.filesystem->uid = sb.st_uid;
+                s->inf.filesystem->gid = sb.st_gid;
+                s->inf.filesystem->inode_total = s->inf.filesystem->f_files - s->inf.filesystem->f_filesfree;
+                s->inf.filesystem->space_total = s->inf.filesystem->f_blocks - s->inf.filesystem->f_blocksfreetotal;
+                s->inf.filesystem->inode_percent = s->inf.filesystem->f_files > 0 ? 100. * (double)s->inf.filesystem->inode_total / (double)s->inf.filesystem->f_files : 0.;
+                s->inf.filesystem->space_percent = s->inf.filesystem->f_blocks > 0 ? 100. * (double)s->inf.filesystem->space_total / (double)s->inf.filesystem->f_blocks : 0.;
         } else {
-                Statistics_reset(&(s->inf->priv.filesystem.read.bytes));
-                Statistics_reset(&(s->inf->priv.filesystem.read.operations));
-                Statistics_reset(&(s->inf->priv.filesystem.write.bytes));
-                Statistics_reset(&(s->inf->priv.filesystem.write.operations));
-                Statistics_reset(&(s->inf->priv.filesystem.time.read));
-                Statistics_reset(&(s->inf->priv.filesystem.time.write));
-                Statistics_reset(&(s->inf->priv.filesystem.time.wait));
-                Statistics_reset(&(s->inf->priv.filesystem.time.run));
+                Statistics_reset(&(s->inf.filesystem->read.bytes));
+                Statistics_reset(&(s->inf.filesystem->read.operations));
+                Statistics_reset(&(s->inf.filesystem->write.bytes));
+                Statistics_reset(&(s->inf.filesystem->write.operations));
+                Statistics_reset(&(s->inf.filesystem->time.read));
+                Statistics_reset(&(s->inf.filesystem->time.write));
+                Statistics_reset(&(s->inf.filesystem->time.wait));
+                Statistics_reset(&(s->inf.filesystem->time.run));
                 LogError("Filesystem '%s' not mounted\n", s->path);
         }
         return rv;

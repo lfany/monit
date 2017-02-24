@@ -266,10 +266,28 @@ static void _gc_service(Service_T *s) {
                 _gc_eventaction(&(*s)->action_ACTION);
         if ((*s)->eventlist)
                 gc_event(&(*s)->eventlist);
-        if ((*s)->inf) {
-                if ((*s)->type == Service_Net)
-                        Link_free(&((*s)->inf->priv.net.stats));
-                FREE((*s)->inf);
+        switch ((*s)->type) {
+                case Service_Directory:
+                        FREE((*s)->inf.directory);
+                        break;
+                case Service_Fifo:
+                        FREE((*s)->inf.fifo);
+                        break;
+                case Service_File:
+                        FREE((*s)->inf.file);
+                        break;
+                case Service_Filesystem:
+                        FREE((*s)->inf.filesystem);
+                        break;
+                case Service_Net:
+                        Link_free(&((*s)->inf.net->stats));
+                        FREE((*s)->inf.net);
+                        break;
+                case Service_Process:
+                        FREE((*s)->inf.process);
+                        break;
+                default:
+                        break;
         }
         FREE((*s)->name);
         FREE((*s)->path);

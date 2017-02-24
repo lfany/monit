@@ -1195,14 +1195,14 @@ checkhost       : CHECKHOST SERVICENAME ADDRESS STRING {
 checknet        : CHECKNET SERVICENAME ADDRESS STRING {
                         if (Link_isGetByAddressSupported()) {
                                 createservice(Service_Net, $<string>2, $4, check_net);
-                                current->inf->priv.net.stats = Link_createForAddress($4);
+                                current->inf.net->stats = Link_createForAddress($4);
                         } else {
                                 yyerror("Network monitoring by IP address is not supported on this platform, please use 'check network <foo> with interface <bar>' instead");
                         }
                   }
                 | CHECKNET SERVICENAME INTERFACE STRING {
                         createservice(Service_Net, $<string>2, $4, check_net);
-                        current->inf->priv.net.stats = Link_createForInterface($4);
+                        current->inf.net->stats = Link_createForInterface($4);
                   }
                 ;
 
@@ -2412,7 +2412,7 @@ space           : IF SPACE operator value unit rate1 THEN action1 recovery {
                                 yyerror2("Cannot read usage of filesystem %s", current->path);
                         filesystemset.resource = Resource_Space;
                         filesystemset.operator = $<number>3;
-                        filesystemset.limit_absolute = (long long)((double)$<real>4 / (double)current->inf->priv.filesystem.f_bsize * (double)$<number>5);
+                        filesystemset.limit_absolute = (long long)((double)$<real>4 / (double)current->inf.filesystem->f_bsize * (double)$<number>5);
                         addeventaction(&(filesystemset).action, $<number>8, $<number>9);
                         addfilesystem(&filesystemset);
                   }
@@ -2428,7 +2428,7 @@ space           : IF SPACE operator value unit rate1 THEN action1 recovery {
                                 yyerror2("Cannot read usage of filesystem %s", current->path);
                         filesystemset.resource = Resource_SpaceFree;
                         filesystemset.operator = $<number>4;
-                        filesystemset.limit_absolute = (long long)((double)$<real>5 / (double)current->inf->priv.filesystem.f_bsize * (double)$<number>6);
+                        filesystemset.limit_absolute = (long long)((double)$<real>5 / (double)current->inf.filesystem->f_bsize * (double)$<number>6);
                         addeventaction(&(filesystemset).action, $<number>9, $<number>10);
                         addfilesystem(&filesystemset);
                   }
@@ -3051,7 +3051,45 @@ static Service_T createservice(Service_Type type, char *name, char *value, State
 
         current->type = type;
 
-        NEW(current->inf);
+/*
+DEBUG("BUBU: size=%d\n", sizeof(*(current->inf)));
+DEBUG("BUBU: size file=%d\n", sizeof((current->inf.file)));
+DEBUG("BUBU: size fifo=%d\n", sizeof((current->inf.fifo)));
+DEBUG("BUBU: size filesystem=%d\n", sizeof((current->inf.filesystem)));
+DEBUG("BUBU: size directory=%d\n", sizeof((current->inf.directory)));
+DEBUG("BUBU: size process=%d\n", sizeof((current->inf.process)));
+DEBUG("BUBU: size net=%d\n", sizeof((current->inf.net)));
+
+BUBU: size=3832
+BUBU: size file=128
+BUBU: size fifo=24
+BUBU: size filesystem=3832
+BUBU: size directory=24
+BUBU: size process=240
+BUBU: size net=8
+*/
+        switch (type) {
+                case Service_Directory:
+                        NEW(current->inf.directory);
+                        break;
+                case Service_Fifo:
+                        NEW(current->inf.fifo);
+                        break;
+                case Service_File:
+                        NEW(current->inf.file);
+                        break;
+                case Service_Filesystem:
+                        NEW(current->inf.filesystem);
+                        break;
+                case Service_Net:
+                        NEW(current->inf.net);
+                        break;
+                case Service_Process:
+                        NEW(current->inf.process);
+                        break;
+                default:
+                        break;
+        }
         Util_resetInfo(current);
 
         if (type == Service_Program) {
