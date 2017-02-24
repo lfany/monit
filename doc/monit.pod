@@ -2333,7 +2333,7 @@ Platforms I/O statistics granularity and filesystem support:
  | AIX          | per-disk       | disk io monitoring not supported currently | JFSx   |
  | DragonFlyBSD | per-disk       | UFS                                        | HAMMER |
  | FreeBSD      | per-disk       | UFS                                        | ZFS    |
- | Linux        | per-filesystem | EXTx, XFS, NFS, CIFS                       |        |
+ | Linux        | per-filesystem | EXTx, XFS, BTRFS, NFS, CIFS                |        |
  | MacOS        | per-disk       | HFS                                        |        |
  | NetBSD       | per-disk       | FFS                                        | NFS    |
  | OpenBSD      | per-disk       | FFS                                        |        |
