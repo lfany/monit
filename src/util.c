@@ -1496,21 +1496,21 @@ pid_t Util_getPid(char *pidfile) {
                 return 0;
         }
         if (! File_isFile(pidfile)) {
-                LogError("pidfile '%s' is not a regular file\n", pidfile);
+                DEBUG("pidfile '%s' is not a regular file\n", pidfile);
                 return 0;
         }
         if ((file = fopen(pidfile,"r")) == (FILE *)NULL) {
-                LogError("Error opening the pidfile '%s' -- %s\n", pidfile, STRERROR);
+                DEBUG("Error opening the pidfile '%s' -- %s\n", pidfile, STRERROR);
                 return 0;
         }
         if (fscanf(file, "%d", &pid) != 1) {
-                LogError("Error reading pid from file '%s'\n", pidfile);
+                DEBUG("Error reading pid from file '%s'\n", pidfile);
                 if (fclose(file))
-                        LogError("Error closing file '%s' -- %s\n", pidfile, STRERROR);
+                        DEBUG("Error closing file '%s' -- %s\n", pidfile, STRERROR);
                 return 0;
         }
         if (fclose(file))
-                LogError("Error closing file '%s' -- %s\n", pidfile, STRERROR);
+                DEBUG("Error closing file '%s' -- %s\n", pidfile, STRERROR);
 
         if (pid < 0)
                 return(0);
