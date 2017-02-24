@@ -87,6 +87,8 @@ Fixed: If the connection timed out, Monit reported incorrect error: "Resource te
 
 Fixed: Implicit filesystem existence monitoring even if the "does not exist" test is not defined.
 
+Fixed: Issue #563: Only log test of PID file in debug mode to prevent flooding the log during normal operations.
+
 
 Version 5.20.0
 
