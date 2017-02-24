@@ -275,37 +275,37 @@ boolean_t ProcessTree_updateProcess(Service_T s, pid_t pid) {
         ASSERT(s);
 
         /* save the previous pid and set actual one */
-        s->inf->priv.process._pid = s->inf->priv.process.pid;
-        s->inf->priv.process.pid  = pid;
+        s->inf.process->_pid = s->inf.process->pid;
+        s->inf.process->pid  = pid;
 
         int leaf = _findProcess(pid, ptree, ptreesize);
         if (leaf != -1) {
                 /* save the previous ppid and set actual one */
-                s->inf->priv.process._ppid             = s->inf->priv.process.ppid;
-                s->inf->priv.process.ppid              = ptree[leaf].ppid;
-                s->inf->priv.process.uid               = ptree[leaf].cred.uid;
-                s->inf->priv.process.euid              = ptree[leaf].cred.euid;
-                s->inf->priv.process.gid               = ptree[leaf].cred.gid;
-                s->inf->priv.process.uptime            = ptree[leaf].uptime;
-                s->inf->priv.process.threads           = ptree[leaf].threads;
-                s->inf->priv.process.children          = ptree[leaf].children.total;
-                s->inf->priv.process.zombie            = ptree[leaf].zombie;
-                s->inf->priv.process.cpu_percent       = ptree[leaf].cpu.usage;
-                s->inf->priv.process.total_cpu_percent = ptree[leaf].cpu.usage_total > 100. ? 100. : ptree[leaf].cpu.usage_total;
-                s->inf->priv.process.mem               = ptree[leaf].memory.usage;
-                s->inf->priv.process.total_mem         = ptree[leaf].memory.usage_total;
+                s->inf.process->_ppid             = s->inf.process->ppid;
+                s->inf.process->ppid              = ptree[leaf].ppid;
+                s->inf.process->uid               = ptree[leaf].cred.uid;
+                s->inf.process->euid              = ptree[leaf].cred.euid;
+                s->inf.process->gid               = ptree[leaf].cred.gid;
+                s->inf.process->uptime            = ptree[leaf].uptime;
+                s->inf.process->threads           = ptree[leaf].threads;
+                s->inf.process->children          = ptree[leaf].children.total;
+                s->inf.process->zombie            = ptree[leaf].zombie;
+                s->inf.process->cpu_percent       = ptree[leaf].cpu.usage;
+                s->inf.process->total_cpu_percent = ptree[leaf].cpu.usage_total > 100. ? 100. : ptree[leaf].cpu.usage_total;
+                s->inf.process->mem               = ptree[leaf].memory.usage;
+                s->inf.process->total_mem         = ptree[leaf].memory.usage_total;
                 if (systeminfo.mem_max > 0) {
-                        s->inf->priv.process.total_mem_percent = ptree[leaf].memory.usage_total >= systeminfo.mem_max ? 100. : (100. * (double)ptree[leaf].memory.usage_total / (double)systeminfo.mem_max);
-                        s->inf->priv.process.mem_percent       = ptree[leaf].memory.usage >= systeminfo.mem_max ? 100. : (100. * (double)ptree[leaf].memory.usage / (double)systeminfo.mem_max);
+                        s->inf.process->total_mem_percent = ptree[leaf].memory.usage_total >= systeminfo.mem_max ? 100. : (100. * (double)ptree[leaf].memory.usage_total / (double)systeminfo.mem_max);
+                        s->inf.process->mem_percent       = ptree[leaf].memory.usage >= systeminfo.mem_max ? 100. : (100. * (double)ptree[leaf].memory.usage / (double)systeminfo.mem_max);
                 }
                 if (ptree[leaf].read.bytes)
-                        Statistics_update(&(s->inf->priv.process.read.bytes), ptree[leaf].read.time, ptree[leaf].read.bytes);
+                        Statistics_update(&(s->inf.process->read.bytes), ptree[leaf].read.time, ptree[leaf].read.bytes);
                 if (ptree[leaf].read.operations)
-                        Statistics_update(&(s->inf->priv.process.read.operations), ptree[leaf].read.time, ptree[leaf].read.operations);
+                        Statistics_update(&(s->inf.process->read.operations), ptree[leaf].read.time, ptree[leaf].read.operations);
                 if (ptree[leaf].write.bytes)
-                        Statistics_update(&(s->inf->priv.process.write.bytes), ptree[leaf].write.time, ptree[leaf].write.bytes);
+                        Statistics_update(&(s->inf.process->write.bytes), ptree[leaf].write.time, ptree[leaf].write.bytes);
                 if (ptree[leaf].write.operations)
-                        Statistics_update(&(s->inf->priv.process.write.operations), ptree[leaf].write.time, ptree[leaf].write.operations);
+                        Statistics_update(&(s->inf.process->write.operations), ptree[leaf].write.time, ptree[leaf].write.operations);
                 return true;
         }
         Util_resetInfo(s);
@@ -325,10 +325,10 @@ time_t ProcessTree_getProcessUptime(pid_t pid) {
 pid_t ProcessTree_findProcess(Service_T s) {
         ASSERT(s);
         // Test the cached PID first
-        if (s->inf->priv.process.pid > 0) {
+        if (s->inf.process->pid > 0) {
                 errno = 0;
-                if (getpgid(s->inf->priv.process.pid) > -1 || errno == EPERM)
-                        return s->inf->priv.process.pid;
+                if (getpgid(s->inf.process->pid) > -1 || errno == EPERM)
+                        return s->inf.process->pid;
         }
         // If the cached PID is not running, scan for the process again
         if (s->matchlist) {

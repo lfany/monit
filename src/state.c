@@ -213,8 +213,8 @@ static void _updateMonitor(Service_T S, Monitor_State monitor) {
 
 
 static void _updateFilePosition(Service_T S, unsigned long long inode, unsigned long long readpos) {
-        S->inf->priv.file.inode = (ino_t)inode;
-        S->inf->priv.file.readpos = (off_t)readpos;
+        S->inf.file->inode = (ino_t)inode;
+        S->inf.file->readpos = (off_t)readpos;
 }
 
 
@@ -254,7 +254,7 @@ static void _updateChecksum(Service_T S, char *hash) {
 
 static void _updateFilesystemFlags(Service_T S, int flags) {
         if (S->fsflaglist)
-                S->inf->priv.filesystem.flags = flags;
+                S->inf.filesystem->flags = flags;
 }
 
 
@@ -443,24 +443,24 @@ void State_save() {
                         state.ncycle = service->ncycle;
                         switch (service->type) {
                                 case Service_Directory:
-                                        state.priv.directory.timestamp = (unsigned long long)service->inf->priv.directory.timestamp;
+                                        state.priv.directory.timestamp = (unsigned long long)service->inf.directory->timestamp;
                                         if (service->perm)
                                                 state.priv.directory.mode = service->perm->perm;
                                         break;
 
                                 case Service_Fifo:
-                                        state.priv.fifo.timestamp = (unsigned long long)service->inf->priv.fifo.timestamp;
+                                        state.priv.fifo.timestamp = (unsigned long long)service->inf.fifo->timestamp;
                                         if (service->perm)
                                                 state.priv.fifo.mode = service->perm->perm;
                                         break;
 
                                 case Service_File:
-                                        state.priv.file.inode = service->inf->priv.file.inode;
-                                        state.priv.file.readpos = service->inf->priv.file.readpos;
-                                        state.priv.file.size = (unsigned long long)service->inf->priv.file.size;
-                                        state.priv.file.timestamp = (unsigned long long)service->inf->priv.file.timestamp;
+                                        state.priv.file.inode = service->inf.file->inode;
+                                        state.priv.file.readpos = service->inf.file->readpos;
+                                        state.priv.file.size = (unsigned long long)service->inf.file->size;
+                                        state.priv.file.timestamp = (unsigned long long)service->inf.file->timestamp;
                                         if (service->checksum)
-                                                strncpy(state.priv.file.hash, service->inf->priv.file.cs_sum, sizeof(state.priv.file.hash));
+                                                strncpy(state.priv.file.hash, service->inf.file->cs_sum, sizeof(state.priv.file.hash));
                                         if (service->perm)
                                                 state.priv.file.mode = service->perm->perm;
                                         break;
@@ -468,7 +468,7 @@ void State_save() {
                                 case Service_Filesystem:
                                         if (service->perm)
                                                 state.priv.filesystem.mode = service->perm->perm;
-                                        state.priv.filesystem.flags = service->inf->priv.filesystem.flags;
+                                        state.priv.filesystem.flags = service->inf.filesystem->flags;
                                         break;
 
                                 case Service_Net:

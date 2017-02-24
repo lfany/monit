@@ -224,13 +224,13 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         "<gid>%d</gid>"
                                         "<timestamp>%lld</timestamp>"
                                         "<size>%llu</size>",
-                                        S->inf->priv.file.mode & 07777,
-                                        (int)S->inf->priv.file.uid,
-                                        (int)S->inf->priv.file.gid,
-                                        (long long)S->inf->priv.file.timestamp,
-                                        (unsigned long long)S->inf->priv.file.size);
+                                        S->inf.file->mode & 07777,
+                                        (int)S->inf.file->uid,
+                                        (int)S->inf.file->gid,
+                                        (long long)S->inf.file->timestamp,
+                                        (unsigned long long)S->inf.file->size);
                                 if (S->checksum)
-                                        StringBuffer_append(B, "<checksum type=\"%s\">%s</checksum>", checksumnames[S->checksum->type], S->inf->priv.file.cs_sum);
+                                        StringBuffer_append(B, "<checksum type=\"%s\">%s</checksum>", checksumnames[S->checksum->type], S->inf.file->cs_sum);
                                 break;
 
                         case Service_Directory:
@@ -239,10 +239,10 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         "<uid>%d</uid>"
                                         "<gid>%d</gid>"
                                         "<timestamp>%lld</timestamp>",
-                                        S->inf->priv.directory.mode & 07777,
-                                        (int)S->inf->priv.directory.uid,
-                                        (int)S->inf->priv.directory.gid,
-                                        (long long)S->inf->priv.directory.timestamp);
+                                        S->inf.directory->mode & 07777,
+                                        (int)S->inf.directory->uid,
+                                        (int)S->inf.directory->gid,
+                                        (long long)S->inf.directory->timestamp);
                                 break;
 
                         case Service_Fifo:
@@ -251,10 +251,10 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         "<uid>%d</uid>"
                                         "<gid>%d</gid>"
                                         "<timestamp>%lld</timestamp>",
-                                        S->inf->priv.fifo.mode & 07777,
-                                        (int)S->inf->priv.fifo.uid,
-                                        (int)S->inf->priv.fifo.gid,
-                                        (long long)S->inf->priv.fifo.timestamp);
+                                        S->inf.fifo->mode & 07777,
+                                        (int)S->inf.fifo->uid,
+                                        (int)S->inf.fifo->gid,
+                                        (long long)S->inf.fifo->timestamp);
                                 break;
 
                         case Service_Filesystem:
@@ -269,41 +269,41 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         "<usage>%.1lf</usage>"
                                         "<total>%.1lf</total>"
                                         "</block>",
-                                        S->inf->priv.filesystem.object.type,
-                                        S->inf->priv.filesystem.mode & 07777,
-                                        (int)S->inf->priv.filesystem.uid,
-                                        (int)S->inf->priv.filesystem.gid,
-                                        S->inf->priv.filesystem.flags,
-                                        S->inf->priv.filesystem.space_percent,
-                                        S->inf->priv.filesystem.f_bsize > 0 ? (double)S->inf->priv.filesystem.space_total / 1048576. * (double)S->inf->priv.filesystem.f_bsize : 0.,
-                                        S->inf->priv.filesystem.f_bsize > 0 ? (double)S->inf->priv.filesystem.f_blocks / 1048576. * (double)S->inf->priv.filesystem.f_bsize : 0.);
-                                if (S->inf->priv.filesystem.f_files > 0) {
+                                        S->inf.filesystem->object.type,
+                                        S->inf.filesystem->mode & 07777,
+                                        (int)S->inf.filesystem->uid,
+                                        (int)S->inf.filesystem->gid,
+                                        S->inf.filesystem->flags,
+                                        S->inf.filesystem->space_percent,
+                                        S->inf.filesystem->f_bsize > 0 ? (double)S->inf.filesystem->space_total / 1048576. * (double)S->inf.filesystem->f_bsize : 0.,
+                                        S->inf.filesystem->f_bsize > 0 ? (double)S->inf.filesystem->f_blocks / 1048576. * (double)S->inf.filesystem->f_bsize : 0.);
+                                if (S->inf.filesystem->f_files > 0) {
                                         StringBuffer_append(B,
                                                 "<inode>"
                                                 "<percent>%.1f</percent>"
                                                 "<usage>%lld</usage>"
                                                 "<total>%lld</total>"
                                                 "</inode>",
-                                                S->inf->priv.filesystem.inode_percent,
-                                                S->inf->priv.filesystem.inode_total,
-                                                S->inf->priv.filesystem.f_files);
+                                                S->inf.filesystem->inode_percent,
+                                                S->inf.filesystem->inode_total,
+                                                S->inf.filesystem->f_files);
                                 }
-                                _ioStatistics(B, "read", &(S->inf->priv.filesystem.read));
-                                _ioStatistics(B, "write", &(S->inf->priv.filesystem.write));
-                                boolean_t hasReadTime = Statistics_initialized(&(S->inf->priv.filesystem.time.read));
-                                boolean_t hasWriteTime = Statistics_initialized(&(S->inf->priv.filesystem.time.write));
-                                boolean_t hasWaitTime = Statistics_initialized(&(S->inf->priv.filesystem.time.wait));
-                                boolean_t hasRunTime = Statistics_initialized(&(S->inf->priv.filesystem.time.run));
+                                _ioStatistics(B, "read", &(S->inf.filesystem->read));
+                                _ioStatistics(B, "write", &(S->inf.filesystem->write));
+                                boolean_t hasReadTime = Statistics_initialized(&(S->inf.filesystem->time.read));
+                                boolean_t hasWriteTime = Statistics_initialized(&(S->inf.filesystem->time.write));
+                                boolean_t hasWaitTime = Statistics_initialized(&(S->inf.filesystem->time.wait));
+                                boolean_t hasRunTime = Statistics_initialized(&(S->inf.filesystem->time.run));
                                 if (hasReadTime || hasWriteTime || hasWaitTime || hasRunTime) {
                                         StringBuffer_append(B, "<servicetime>");
                                         if (hasReadTime)
-                                                StringBuffer_append(B, "<read>%.3f</read>", Statistics_deltaNormalize(&(S->inf->priv.filesystem.time.read)));
+                                                StringBuffer_append(B, "<read>%.3f</read>", Statistics_deltaNormalize(&(S->inf.filesystem->time.read)));
                                         if (hasWriteTime)
-                                                StringBuffer_append(B, "<write>%.3f</write>", Statistics_deltaNormalize(&(S->inf->priv.filesystem.time.write)));
+                                                StringBuffer_append(B, "<write>%.3f</write>", Statistics_deltaNormalize(&(S->inf.filesystem->time.write)));
                                         if (hasWaitTime)
-                                                StringBuffer_append(B, "<wait>%.3f</wait>", Statistics_deltaNormalize(&(S->inf->priv.filesystem.time.wait)));
+                                                StringBuffer_append(B, "<wait>%.3f</wait>", Statistics_deltaNormalize(&(S->inf.filesystem->time.wait)));
                                         if (hasRunTime)
-                                                StringBuffer_append(B, "<run>%.3f</run>", Statistics_deltaNormalize(&(S->inf->priv.filesystem.time.run)));
+                                                StringBuffer_append(B, "<run>%.3f</run>", Statistics_deltaNormalize(&(S->inf.filesystem->time.run)));
                                         StringBuffer_append(B, "</servicetime>");
                                 }
                                 break;
@@ -343,21 +343,21 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         "</errors>"
                                         "</upload>"
                                         "</link>",
-                                        Link_getState(S->inf->priv.net.stats),
-                                        Link_getSpeed(S->inf->priv.net.stats),
-                                        Link_getDuplex(S->inf->priv.net.stats),
-                                        Link_getPacketsInPerSecond(S->inf->priv.net.stats),
-                                        Link_getPacketsInTotal(S->inf->priv.net.stats),
-                                        Link_getBytesInPerSecond(S->inf->priv.net.stats),
-                                        Link_getBytesInTotal(S->inf->priv.net.stats),
-                                        Link_getErrorsInPerSecond(S->inf->priv.net.stats),
-                                        Link_getErrorsInTotal(S->inf->priv.net.stats),
-                                        Link_getPacketsOutPerSecond(S->inf->priv.net.stats),
-                                        Link_getPacketsOutTotal(S->inf->priv.net.stats),
-                                        Link_getBytesOutPerSecond(S->inf->priv.net.stats),
-                                        Link_getBytesOutTotal(S->inf->priv.net.stats),
-                                        Link_getErrorsOutPerSecond(S->inf->priv.net.stats),
-                                        Link_getErrorsOutTotal(S->inf->priv.net.stats));
+                                        Link_getState(S->inf.net->stats),
+                                        Link_getSpeed(S->inf.net->stats),
+                                        Link_getDuplex(S->inf.net->stats),
+                                        Link_getPacketsInPerSecond(S->inf.net->stats),
+                                        Link_getPacketsInTotal(S->inf.net->stats),
+                                        Link_getBytesInPerSecond(S->inf.net->stats),
+                                        Link_getBytesInTotal(S->inf.net->stats),
+                                        Link_getErrorsInPerSecond(S->inf.net->stats),
+                                        Link_getErrorsInTotal(S->inf.net->stats),
+                                        Link_getPacketsOutPerSecond(S->inf.net->stats),
+                                        Link_getPacketsOutTotal(S->inf.net->stats),
+                                        Link_getBytesOutPerSecond(S->inf.net->stats),
+                                        Link_getBytesOutTotal(S->inf.net->stats),
+                                        Link_getErrorsOutPerSecond(S->inf.net->stats),
+                                        Link_getErrorsOutTotal(S->inf.net->stats));
                                 break;
 
                         case Service_Process:
@@ -368,12 +368,12 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         "<euid>%d</euid>"
                                         "<gid>%d</gid>"
                                         "<uptime>%lld</uptime>",
-                                        S->inf->priv.process.pid,
-                                        S->inf->priv.process.ppid,
-                                        S->inf->priv.process.uid,
-                                        S->inf->priv.process.euid,
-                                        S->inf->priv.process.gid,
-                                        (long long)S->inf->priv.process.uptime);
+                                        S->inf.process->pid,
+                                        S->inf.process->ppid,
+                                        S->inf.process->uid,
+                                        S->inf.process->euid,
+                                        S->inf.process->gid,
+                                        (long long)S->inf.process->uptime);
                                 if (Run.flags & Run_ProcessEngineEnabled) {
                                         StringBuffer_append(B,
                                                 "<threads>%d</threads>"
@@ -388,17 +388,17 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                                 "<percent>%.1f</percent>"
                                                 "<percenttotal>%.1f</percenttotal>"
                                                 "</cpu>",
-                                                S->inf->priv.process.threads,
-                                                S->inf->priv.process.children,
-                                                S->inf->priv.process.mem_percent,
-                                                S->inf->priv.process.total_mem_percent,
-                                                (unsigned long long)((double)S->inf->priv.process.mem / 1024.),       // Send as kB for backward compatibility
-                                                (unsigned long long)((double)S->inf->priv.process.total_mem / 1024.), // Send as kB for backward compatibility
-                                                S->inf->priv.process.cpu_percent,
-                                                S->inf->priv.process.total_cpu_percent);
+                                                S->inf.process->threads,
+                                                S->inf.process->children,
+                                                S->inf.process->mem_percent,
+                                                S->inf.process->total_mem_percent,
+                                                (unsigned long long)((double)S->inf.process->mem / 1024.),       // Send as kB for backward compatibility
+                                                (unsigned long long)((double)S->inf.process->total_mem / 1024.), // Send as kB for backward compatibility
+                                                S->inf.process->cpu_percent,
+                                                S->inf.process->total_cpu_percent);
                                 }
-                                _ioStatistics(B, "read", &(S->inf->priv.process.read));
-                                _ioStatistics(B, "write", &(S->inf->priv.process.write));
+                                _ioStatistics(B, "read", &(S->inf.process->read));
+                                _ioStatistics(B, "write", &(S->inf.process->write));
                                 break;
 
                         default:

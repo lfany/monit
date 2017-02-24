@@ -101,18 +101,18 @@ static struct {
 static boolean_t _getDiskUsage(void *_inf) {
         Info_T inf = _inf;
         struct statvfs usage;
-        if (statvfs(inf->priv.filesystem.object.mountpoint, &usage) != 0) {
-                LogError("Error getting usage statistics for filesystem '%s' -- %s\n", inf->priv.filesystem.object.mountpoint, STRERROR);
+        if (statvfs(inf->filesystem->object.mountpoint, &usage) != 0) {
+                LogError("Error getting usage statistics for filesystem '%s' -- %s\n", inf->filesystem->object.mountpoint, STRERROR);
                 return false;
         }
-        inf->priv.filesystem.f_bsize = usage.f_frsize;
-        inf->priv.filesystem.f_blocks = usage.f_blocks;
-        inf->priv.filesystem.f_blocksfree = usage.f_bavail;
-        inf->priv.filesystem.f_blocksfreetotal = usage.f_bfree;
-        inf->priv.filesystem.f_files = usage.f_files;
-        inf->priv.filesystem.f_filesfree = usage.f_ffree;
-        inf->priv.filesystem._flags = inf->priv.filesystem.flags;
-        inf->priv.filesystem.flags = usage.f_flag;
+        inf->filesystem->f_bsize = usage.f_frsize;
+        inf->filesystem->f_blocks = usage.f_blocks;
+        inf->filesystem->f_blocksfree = usage.f_bavail;
+        inf->filesystem->f_blocksfreetotal = usage.f_bfree;
+        inf->filesystem->f_files = usage.f_files;
+        inf->filesystem->f_filesfree = usage.f_ffree;
+        inf->filesystem->_flags = inf->filesystem->flags;
+        inf->filesystem->flags = usage.f_flag;
         return true;
 }
 
@@ -136,7 +136,7 @@ static boolean_t _getCifsDiskActivity(void *_inf) {
                 if (! found) {
                         int index;
                         char name[PATH_MAX];
-                        if (sscanf(line, "%d) %1023s", &index, name) == 2 && IS(name, inf->priv.filesystem.object.key)) {
+                        if (sscanf(line, "%d) %1023s", &index, name) == 2 && IS(name, inf->filesystem->object.key)) {
                                 found = true;
                         }
                 } else if (found) {
@@ -146,11 +146,11 @@ static boolean_t _getCifsDiskActivity(void *_inf) {
                         uint64_t bytes;
                         if (sscanf(line, "%255[^:]: %"PRIu64" %255[^:]: %"PRIu64, label1, &operations, label2, &bytes) == 4) {
                                 if (IS(label1, "Reads") && IS(label2, "Bytes")) {
-                                        Statistics_update(&(inf->priv.filesystem.read.bytes), now, bytes);
-                                        Statistics_update(&(inf->priv.filesystem.read.operations), now, operations);
+                                        Statistics_update(&(inf->filesystem->read.bytes), now, bytes);
+                                        Statistics_update(&(inf->filesystem->read.operations), now, operations);
                                 } else if (IS(label1, "Writes") && IS(label2, "Bytes")) {
-                                        Statistics_update(&(inf->priv.filesystem.write.bytes), now, bytes);
-                                        Statistics_update(&(inf->priv.filesystem.write.operations), now, operations);
+                                        Statistics_update(&(inf->filesystem->write.bytes), now, bytes);
+                                        Statistics_update(&(inf->filesystem->write.operations), now, operations);
                                         break;
                                 }
                         }
@@ -172,7 +172,7 @@ static boolean_t _getNfsDiskActivity(void *_inf) {
         char line[PATH_MAX];
         char pattern[PATH_MAX];
         boolean_t found = false;
-        snprintf(pattern, sizeof(pattern), "device %s ", inf->priv.filesystem.object.device);
+        snprintf(pattern, sizeof(pattern), "device %s ", inf->filesystem->object.device);
         while (fgets(line, sizeof(line), f)) {
                 if (! found && Str_startsWith(line, pattern)) {
                         found = true;
@@ -184,13 +184,13 @@ static boolean_t _getNfsDiskActivity(void *_inf) {
                         uint64_t time;
                         if (sscanf(line, " %255[^:]: %"PRIu64" %*u %*u %"PRIu64 " %"PRIu64" %*u %*u %"PRIu64, name, &operations, &bytesSent, &bytesReceived, &time) == 5) {
                                 if (IS(name, "READ")) {
-                                        Statistics_update(&(inf->priv.filesystem.time.read), now, time / 1000.); // us -> ms
-                                        Statistics_update(&(inf->priv.filesystem.read.bytes), now, bytesReceived);
-                                        Statistics_update(&(inf->priv.filesystem.read.operations), now, operations);
+                                        Statistics_update(&(inf->filesystem->time.read), now, time / 1000.); // us -> ms
+                                        Statistics_update(&(inf->filesystem->read.bytes), now, bytesReceived);
+                                        Statistics_update(&(inf->filesystem->read.operations), now, operations);
                                 } else if (IS(name, "WRITE")) {
-                                        Statistics_update(&(inf->priv.filesystem.time.write), now, time / 1000.); // us -> ms
-                                        Statistics_update(&(inf->priv.filesystem.write.bytes), now, bytesSent);
-                                        Statistics_update(&(inf->priv.filesystem.write.operations), now, operations);
+                                        Statistics_update(&(inf->filesystem->time.write), now, time / 1000.); // us -> ms
+                                        Statistics_update(&(inf->filesystem->write.bytes), now, bytesSent);
+                                        Statistics_update(&(inf->filesystem->write.operations), now, operations);
                                         break;
                                 }
                         }
@@ -204,7 +204,7 @@ static boolean_t _getNfsDiskActivity(void *_inf) {
 static boolean_t _getSysfsBlockDiskActivity(void *_inf) {
         Info_T inf = _inf;
         char path[PATH_MAX];
-        snprintf(path, sizeof(path), "/sys/class/block/%s/stat", inf->priv.filesystem.object.key);
+        snprintf(path, sizeof(path), "/sys/class/block/%s/stat", inf->filesystem->object.key);
         FILE *f = fopen(path, "r");
         if (f) {
                 uint64_t now = Time_milli();
@@ -215,12 +215,12 @@ static boolean_t _getSysfsBlockDiskActivity(void *_inf) {
                         LogError("filesystem statistic error: cannot parse %s -- %s\n", path, STRERROR);
                         return false;
                 }
-                Statistics_update(&(inf->priv.filesystem.time.read), now, readTime);
-                Statistics_update(&(inf->priv.filesystem.read.bytes), now, readSectors * 512);
-                Statistics_update(&(inf->priv.filesystem.read.operations), now, readOperations);
-                Statistics_update(&(inf->priv.filesystem.time.write), now, writeTime);
-                Statistics_update(&(inf->priv.filesystem.write.bytes), now, writeSectors * 512);
-                Statistics_update(&(inf->priv.filesystem.write.operations), now, writeOperations);
+                Statistics_update(&(inf->filesystem->time.read), now, readTime);
+                Statistics_update(&(inf->filesystem->read.bytes), now, readSectors * 512);
+                Statistics_update(&(inf->filesystem->read.operations), now, readOperations);
+                Statistics_update(&(inf->filesystem->time.write), now, writeTime);
+                Statistics_update(&(inf->filesystem->write.bytes), now, writeSectors * 512);
+                Statistics_update(&(inf->filesystem->write.operations), now, writeOperations);
                 fclose(f);
                 return true;
         }
@@ -242,11 +242,11 @@ static boolean_t _getProcfsBlockDiskActivity(void *_inf) {
                         // Fallback for kernels < 2.6.25: the /proc/diskstats used to have just 4 statistics, the file is present on >= 2.6.25 too and has 11 fields (same format as /sys/class/block/<NAME>/stat), but we use sysfs for it
                         // as we read the given partition directly instead of traversing the whole filesystems list. In this function we expect the old 4-statistics format - if it should be ever used as main data collector, it needs to
                         // be modified to support >= 2.6.25 format too.
-                        if (fscanf(f, " %*d %*d %255s %"PRIu64" %"PRIu64" %"PRIu64" %"PRIu64, name, &readOperations, &readSectors, &writeOperations, &writeSectors) == 5 && IS(name, inf->priv.filesystem.object.key)) {
-                                Statistics_update(&(inf->priv.filesystem.read.bytes), now, readSectors * 512);
-                                Statistics_update(&(inf->priv.filesystem.read.operations), now, readOperations);
-                                Statistics_update(&(inf->priv.filesystem.write.bytes), now, writeSectors * 512);
-                                Statistics_update(&(inf->priv.filesystem.write.operations), now, writeOperations);
+                        if (fscanf(f, " %*d %*d %255s %"PRIu64" %"PRIu64" %"PRIu64" %"PRIu64, name, &readOperations, &readSectors, &writeOperations, &writeSectors) == 5 && IS(name, inf->filesystem->object.key)) {
+                                Statistics_update(&(inf->filesystem->read.bytes), now, readSectors * 512);
+                                Statistics_update(&(inf->filesystem->read.operations), now, readOperations);
+                                Statistics_update(&(inf->filesystem->write.bytes), now, writeSectors * 512);
+                                Statistics_update(&(inf->filesystem->write.operations), now, writeOperations);
                                 fclose(f);
                                 return true;
                         }
@@ -277,44 +277,44 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                 LogError("Cannot open %s\n", MOUNTS);
                 return false;
         }
-        inf->priv.filesystem.object.generation = _statistics.generation;
+        inf->filesystem->object.generation = _statistics.generation;
         struct mntent *mnt;
         while ((mnt = getmntent(f))) {
                 if (compare(path, mnt)) {
-                        strncpy(inf->priv.filesystem.object.device, mnt->mnt_fsname, sizeof(inf->priv.filesystem.object.device) - 1);
-                        strncpy(inf->priv.filesystem.object.mountpoint, mnt->mnt_dir, sizeof(inf->priv.filesystem.object.mountpoint) - 1);
-                        strncpy(inf->priv.filesystem.object.type, mnt->mnt_type, sizeof(inf->priv.filesystem.object.type) - 1);
-                        inf->priv.filesystem.object.getDiskUsage = _getDiskUsage; // The disk usage method is common for all filesystem types
-                        inf->priv.filesystem.object.getDiskActivity = _getDummyDiskActivity; // Set to dummy IO statistics method by default (can be overriden bellow if statistics method is available for this filesystem)
+                        strncpy(inf->filesystem->object.device, mnt->mnt_fsname, sizeof(inf->filesystem->object.device) - 1);
+                        strncpy(inf->filesystem->object.mountpoint, mnt->mnt_dir, sizeof(inf->filesystem->object.mountpoint) - 1);
+                        strncpy(inf->filesystem->object.type, mnt->mnt_type, sizeof(inf->filesystem->object.type) - 1);
+                        inf->filesystem->object.getDiskUsage = _getDiskUsage; // The disk usage method is common for all filesystem types
+                        inf->filesystem->object.getDiskActivity = _getDummyDiskActivity; // Set to dummy IO statistics method by default (can be overriden bellow if statistics method is available for this filesystem)
                         if (Str_startsWith(mnt->mnt_type, "nfs")) {
                                 // NFS
-                                inf->priv.filesystem.object.getDiskActivity = _getNfsDiskActivity;
+                                inf->filesystem->object.getDiskActivity = _getNfsDiskActivity;
                         } else if (IS(mnt->mnt_type, "cifs")) {
                                 // CIFS
-                                inf->priv.filesystem.object.getDiskActivity = _statistics.getCifsDiskActivity;
+                                inf->filesystem->object.getDiskActivity = _statistics.getCifsDiskActivity;
                                 // Need Windows style name - replace '/' with '\' so we can lookup the filesystem activity in /proc/fs/cifs/Stats
-                                strncpy(inf->priv.filesystem.object.key, inf->priv.filesystem.object.device, sizeof(inf->priv.filesystem.object.key) - 1);
-                                Str_replaceChar(inf->priv.filesystem.object.key, '/', '\\');
+                                strncpy(inf->filesystem->object.key, inf->filesystem->object.device, sizeof(inf->filesystem->object.key) - 1);
+                                Str_replaceChar(inf->filesystem->object.key, '/', '\\');
                         } else {
-                                if (realpath(mnt->mnt_fsname, inf->priv.filesystem.object.key)) {
+                                if (realpath(mnt->mnt_fsname, inf->filesystem->object.key)) {
                                         // Need base name for /sys/class/block/<NAME>/stat or /proc/diskstats lookup:
-                                        snprintf(inf->priv.filesystem.object.key, sizeof(inf->priv.filesystem.object.key), "%s", File_basename(inf->priv.filesystem.object.key));
+                                        snprintf(inf->filesystem->object.key, sizeof(inf->filesystem->object.key), "%s", File_basename(inf->filesystem->object.key));
                                         // Test if block device statistics are available for the given filesystem
                                         if (_statistics.getBlockDiskActivity(inf)) {
                                                 // Block device
-                                                inf->priv.filesystem.object.getDiskActivity = _statistics.getBlockDiskActivity;
+                                                inf->filesystem->object.getDiskActivity = _statistics.getBlockDiskActivity;
                                         }
                                 }
                         }
                         endmntent(f);
-                        inf->priv.filesystem.object.mounted = true;
+                        inf->filesystem->object.mounted = true;
                         return true;
                 }
         }
         LogError("Lookup for '%s' filesystem failed  -- not found in %s\n", path, MOUNTS);
 error:
         endmntent(f);
-        inf->priv.filesystem.object.mounted = false;
+        inf->filesystem->object.mounted = false;
         return false;
 }
 
@@ -337,12 +337,12 @@ static boolean_t _getDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                         LogError("Mount table polling failed -- %s\n", STRERROR);
                 }
         }
-        if (inf->priv.filesystem.object.generation != _statistics.generation || _statistics.fd == -1) {
+        if (inf->filesystem->object.generation != _statistics.generation || _statistics.fd == -1) {
                 DEBUG("Reloading mount informations for filesystem '%s'\n", path);
                 _setDevice(inf, path, compare);
         }
-        if (inf->priv.filesystem.object.mounted) {
-                return (inf->priv.filesystem.object.getDiskUsage(inf) && inf->priv.filesystem.object.getDiskActivity(inf));
+        if (inf->filesystem->object.mounted) {
+                return (inf->filesystem->object.getDiskUsage(inf) && inf->filesystem->object.getDiskActivity(inf));
         }
         return false;
 }

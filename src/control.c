@@ -124,10 +124,10 @@ static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, int6
                 Command_setEnv(C, "MONIT_DESCRIPTION", c == S->start ? "Started" : c == S->stop ? "Stopped" : "Restarted");
                 switch (S->type) {
                         case Service_Process:
-                                Command_vSetEnv(C, "MONIT_PROCESS_PID", "%d", S->inf->priv.process.pid);
-                                Command_vSetEnv(C, "MONIT_PROCESS_MEMORY", "%llu", (unsigned long long)((double)S->inf->priv.process.mem / 1024.));
-                                Command_vSetEnv(C, "MONIT_PROCESS_CHILDREN", "%d", S->inf->priv.process.children);
-                                Command_vSetEnv(C, "MONIT_PROCESS_CPU_PERCENT", "%.1f", S->inf->priv.process.cpu_percent);
+                                Command_vSetEnv(C, "MONIT_PROCESS_PID", "%d", S->inf.process->pid);
+                                Command_vSetEnv(C, "MONIT_PROCESS_MEMORY", "%llu", (unsigned long long)((double)S->inf.process->mem / 1024.));
+                                Command_vSetEnv(C, "MONIT_PROCESS_CHILDREN", "%d", S->inf.process->children);
+                                Command_vSetEnv(C, "MONIT_PROCESS_CPU_PERCENT", "%.1f", S->inf.process->cpu_percent);
                                 break;
                         case Service_Program:
                                 Command_vSetEnv(C, "MONIT_PROGRAM_STATUS", "%d", S->program->exitStatus);
