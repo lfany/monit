@@ -179,8 +179,6 @@ static boolean_t _getDiskUsage(void *_inf) {
         inf->filesystem->f_blocksfreetotal = usage.f_bfree;
         inf->filesystem->f_files = usage.f_files;
         inf->filesystem->f_filesfree = usage.f_ffree;
-        inf->filesystem->_flags = inf->filesystem->flags;
-        inf->filesystem->flags = usage.f_flags;
         return true;
 }
 
@@ -192,6 +190,49 @@ static boolean_t _compareMountpoint(const char *mountpoint, struct statfs *mnt) 
 
 static boolean_t _compareDevice(const char *device, struct statfs *mnt) {
         return IS(device, mnt->f_mntfromname);
+}
+
+
+static void _filesystemFlagsToString(Info_T inf, uint64_t flags) {
+        struct mystable {
+                uint64_t flag;
+                char *description;
+        } t[]= {
+                {MNT_RDONLY, "ro"},
+                {MNT_SYNCHRONOUS, "synchronous"},
+                {MNT_NOEXEC, "noexec"},
+                {MNT_NOSUID, "nosuid"},
+                {MNT_NFS4ACLS, "nfs4acls"},
+                {MNT_UNION, "union"},
+                {MNT_ASYNC, "async"},
+                {MNT_SUIDDIR, "suiddir"},
+                {MNT_SOFTDEP, "soft updates"},
+                {MNT_NOSYMFOLLOW, "nosymfollow"},
+                {MNT_GJOURNAL, "GEOM journal"},
+                {MNT_MULTILABEL, "multilabel"},
+                {MNT_ACLS, "acls"},
+                {MNT_NOATIME, "noatime"},
+                {MNT_NOCLUSTERR, "noclusterr"},
+                {MNT_NOCLUSTERW, "noclusterw"},
+                {MNT_SUJ, "journaled soft updates"},
+                {MNT_AUTOMOUNTED, "automounted"},
+                {MNT_EXRDONLY, "exported read only"},
+                {MNT_EXPORTED, "exported"},
+                {MNT_DEFEXPORTED, "exported to the world"},
+                {MNT_EXPORTANON, "anon uid mapping"},
+                {MNT_EXKERB, "exported with kerberos"},
+                {MNT_EXPUBLIC, "public export"},
+                {MNT_LOCAL, "local"},
+                {MNT_QUOTA, "quota"},
+                {MNT_ROOTFS, "rootfs"},
+                {MNT_USER, "user"},
+                {MNT_IGNORE, "ignore"}
+        };
+        for (int i = 0, count = 0; i < sizeof(t) / sizeof(t[0]); i++) {
+                if (flags & t[i].flag) {
+                        snprintf(inf->filesystem->flags + strlen(inf->filesystem->flags), sizeof(inf->filesystem->flags) - strlen(inf->filesystem->flags) - 1, "%s%s", count++ ? ", " : "", t[i].description);
+                }
+        }
 }
 
 
@@ -211,6 +252,13 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                                         } else {
                                                 //FIXME: can add ZFS support (see sysdep_SOLARIS.c), but libzfs headers are not installed on FreeBSD by default (part of "cddl" set)
                                                 inf->filesystem->object.getDiskActivity = _getDummyDiskActivity;
+                                        }
+                                        if (mntItem->f_flags != inf->filesystem->object.flags) {
+                                                if (inf->filesystem->object.flags) {
+                                                        inf->filesystem->flagsChanged = true;
+                                                }
+                                                inf->filesystem->object.flags = mntItem->f_flags;
+                                                _filesystemFlagsToString(inf, inf->filesystem->object.flags);
                                         }
                                         strncpy(inf->filesystem->object.device, mntItem->f_mntfromname, sizeof(inf->filesystem->object.device) - 1);
                                         strncpy(inf->filesystem->object.mountpoint, mntItem->f_mntonname, sizeof(inf->filesystem->object.mountpoint) - 1);

@@ -955,6 +955,7 @@ typedef struct Device_T {
         char key[PATH_MAX];
         char module[256];
         char type[64];
+        uint64_t flags;
         boolean_t (*getDiskUsage)(void *);
         boolean_t (*getDiskActivity)(void *);
 } *Device_T;
