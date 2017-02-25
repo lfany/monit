@@ -351,7 +351,7 @@ const char *File_extension(const char *path);
  * @param path A file path string
  * @return A pointer to the path string
  */
-char *File_removeTrailingSeparator(char *path);
+char *File_removeTrailingSeparator(unsigned char *path);
 
 
 /**
