@@ -1711,8 +1711,8 @@ void Util_resetInfo(Service_T s) {
                         s->inf.filesystem->inode_total = 0LL;
                         s->inf.filesystem->space_percent = 0.;
                         s->inf.filesystem->space_total = 0LL;
-                        s->inf.filesystem->_flags = -1;
-                        s->inf.filesystem->flags = -1;
+                        s->inf.filesystem->flagsChanged = false;
+                        *(s->inf.filesystem->flags) = 0;
                         s->inf.filesystem->mode = -1;
                         s->inf.filesystem->uid = -1;
                         s->inf.filesystem->gid = -1;

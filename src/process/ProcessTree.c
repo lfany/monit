@@ -429,20 +429,22 @@ boolean_t init_system_info(void) {
         CFURLRef url = CFURLCreateWithFileSystemPath(NULL, CFSTR("/System/Library/CoreServices/SystemVersion.plist"), kCFURLPOSIXPathStyle, false);
         if (url) {
                 CFReadStreamRef stream = CFReadStreamCreateWithFile(NULL, url);
-                if (CFReadStreamOpen(stream)) {
-                        CFPropertyListRef propertyList = CFPropertyListCreateWithStream(NULL, stream, 0, kCFPropertyListImmutable, NULL, NULL);
-                        if (propertyList) {
-                                CFStringRef value = CFDictionaryGetValue(propertyList, CFSTR("ProductName"));
-                                if (value) {
-                                        snprintf(systeminfo.uname.sysname, sizeof(systeminfo.uname.sysname), "%s", CFStringGetCStringPtr(value, CFStringGetSystemEncoding()));
+                if (stream) {
+                        if (CFReadStreamOpen(stream)) {
+                                CFPropertyListRef propertyList = CFPropertyListCreateWithStream(NULL, stream, 0, kCFPropertyListImmutable, NULL, NULL);
+                                if (propertyList) {
+                                        CFStringRef value = CFDictionaryGetValue(propertyList, CFSTR("ProductName"));
+                                        if (value) {
+                                                snprintf(systeminfo.uname.sysname, sizeof(systeminfo.uname.sysname), "%s", CFStringGetCStringPtr(value, CFStringGetSystemEncoding()));
+                                        }
+                                        value = CFDictionaryGetValue(propertyList, CFSTR("ProductVersion"));
+                                        if (value) {
+                                                snprintf(systeminfo.uname.release, sizeof(systeminfo.uname.release), "%s", CFStringGetCStringPtr(value, CFStringGetSystemEncoding()));
+                                        }
+                                        CFRelease(propertyList);
                                 }
-                                value = CFDictionaryGetValue(propertyList, CFSTR("ProductVersion"));
-                                if (value) {
-                                        snprintf(systeminfo.uname.release, sizeof(systeminfo.uname.release), "%s", CFStringGetCStringPtr(value, CFStringGetSystemEncoding()));
-                                }
-                                CFRelease(propertyList);
+                                CFReadStreamClose(stream);
                         }
-                        CFReadStreamClose(stream);
                         CFRelease(stream);
                 }
                 CFRelease(url);

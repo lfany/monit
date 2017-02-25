@@ -912,14 +912,15 @@ final1:
  */
 static State_Type _checkFilesystemFlags(Service_T s) {
         ASSERT(s);
-        if (s->inf.filesystem->_flags >= 0) {
-                if (s->inf.filesystem->_flags != s->inf.filesystem->flags) {
+        if (*(s->inf.filesystem->flags)) {
+                if (s->inf.filesystem->flagsChanged) {
+                        s->inf.filesystem->flagsChanged = false;
                         for (Fsflag_T l = s->fsflaglist; l; l = l->next)
-                                Event_post(s, Event_Fsflag, State_Changed, l->action, "filesystem flags changed to %#x", s->inf.filesystem->flags);
+                                Event_post(s, Event_Fsflag, State_Changed, l->action, "filesystem flags changed to %s", s->inf.filesystem->flags);
                         return State_Changed;
                 }
                 for (Fsflag_T l = s->fsflaglist; l; l = l->next)
-                        Event_post(s, Event_Fsflag, State_ChangedNot, l->action, "filesystem flags has not changed");
+                        Event_post(s, Event_Fsflag, State_ChangedNot, l->action, "filesystem flags has not changed [current flags %s]", s->inf.filesystem->flags);
                 return State_ChangedNot;
         }
         return State_Init;

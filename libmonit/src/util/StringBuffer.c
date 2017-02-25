@@ -285,7 +285,7 @@ const void *StringBuffer_toCompressed(T S, int level, size_t *length) {
                 zstream.avail_in = S->used;
                 int status = deflateInit2(&zstream, level, Z_DEFLATED, 15 | 16, 8, Z_DEFAULT_STRATEGY);
                 if (status == Z_OK) {
-                        unsigned long need = deflateBound(&zstream, S->used);
+                        int need = (int)deflateBound(&zstream, S->used);
                         RESIZE(S->compressedBuffer, need);
                         zstream.next_out = S->compressedBuffer;
                         zstream.avail_out = need;

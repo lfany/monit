@@ -3048,26 +3048,7 @@ static Service_T createservice(Service_Type type, char *name, char *value, State
                 addservice(current);
 
         NEW(current);
-
         current->type = type;
-
-/*
-DEBUG("BUBU: size=%d\n", sizeof(*(current->inf)));
-DEBUG("BUBU: size file=%d\n", sizeof((current->inf.file)));
-DEBUG("BUBU: size fifo=%d\n", sizeof((current->inf.fifo)));
-DEBUG("BUBU: size filesystem=%d\n", sizeof((current->inf.filesystem)));
-DEBUG("BUBU: size directory=%d\n", sizeof((current->inf.directory)));
-DEBUG("BUBU: size process=%d\n", sizeof((current->inf.process)));
-DEBUG("BUBU: size net=%d\n", sizeof((current->inf.net)));
-
-BUBU: size=3832
-BUBU: size file=128
-BUBU: size fifo=24
-BUBU: size filesystem=3832
-BUBU: size directory=24
-BUBU: size process=240
-BUBU: size net=8
-*/
         switch (type) {
                 case Service_Directory:
                         NEW(current->inf.directory);
@@ -4094,7 +4075,7 @@ static void addmailserver(MailServer_T mailserver) {
         s->password    = mailserver->password;
 
         if (sslset.flags && (mailserver->port == 25 || mailserver->port == 587))
-                s->ssl.flags = SSL_StartTLS;
+                sslset.flags = SSL_StartTLS;
         _setSSLOptions(&(s->ssl));
 
         s->next = NULL;

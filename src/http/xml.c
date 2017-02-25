@@ -259,21 +259,21 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
 
                         case Service_Filesystem:
                                 StringBuffer_append(B,
-                                        "<fs>%s</fs>"
+                                        "<fstype>%s</fstype>"
+                                        "<fsflags>%s</fsflags>"
                                         "<mode>%o</mode>"
                                         "<uid>%d</uid>"
                                         "<gid>%d</gid>"
-                                        "<flags>%d</flags>"
                                         "<block>"
                                         "<percent>%.1f</percent>"
                                         "<usage>%.1lf</usage>"
                                         "<total>%.1lf</total>"
                                         "</block>",
                                         S->inf.filesystem->object.type,
+                                        S->inf.filesystem->flags,
                                         S->inf.filesystem->mode & 07777,
                                         (int)S->inf.filesystem->uid,
                                         (int)S->inf.filesystem->gid,
-                                        S->inf.filesystem->flags,
                                         S->inf.filesystem->space_percent,
                                         S->inf.filesystem->f_bsize > 0 ? (double)S->inf.filesystem->space_total / 1048576. * (double)S->inf.filesystem->f_bsize : 0.,
                                         S->inf.filesystem->f_bsize > 0 ? (double)S->inf.filesystem->f_blocks / 1048576. * (double)S->inf.filesystem->f_bsize : 0.);

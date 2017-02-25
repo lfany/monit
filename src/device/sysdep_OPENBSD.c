@@ -172,8 +172,6 @@ static boolean_t _getDiskUsage(void *_inf) {
         inf->filesystem->f_blocksfreetotal = usage.f_bfree;
         inf->filesystem->f_files = usage.f_files;
         inf->filesystem->f_filesfree = usage.f_ffree;
-        inf->filesystem->_flags = inf->filesystem->flags;
-        inf->filesystem->flags = usage.f_flags;
         return true;
 }
 
@@ -185,6 +183,35 @@ static boolean_t _compareMountpoint(const char *mountpoint, struct statfs *mnt) 
 
 static boolean_t _compareDevice(const char *device, struct statfs *mnt) {
         return IS(device, mnt->f_mntfromname);
+}
+
+
+static void _filesystemFlagsToString(Info_T inf, uint64_t flags) {
+        struct mystable {
+                uint64_t flag;
+                char *description;
+        } t[]= {
+                {MNT_RDONLY, "ro"},
+                {MNT_SYNCHRONOUS, "synchronous"},
+                {MNT_NOEXEC, "noexec"},
+                {MNT_NOSUID, "nosuid"},
+                {MNT_NODEV, "nodev"},
+                {MNT_WXALLOWED, "wxallowed"},
+                {MNT_ASYNC, "async"},
+                {MNT_NOATIME, "noatime"},
+                {MNT_EXRDONLY, "exported read only"},
+                {MNT_EXPORTED, "exported"},
+                {MNT_DEFEXPORTED, "exported to the world"},
+                {MNT_EXPORTANON, "anon uid mapping"},
+                {MNT_LOCAL, "local"},
+                {MNT_QUOTA, "quota"},
+                {MNT_ROOTFS, "rootfs"}
+        };
+        for (int i = 0, count = 0; i < sizeof(t) / sizeof(t[0]); i++) {
+                if (flags & t[i].flag) {
+                        snprintf(inf->filesystem->flags + strlen(inf->filesystem->flags), sizeof(inf->filesystem->flags) - strlen(inf->filesystem->flags) - 1, "%s%s", count++ ? ", " : "", t[i].description);
+                }
+        }
 }
 
 
@@ -203,6 +230,13 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                                                 }
                                         } else {
                                                 inf->filesystem->object.getDiskActivity = _getDummyDiskActivity;
+                                        }
+                                        if ((mntItem->f_flags & MNT_VISFLAGMASK) != inf->filesystem->object.flags) {
+                                                if (inf->filesystem->object.flags) {
+                                                        inf->filesystem->flagsChanged = true;
+                                                }
+                                                inf->filesystem->object.flags = mntItem->f_flags & MNT_VISFLAGMASK;
+                                                _filesystemFlagsToString(inf, inf->filesystem->object.flags);
                                         }
                                         strncpy(inf->filesystem->object.device, mntItem->f_mntfromname, sizeof(inf->filesystem->object.device) - 1);
                                         strncpy(inf->filesystem->object.mountpoint, mntItem->f_mntonname, sizeof(inf->filesystem->object.mountpoint) - 1);

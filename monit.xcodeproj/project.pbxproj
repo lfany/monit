@@ -83,8 +83,6 @@
 		9378737B1A13907100CF8C5E /* sieve.c in Sources */ = {isa = PBXBuildFile; fileRef = 9378737A1A13907100CF8C5E /* sieve.c */; };
 		9397E3091D897CCA008CAD1F /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9397E3081D897CCA008CAD1F /* libz.tbd */; };
 		93A23ED41C85E6890076FBFE /* Address.c in Sources */ = {isa = PBXBuildFile; fileRef = 93A23ED21C85E6890076FBFE /* Address.c */; };
-		93A6578F1E6052DC005EBBFE /* sysdep_DRAGONFLY.c in Sources */ = {isa = PBXBuildFile; fileRef = 93A6578E1E6052DC005EBBFE /* sysdep_DRAGONFLY.c */; };
-		93A657941E6052F3005EBBFE /* sysdep_DRAGONFLY.c in Sources */ = {isa = PBXBuildFile; fileRef = 93A657931E6052F3005EBBFE /* sysdep_DRAGONFLY.c */; };
 		93DE91B01CBAED0400BC8E0C /* client.c in Sources */ = {isa = PBXBuildFile; fileRef = 93DE91AE1CBAED0400BC8E0C /* client.c */; };
 		93F515891CEF651000CC00F4 /* ProcessTree.c in Sources */ = {isa = PBXBuildFile; fileRef = 93F515861CEF651000CC00F4 /* ProcessTree.c */; };
 /* End PBXBuildFile section */
@@ -203,7 +201,6 @@
 		52F6E74A13A74F220023F87A /* daemonize.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = daemonize.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		52F6E74C13A74F220023F87A /* device.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = device.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		52F6E74D13A74F220023F87A /* device_common.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = device_common.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
-		52F6E74E13A74F220023F87A /* device_sysdep.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = device_sysdep.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		52F6E74F13A74F220023F87A /* sysdep_AIX.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = sysdep_AIX.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		52F6E75013A74F220023F87A /* sysdep_DARWIN.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = sysdep_DARWIN.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		52F6E75113A74F220023F87A /* sysdep_FREEBSD.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = sysdep_FREEBSD.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
@@ -311,8 +308,8 @@
 		9397E3081D897CCA008CAD1F /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		93A23ED21C85E6890076FBFE /* Address.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Address.c; sourceTree = "<group>"; };
 		93A23ED31C85E6890076FBFE /* Address.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Address.h; sourceTree = "<group>"; };
-		93A6578E1E6052DC005EBBFE /* sysdep_DRAGONFLY.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sysdep_DRAGONFLY.c; sourceTree = "<group>"; };
-		93A657931E6052F3005EBBFE /* sysdep_DRAGONFLY.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sysdep_DRAGONFLY.c; sourceTree = "<group>"; };
+		93C635D81E6213B5009B873B /* sysdep_DRAGONFLY.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sysdep_DRAGONFLY.c; sourceTree = "<group>"; };
+		93C635D91E6213CB009B873B /* sysdep_DRAGONFLY.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sysdep_DRAGONFLY.c; sourceTree = "<group>"; };
 		93DE91AE1CBAED0400BC8E0C /* client.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = client.c; sourceTree = "<group>"; };
 		93DE91AF1CBAED0400BC8E0C /* client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = client.h; sourceTree = "<group>"; };
 		93F515861CEF651000CC00F4 /* ProcessTree.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ProcessTree.c; sourceTree = "<group>"; };
@@ -535,10 +532,9 @@
 			children = (
 				52F6E74C13A74F220023F87A /* device.h */,
 				52F6E74D13A74F220023F87A /* device_common.c */,
-				52F6E74E13A74F220023F87A /* device_sysdep.h */,
 				52F6E74F13A74F220023F87A /* sysdep_AIX.c */,
 				52F6E75013A74F220023F87A /* sysdep_DARWIN.c */,
-				93A657931E6052F3005EBBFE /* sysdep_DRAGONFLY.c */,
+				93C635D81E6213B5009B873B /* sysdep_DRAGONFLY.c */,
 				52F6E75113A74F220023F87A /* sysdep_FREEBSD.c */,
 				52F6E75213A74F220023F87A /* sysdep_HPUX.c */,
 				52F6E75313A74F220023F87A /* sysdep_LINUX.c */,
@@ -577,7 +573,7 @@
 				52F6E77513A74F220023F87A /* process_sysdep.h */,
 				52F6E77613A74F220023F87A /* sysdep_AIX.c */,
 				52F6E77713A74F220023F87A /* sysdep_DARWIN.c */,
-				93A6578E1E6052DC005EBBFE /* sysdep_DRAGONFLY.c */,
+				93C635D91E6213CB009B873B /* sysdep_DRAGONFLY.c */,
 				52F6E77813A74F220023F87A /* sysdep_FREEBSD.c */,
 				52F6E77913A74F220023F87A /* sysdep_HPUX.c */,
 				52F6E77A13A74F220023F87A /* sysdep_LINUX.c */,
@@ -779,7 +775,6 @@
 				52F6E81313A74F220023F87A /* env.c in Sources */,
 				52F6E81413A74F220023F87A /* event.c in Sources */,
 				52F6E81513A74F220023F87A /* file.c in Sources */,
-				93A657941E6052F3005EBBFE /* sysdep_DRAGONFLY.c in Sources */,
 				52F6E81613A74F220023F87A /* gc.c in Sources */,
 				52F6E81713A74F220023F87A /* base64.c in Sources */,
 				52F6E81813A74F220023F87A /* cervlet.c in Sources */,
@@ -807,7 +802,6 @@
 				9378737B1A13907100CF8C5E /* sieve.c in Sources */,
 				52F6E83513A74F220023F87A /* gps.c in Sources */,
 				52F6E83613A74F220023F87A /* http.c in Sources */,
-				93A6578F1E6052DC005EBBFE /* sysdep_DRAGONFLY.c in Sources */,
 				52F6E83713A74F220023F87A /* imap.c in Sources */,
 				52F6E83813A74F220023F87A /* ldap2.c in Sources */,
 				52F6E83913A74F220023F87A /* ldap3.c in Sources */,
@@ -904,7 +898,7 @@
 					/opt/local/include,
 				);
 				LIBRARY_SEARCH_PATHS = /opt/local/lib;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "$SRCROOT/src/ $SRCROOT/libmonit/src/ $SRCROOT/libmonit/src/thread $SRCROOT/libmonit/src/io $SRCROOT/libmonit/src/net $SRCROOT/libmonit/src/util /opt/local/include";
@@ -954,7 +948,7 @@
 					/opt/local/include,
 				);
 				LIBRARY_SEARCH_PATHS = /opt/local/lib;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "$SRCROOT/src/ $SRCROOT/libmonit/src/ $SRCROOT/libmonit/src/thread $SRCROOT/libmonit/src/io $SRCROOT/libmonit/src/net $SRCROOT/libmonit/src/util /opt/local/include";
 			};
