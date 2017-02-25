@@ -160,7 +160,7 @@ int OutputStream_print(T S, const char *s, ...) __attribute__((format (printf, 2
  * if a write would block, indicating that the caller should try again later.
  * @exception AssertException if an unknown format specifier is used in s.
  */
-int OutputStream_vprint(T S, const char *s, va_list ap);
+int OutputStream_vprint(T S, const unsigned char *s, va_list ap);
 
 
 /**

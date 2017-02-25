@@ -412,7 +412,7 @@ int OutputStream_print(T S, const char *s, ...) {
 }
 
 
-int OutputStream_vprint(T S, const char *fmt, va_list ap) {
+int OutputStream_vprint(T S, const unsigned char *fmt, va_list ap) {
         assert(S);
         assert(fmt);
         va_list_box box;
