@@ -253,11 +253,11 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                                                 //FIXME: can add ZFS support (see sysdep_SOLARIS.c), but libzfs headers are not installed on FreeBSD by default (part of "cddl" set)
                                                 inf->filesystem->object.getDiskActivity = _getDummyDiskActivity;
                                         }
-                                        if (mntItem->f_flags != inf->filesystem->object.flags) {
+                                        if ((mntItem->f_flags & MNT_VISFLAGMASK) != inf->filesystem->object.flags) {
                                                 if (inf->filesystem->object.flags) {
                                                         inf->filesystem->flagsChanged = true;
                                                 }
-                                                inf->filesystem->object.flags = mntItem->f_flags;
+                                                inf->filesystem->object.flags = mntItem->f_flags & MNT_VISFLAGMASK;
                                                 _filesystemFlagsToString(inf, inf->filesystem->object.flags);
                                         }
                                         strncpy(inf->filesystem->object.device, mntItem->f_mntfromname, sizeof(inf->filesystem->object.device) - 1);
