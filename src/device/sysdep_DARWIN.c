@@ -84,8 +84,6 @@ static boolean_t _getDiskUsage(void *_inf) {
         inf->filesystem->f_blocksfreetotal = usage.f_bfree;
         inf->filesystem->f_files = usage.f_files;
         inf->filesystem->f_filesfree = usage.f_ffree;
-        inf->filesystem->_flags = inf->filesystem->flags;
-        inf->filesystem->flags = usage.f_flags;
         return true;
 }
 
@@ -174,6 +172,41 @@ static boolean_t _compareDevice(const char *device, struct statfs *mnt) {
 }
 
 
+static void _filesystemFlagsToString(Info_T inf, uint64_t flags) {
+        struct mystable {
+                uint64_t flag;
+                char *description;
+        } t[]= {
+                {MNT_RDONLY, "ro"},
+                {MNT_SYNCHRONOUS, "synchronous"},
+                {MNT_NOEXEC, "noexec"},
+                {MNT_NOSUID, "nosuid"},
+                {MNT_NODEV, "nodev"},
+                {MNT_UNION, "union"},
+                {MNT_ASYNC, "async"},
+                {MNT_CPROTECT, "content protection"},
+                {MNT_EXPORTED, "exported"},
+                {MNT_QUARANTINE, "quarantined"},
+                {MNT_LOCAL, "local"},
+                {MNT_QUOTA, "quota"},
+                {MNT_ROOTFS, "rootfs"},
+                {MNT_DONTBROWSE, "nobrowse"},
+                {MNT_IGNORE_OWNERSHIP, "noowners"},
+                {MNT_AUTOMOUNTED, "automounted"},
+                {MNT_JOURNALED, "journaled"},
+                {MNT_NOUSERXATTR, "nouserxattr"},
+                {MNT_DEFWRITE, "defer writes"},
+                {MNT_MULTILABEL, "multilabel"},
+                {MNT_NOATIME, "noatime"}
+        };
+        for (int i = 0, count = 0; i < sizeof(t) / sizeof(t[0]); i++) {
+                if (flags & t[i].flag) {
+                        snprintf(inf->filesystem->flags + strlen(inf->filesystem->flags), sizeof(inf->filesystem->flags) - strlen(inf->filesystem->flags) - 1, "%s%s", count++ ? ", " : "", t[i].description);
+                }
+        }
+}
+
+
 static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(const char *path, struct statfs *mnt)) {
         int countfs = getfsstat(NULL, 0, MNT_NOWAIT);
         if (countfs != -1) {
@@ -186,6 +219,13 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                                                 inf->filesystem->object.getDiskActivity = _getBlockDiskActivity;
                                         } else {
                                                 inf->filesystem->object.getDiskActivity = _getDummyDiskActivity;
+                                        }
+                                        if ((mntItem->f_flags & MNT_VISFLAGMASK) != inf->filesystem->object.flags) {
+                                                if (inf->filesystem->object.flags) {
+                                                        inf->filesystem->flagsChanged = true;
+                                                }
+                                                inf->filesystem->object.flags = mntItem->f_flags & MNT_VISFLAGMASK;
+                                                _filesystemFlagsToString(inf, inf->filesystem->object.flags);
                                         }
                                         strncpy(inf->filesystem->object.device, mntItem->f_mntfromname, sizeof(inf->filesystem->object.device) - 1);
                                         strncpy(inf->filesystem->object.mountpoint, mntItem->f_mntonname, sizeof(inf->filesystem->object.mountpoint) - 1);
