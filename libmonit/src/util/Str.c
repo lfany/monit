@@ -73,7 +73,7 @@ char *Str_trim(char *s) {
 }
 
 
-char *Str_ltrim(unsigned char *s) {
+char *Str_ltrim(char *s) {
         if (STR_DEF(s) && isspace(*s)) {
                 int i, j;
                 for (j = 0; s[j]; j++) ;
@@ -85,20 +85,20 @@ char *Str_ltrim(unsigned char *s) {
 }
 
 
-char *Str_rtrim(unsigned char *s) {
+char *Str_rtrim(char *s) {
         if (STR_DEF(s))
                 for (size_t j = strlen(s) - 1; isspace(s[j]); j--) s[j] = 0;
         return s;
 }
 
 
-char *Str_unquote(unsigned char *s) {
+char *Str_unquote(char *s) {
         if (STR_DEF(s)) {
-                unsigned char *t = s;
+                char *t = s;
                 // Left unquote
                 while (*t == 34 || *t == 39 || isspace(*t)) t++;
                 if (t != s) {
-                        unsigned char *u = s;
+                        char *u = s;
                         for (; *t; t++, u++)
                                 *u = *t;
                         t = u;
@@ -113,7 +113,7 @@ char *Str_unquote(unsigned char *s) {
 }
 
 
-char *Str_toLower(unsigned char *s) {
+char *Str_toLower(char *s) {
         if (s)
                 for (int i = 0; s[i]; i++)
                         s[i] = tolower(s[i]);
@@ -121,7 +121,7 @@ char *Str_toLower(unsigned char *s) {
 }
 
 
-char *Str_toUpper(unsigned char *s) {
+char *Str_toUpper(char *s) {
         if (s)
                 for (int i = 0; s[i]; i++)
                         s[i] = toupper(s[i]);
@@ -178,7 +178,7 @@ char *Str_replaceChar(char *s, char o, char n) {
 }
 
 
-int Str_startsWith(const unsigned char *a, const unsigned char *b) {
+int Str_startsWith(const char *a, const char *b) {
 	if (a && b) {
 	        do
 	                if (toupper(*a++) != toupper(*b++)) return false;
@@ -189,7 +189,7 @@ int Str_startsWith(const unsigned char *a, const unsigned char *b) {
 }
 
 
-int Str_endsWith(const unsigned char *a, const unsigned char *b) {
+int Str_endsWith(const char *a, const char *b) {
         if (a && b) {
                 size_t i = 0, j = 0;
                 for (i = strlen(a), j = strlen(b); (i && j); i--, j--)
@@ -200,9 +200,9 @@ int Str_endsWith(const unsigned char *a, const unsigned char *b) {
 }
 
 
-char *Str_sub(const unsigned char *a, const unsigned char *b) {
+char *Str_sub(const char *a, const char *b) {
         if (a && STR_DEF(b)) {
-                const unsigned char *p, *q;
+                const char *p, *q;
                 while (*a) {
                         if (toupper(*a) == toupper(*b)) {
                                 p = a;
@@ -251,7 +251,7 @@ char *Str_unescape(const char *charset, char *s) {
 }
 
 
-int Str_isEqual(const unsigned char *a, const unsigned char *b) {
+int Str_isEqual(const char *a, const char *b) {
         if (a && b) {
                 while (*a && *b)
                         if (toupper(*a++) != toupper(*b++)) return false;
