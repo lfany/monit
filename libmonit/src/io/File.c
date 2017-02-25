@@ -304,7 +304,7 @@ const char *File_extension(const char *path) {
 
 char *File_removeTrailingSeparator(char *path) {
         if (STR_DEF(path)) {
-                unsigned char *p;
+                char *p;
                 for (p = path; *p; p++);
                 do 
                         *(p--) = 0;
