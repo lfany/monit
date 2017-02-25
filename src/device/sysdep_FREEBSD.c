@@ -198,11 +198,19 @@ static void _filesystemFlagsToString(Info_T inf, uint64_t flags) {
                 uint64_t flag;
                 char *description;
         } t[]= {
+#ifdef MNT_AUTOMOUNTED
+                {MNT_AUTOMOUNTED, "automounted"},
+#endif
+#ifdef MNT_NFS4ACLS
+                {MNT_NFS4ACLS, "nfs4acls"},
+#endif
+#ifdef MNT_SUJ
+                {MNT_SUJ, "journaled soft updates"},
+#endif
                 {MNT_RDONLY, "ro"},
                 {MNT_SYNCHRONOUS, "synchronous"},
                 {MNT_NOEXEC, "noexec"},
                 {MNT_NOSUID, "nosuid"},
-                {MNT_NFS4ACLS, "nfs4acls"},
                 {MNT_UNION, "union"},
                 {MNT_ASYNC, "async"},
                 {MNT_SUIDDIR, "suiddir"},
@@ -214,8 +222,6 @@ static void _filesystemFlagsToString(Info_T inf, uint64_t flags) {
                 {MNT_NOATIME, "noatime"},
                 {MNT_NOCLUSTERR, "noclusterr"},
                 {MNT_NOCLUSTERW, "noclusterw"},
-                {MNT_SUJ, "journaled soft updates"},
-                {MNT_AUTOMOUNTED, "automounted"},
                 {MNT_EXRDONLY, "exported read only"},
                 {MNT_EXPORTED, "exported"},
                 {MNT_DEFEXPORTED, "exported to the world"},
