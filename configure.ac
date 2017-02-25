@@ -574,7 +574,7 @@ then
 elif test "$architecture" = "NetBSD"
 then
    ARCH="NETBSD"
-   CFLAGS="$CFLAGS -D _REENTRANT"
+   CFLAGS="$CFLAGS -D _REENTRANT -Wno-char-subscripts"
    AC_CHECK_LIB([kvm], [kvm_open])
 elif test "$architecture" = "DragonFly"
 then
