@@ -194,13 +194,15 @@ static void _filesystemFlagsToString(Info_T inf, uint64_t flags) {
                 uint64_t flag;
                 char *description;
         } t[]= {
+#ifdef MNT_DISCARD
+                {MNT_DISCARD, "discard"},
+#endif
                 {MNT_RDONLY, "ro"},
                 {MNT_SYNCHRONOUS, "synchronous"},
                 {MNT_NOEXEC, "noexec"},
                 {MNT_NOSUID, "nosuid"},
                 {MNT_NODEV, "nodev"},
                 {MNT_NODEVMTIME, "nodevmtime"},
-                {MNT_DISCARD, "discard"},
                 {MNT_EXTATTR, "extattr"},
                 {MNT_IGNORE, "hidden"},
                 {MNT_LOG, "log"},
