@@ -138,7 +138,7 @@ typedef struct mystate3 {
 
                 struct {
                         int mode;
-                        int flags;
+                        int flags; // Obsolete since Monit 5.21.0
                 } filesystem;
 
                 struct {
