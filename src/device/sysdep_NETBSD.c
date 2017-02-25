@@ -102,7 +102,7 @@ static void __attribute__ ((destructor)) _destructor() {
 
 // Parse the device path like /dev/sd0a -> sd0
 static boolean_t _parseDevice(const char *path, Device_T device) {
-        const char *base = File_basename(path);
+        const unsigned char *base = File_basename(path);
         for (int len = strlen(base), i = len - 1; i >= 0; i--) {
                 if (isdigit(*(base + i))) {
                         strncpy(device->key, base, i + 1 < sizeof(device->key) ? i + 1 : sizeof(device->key) - 1);
@@ -175,8 +175,6 @@ static boolean_t _getDiskUsage(void *_inf) {
         inf->filesystem->f_blocksfreetotal = usage.f_bfree;
         inf->filesystem->f_files = usage.f_files;
         inf->filesystem->f_filesfree = usage.f_ffree;
-        inf->filesystem->_flags = inf->filesystem->flags;
-        inf->filesystem->flags = usage.f_flag;
         return true;
 }
 
@@ -188,6 +186,47 @@ static boolean_t _compareMountpoint(const char *mountpoint, struct statvfs *mnt)
 
 static boolean_t _compareDevice(const char *device, struct statvfs *mnt) {
         return IS(device, mnt->f_mntfromname);
+}
+
+
+static void _filesystemFlagsToString(Info_T inf, uint64_t flags) {
+        struct mystable {
+                uint64_t flag;
+                char *description;
+        } t[]= {
+                {MNT_RDONLY, "ro"},
+                {MNT_SYNCHRONOUS, "synchronous"},
+                {MNT_NOEXEC, "noexec"},
+                {MNT_NOSUID, "nosuid"},
+                {MNT_NODEV, "nodev"},
+                {MNT_NODEVMTIME, "nodevmtime"},
+                {MNT_DISCARD, "discard"},
+                {MNT_EXTATTR, "extattr"},
+                {MNT_IGNORE, "hidden"},
+                {MNT_LOG, "log"},
+                {MNT_RELATIME, "relatime"},
+                {MNT_NOCOREDUMP, "nocoredump"},
+                {MNT_ASYNC, "asynchronous"},
+                {MNT_NOATIME, "noatime"},
+                {MNT_EXRDONLY, "exported read only"},
+                {MNT_EXPORTED, "exported"},
+                {MNT_DEFEXPORTED, "exported to the world"},
+                {MNT_EXPORTANON, "anon uid mapping"},
+                {MNT_EXKERB, "exported with kerberos"},
+                {MNT_EXPUBLIC, "public export"},
+                {MNT_EXNORESPORT, "no reserved ports enforcement"},
+                {MNT_LOCAL, "local"},
+                {MNT_QUOTA, "quota"},
+                {MNT_ROOTFS, "rootfs"},
+                {MNT_SOFTDEP, "soft dependencies"},
+                {MNT_SYMPERM, "symperm"},
+                {MNT_UNION, "union"}
+        };
+        for (int i = 0, count = 0; i < sizeof(t) / sizeof(t[0]); i++) {
+                if (flags & t[i].flag) {
+                        snprintf(inf->filesystem->flags + strlen(inf->filesystem->flags), sizeof(inf->filesystem->flags) - strlen(inf->filesystem->flags) - 1, "%s%s", count++ ? ", " : "", t[i].description);
+                }
+        }
 }
 
 
@@ -207,6 +246,13 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                                         } else {
                                                 //FIXME: NetBSD kernel has NFS statistics as well, but there is no clear mapping between the kernel label ("nfsX" style) and the NFS mount => we don't support NFS currently
                                                 inf->filesystem->object.getDiskActivity = _getDummyDiskActivity;
+                                        }
+                                        if ((mntItem->f_flag & MNT_VISFLAGMASK) != inf->filesystem->object.flags) {
+                                                if (inf->filesystem->object.flags) {
+                                                        inf->filesystem->flagsChanged = true;
+                                                }
+                                                inf->filesystem->object.flags = mntItem->f_flag & MNT_VISFLAGMASK;
+                                                _filesystemFlagsToString(inf, inf->filesystem->object.flags);
                                         }
                                         strncpy(inf->filesystem->object.device, mntItem->f_mntfromname, sizeof(inf->filesystem->object.device) - 1);
                                         strncpy(inf->filesystem->object.mountpoint, mntItem->f_mntonname, sizeof(inf->filesystem->object.mountpoint) - 1);
