@@ -178,7 +178,7 @@ struct tm *Time_toDateTime(const char *s, struct tm *t) {
         assert(s);
         struct tm tm = {.tm_isdst = -1};
         int has_date = false, has_time = false;
-        const char *limit = s + strlen(s), *marker, *token, *cursor = s;
+        const unsigned char *limit = s + strlen(s), *marker, *token, *cursor = s;
         while (true) {
                 if (cursor >= limit) {
                         if (has_date || has_time) {
