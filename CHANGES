@@ -55,6 +55,8 @@ of connection event.
 
 New: M/Monit: show MacOS version instead of Darwin kernel version.
 
+New: Show textual representation of filesystem flags instead of numeric.
+
 Fixed: Previous Monit versions may be unable to detect that the filesystem is not
 mounted in the case that mountpoint was used as a filesystem path. The reason is,
 that the mountpoint itself resides on some filesystem (for example root filesystem)
@@ -83,13 +85,15 @@ Fixed: Issue #537: Monit HTTP server could not start if no network interface ava
 
 Fixed: Issue #549: Mailserver on port 587 doesn't work with STARTTLS.
 
+Fixed: Issue #560: Monit may miss the filesystem flags change if it was triggered by kernel.
+
+Fixed: Issue #563: Only log test of PID file in debug mode to prevent flooding the log during normal operations.
+
 Fixed: Monit HTTP GUI: Safari may fail to load the page if SSL is enabled.
 
 Fixed: If the connection timed out, Monit reported incorrect error: "Resource temporarily unavailable".
 
 Fixed: Implicit filesystem existence monitoring even if the "does not exist" test is not defined.
-
-Fixed: Issue #563: Only log test of PID file in debug mode to prevent flooding the log during normal operations.
 
 
 Version 5.20.0

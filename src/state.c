@@ -81,8 +81,7 @@
  *        Allows to skip the content match test for the content which was checked
  *        already to suppress duplicate events.
  *
- *    5.) size, checksum, timestamp, permissions, link speed, filesystem flags
- *        for the change observation test
+ *    5.) size, checksum, timestamp, permissions, link speed for the change observation test
  *
  * Data is stored in binary form in the statefile using the following format:
  *    <MAGIC><VERSION>{<SERVICE_STATE>}+
@@ -252,12 +251,6 @@ static void _updateChecksum(Service_T S, char *hash) {
 }
 
 
-static void _updateFilesystemFlags(Service_T S, int flags) {
-        if (S->fsflaglist)
-                S->inf.filesystem->flags = flags;
-}
-
-
 static void _updateLinkSpeed(Service_T S, int duplex, long long speed) {
         for (LinkSpeed_T l = S->linkspeedlist; l; l = l->next) {
                 l->duplex = duplex;
@@ -298,7 +291,6 @@ static void _restoreV3() {
 
                                 case Service_Filesystem:
                                         _updatePermission(service, state.priv.filesystem.mode);
-                                        _updateFilesystemFlags(service, state.priv.filesystem.flags);
                                         break;
 
                                 case Service_Net:
@@ -344,7 +336,6 @@ static void _restoreV2() {
 
                                 case Service_Filesystem:
                                         _updatePermission(service, state.priv.filesystem.mode);
-                                        _updateFilesystemFlags(service, state.priv.filesystem.flags);
                                         break;
 
                                 case Service_Net:
@@ -468,7 +459,6 @@ void State_save() {
                                 case Service_Filesystem:
                                         if (service->perm)
                                                 state.priv.filesystem.mode = service->perm->perm;
-                                        state.priv.filesystem.flags = service->inf.filesystem->flags;
                                         break;
 
                                 case Service_Net:

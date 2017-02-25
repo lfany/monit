@@ -971,11 +971,11 @@ typedef struct FilesystemInfo_T {
         float inode_percent;                        /**< Used inode percentage */
         float space_percent;                        /**< Used space percentage */
         int f_bsize;                                  /**< Transfer block size */
-        int _flags;                      /**< Filesystem flags from last cycle */
-        int flags;                     /**< Filesystem flags from actual cycle */
         int uid;                                              /**< Owner's uid */
         int gid;                                              /**< Owner's gid */
         int mode;                                              /**< Permission */
+        char flags[STRLEN];                              /**< Filesystem flags */
+        boolean_t flagsChanged;          /**< True if filesystem flags changed */
         struct IOStatistics_T read;                       /**< Read statistics */
         struct IOStatistics_T write;                     /**< Write statistics */
         struct {

@@ -111,8 +111,6 @@ static boolean_t _getDiskUsage(void *_inf) {
         inf->filesystem->f_blocksfreetotal = usage.f_bfree;
         inf->filesystem->f_files = usage.f_files;
         inf->filesystem->f_filesfree = usage.f_ffree;
-        inf->filesystem->_flags = inf->filesystem->flags;
-        inf->filesystem->flags = usage.f_flag;
         return true;
 }
 
@@ -284,6 +282,12 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                         strncpy(inf->filesystem->object.device, mnt->mnt_fsname, sizeof(inf->filesystem->object.device) - 1);
                         strncpy(inf->filesystem->object.mountpoint, mnt->mnt_dir, sizeof(inf->filesystem->object.mountpoint) - 1);
                         strncpy(inf->filesystem->object.type, mnt->mnt_type, sizeof(inf->filesystem->object.type) - 1);
+                        if (! IS(mnt->mnt_opts, inf->filesystem->flags)) {
+                                if (*(inf->filesystem->flags)) {
+                                        inf->filesystem->flagsChanged = true;
+                                }
+                                snprintf(inf->filesystem->flags, sizeof(inf->filesystem->flags), "%s", mnt->mnt_opts);
+                        }
                         inf->filesystem->object.getDiskUsage = _getDiskUsage; // The disk usage method is common for all filesystem types
                         inf->filesystem->object.getDiskActivity = _getDummyDiskActivity; // Set to dummy IO statistics method by default (can be overriden bellow if statistics method is available for this filesystem)
                         if (Str_startsWith(mnt->mnt_type, "nfs")) {
