@@ -246,7 +246,7 @@ static void _updateSize(Service_T S, unsigned long long size) {
 static void _updateChecksum(Service_T S, char *hash) {
         if (S->checksum && S->checksum->test_changes) {
                 S->checksum->initialized = false;
-                strncpy(S->checksum->hash, hash, sizeof(S->checksum->hash));
+                strncpy(S->checksum->hash, hash, sizeof(S->checksum->hash) - 1);
         }
 }
 
@@ -451,7 +451,7 @@ void State_save() {
                                         state.priv.file.size = (unsigned long long)service->inf.file->size;
                                         state.priv.file.timestamp = (unsigned long long)service->inf.file->timestamp;
                                         if (service->checksum)
-                                                strncpy(state.priv.file.hash, service->inf.file->cs_sum, sizeof(state.priv.file.hash));
+                                                strncpy(state.priv.file.hash, service->inf.file->cs_sum, sizeof(state.priv.file.hash) - 1);
                                         if (service->perm)
                                                 state.priv.file.mode = service->perm->perm;
                                         break;

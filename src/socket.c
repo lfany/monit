@@ -366,7 +366,7 @@ T Socket_createUnix(const char *path, Socket_Type type, int timeout) {
                 }
                 struct sockaddr_un unixsocket_server = {};
                 unixsocket_server.sun_family = AF_UNIX;
-                strncpy(unixsocket_server.sun_path, path, sizeof(unixsocket_server.sun_path));
+                strncpy(unixsocket_server.sun_path, path, sizeof(unixsocket_server.sun_path) - 1);
                 if (Net_setNonBlocking(s)) {
                         char error[STRLEN];
                         if (_doConnect(s, (struct sockaddr *)&unixsocket_server, sizeof(unixsocket_server), timeout, error, sizeof(error))) {
