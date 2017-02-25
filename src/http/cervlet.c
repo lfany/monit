@@ -362,10 +362,10 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
 
                         case Service_Filesystem:
                                 _formatStatus("filesystem type", Event_Null, type, res, s, *(s->inf.filesystem->object.type), "%s", s->inf.filesystem->object.type);
+                                _formatStatus("filesystem flags", Event_Fsflag, type, res, s, *(s->inf.filesystem->flags), "%s", s->inf.filesystem->flags);
                                 _formatStatus("permission", Event_Permission, type, res, s, s->inf.filesystem->mode >= 0, "%o", s->inf.filesystem->mode & 07777);
                                 _formatStatus("uid", Event_Uid, type, res, s, s->inf.filesystem->uid >= 0, "%d", s->inf.filesystem->uid);
                                 _formatStatus("gid", Event_Gid, type, res, s, s->inf.filesystem->gid >= 0, "%d", s->inf.filesystem->gid);
-                                _formatStatus("filesystem flags", Event_Fsflag, type, res, s, *(s->inf.filesystem->flags), "%s", s->inf.filesystem->flags);
                                 _formatStatus("block size", Event_Null, type, res, s, true, "%s", Str_bytesToSize(s->inf.filesystem->f_bsize, (char[10]){}));
                                 _formatStatus("space total", Event_Null, type, res, s, true, "%s (of which %.1f%% is reserved for root user)",
                                         s->inf.filesystem->f_bsize > 0 ? Str_bytesToSize(s->inf.filesystem->f_blocks * s->inf.filesystem->f_bsize, (char[10]){}) : "0 MB",
