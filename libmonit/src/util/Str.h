@@ -85,7 +85,7 @@ char *Str_trim(char *s);
  * @param s A string
  * @return s with leading spaces removed
  */
-char *Str_ltrim(char *s);
+char *Str_ltrim(unsigned char *s);
 
 
 /**
@@ -93,7 +93,7 @@ char *Str_ltrim(char *s);
  * @param s A string
  * @return s with trailing spaces removed
  */
-char *Str_rtrim(char *s);
+char *Str_rtrim(unsigned char *s);
 
 
 /**
@@ -101,7 +101,7 @@ char *Str_rtrim(char *s);
  * @param s A string
  * @return s with any enclosed quotes and white-space removed
  */
-char *Str_unquote(char *s);
+char *Str_unquote(unsigned char *s);
 
 
 /**
@@ -109,7 +109,7 @@ char *Str_unquote(char *s);
  * @param s A string
  * @return s converted to lower case letters
  */
-char *Str_toLower(char *s);
+char *Str_toLower(unsigned char *s);
 
 
 /**
@@ -117,7 +117,7 @@ char *Str_toLower(char *s);
  * @param s A string
  * @return s converted to upper case letters
  */
-char *Str_toUpper(char *s);
+char *Str_toUpper(unsigned char *s);
 
 
 /**
@@ -172,7 +172,7 @@ char *Str_replaceChar(char *s, char o, char n);
  * @param b The sub-string to test a against
  * @return true if a starts with b, otherwise false
  */
-int Str_startsWith(const char *a, const char *b);
+int Str_startsWith(const unsigned char *a, const unsigned char *b);
 
 
 /**
@@ -183,7 +183,7 @@ int Str_startsWith(const char *a, const char *b);
  * @param b The sub-string to test a against
  * @return true if a ends with b, otherwise false
  */
-int Str_endsWith(const char *a, const char *b);
+int Str_endsWith(const unsigned char *a, const unsigned char *b);
 
 
 /**
@@ -202,7 +202,7 @@ int Str_endsWith(const char *a, const char *b);
  * @return A pointer to the start of the substring in a that contains b, 
  * otherwise NULL
  */
-char *Str_sub(const char *a, const char *b);
+char *Str_sub(const unsigned char *a, const unsigned char *b);
 
 
 /**
@@ -246,7 +246,7 @@ char *Str_unescape(const char *charset, char *s);
  * @param b The string to test for equality with <code>a</code>
  * @return true if a equals b, otherwise false
  */
-int Str_isEqual(const char *a, const char *b);
+int Str_isEqual(const unsigned char *a, const unsigned char *b);
 
 
 /**
