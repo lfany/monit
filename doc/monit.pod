@@ -1775,14 +1775,14 @@ enable monitoring from the web interface or from the console.
 
 =item *
 
-B<EXEC> can be used to execute an arbitrary program B<and> send
-an alert. If you choose this action you must state the program to
-be executed and if the program requires arguments you must enclose
-the program and its arguments in a quoted string. You may
-optionally specify the uid and gid the executed program should
-switch to upon start. The program is by default executed only once,
-on the state change. You can enable program repetition when the error
-persists for given number of cycles. For instance:
+B<EXEC> can be used to execute an arbitrary program B<and> send an
+alert. If you choose this action you must state the program to be
+executed and if the program requires arguments you must enclose the
+program and its arguments in a quoted string. You may optionally
+specify the uid and gid the executed program should switch to upon
+start. The program is executed only I<once> if the test fails. You can
+enable execute repetition if the error persists for a given number of
+cycles. For instance:
 
  if failed <test> then exec "/usr/local/bin/sms.sh"
       as uid nobody and gid nobody
