@@ -229,7 +229,7 @@ static boolean_t _parseNetwork(char *pattern) {
         int count = 0;
 
         char buf[STRLEN];
-        strncpy(buf, pattern, sizeof(buf));
+        strncpy(buf, pattern, sizeof(buf) - 1);
         char *temp = buf;
         Socket_Family family = Socket_Ip4;
         // check if we have IPv4/IPv6 CIDR notation (x.x.x.x/yyy or x::/y) or IPv4 dot-decimal (x.x.x.x/y.y.y.y)
@@ -431,7 +431,7 @@ static void _createTcpServer(Socket_Family family, char error[STRLEN]) {
 #ifdef HAVE_OPENSSL
                 if (Run.httpd.socket.net.ssl.flags & SSL_Enabled) {
                         if (! (data[myServerSocketsCount].ssl = SslServer_new(myServerSockets[myServerSocketsCount].fd, &(Run.httpd.socket.net.ssl)))) {
-                                strncpy(error, "Could not initialize SSL engine", STRLEN);
+                                strncpy(error, "Could not initialize SSL engine", STRLEN - 1);
                                 Net_close(myServerSockets[myServerSocketsCount].fd);
                                 return;
                         }

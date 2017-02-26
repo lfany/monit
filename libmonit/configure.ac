@@ -236,7 +236,7 @@ then
    AC_DEFINE([HPUX], 1, [Define to 1 if the system is HPUX])
 elif test "$architecture" = "NetBSD"
 then
-   CFLAGS="$CFLAGS -D_REENTRANT"
+   CFLAGS="$CFLAGS -D_REENTRANT -Wno-char-subscripts"
    AC_DEFINE([NETBSD], 1, [Define to 1 if the system is NETBSD])
 elif test "$architecture" = "AIX"
 then
