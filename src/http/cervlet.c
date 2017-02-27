@@ -362,7 +362,7 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
 
                         case Service_Filesystem:
                                 _formatStatus("filesystem type", Event_Null, type, res, s, *(s->inf.filesystem->object.type), "%s", s->inf.filesystem->object.type);
-                                _formatStatus("filesystem flags", Event_Fsflag, type, res, s, *(s->inf.filesystem->flags), "%s", s->inf.filesystem->flags);
+                                _formatStatus("filesystem flags", Event_FsFlag, type, res, s, *(s->inf.filesystem->flags), "%s", s->inf.filesystem->flags);
                                 _formatStatus("permission", Event_Permission, type, res, s, s->inf.filesystem->mode >= 0, "%o", s->inf.filesystem->mode & 07777);
                                 _formatStatus("uid", Event_Uid, type, res, s, s->inf.filesystem->uid >= 0, "%d", s->inf.filesystem->uid);
                                 _formatStatus("gid", Event_Gid, type, res, s, s->inf.filesystem->gid >= 0, "%d", s->inf.filesystem->gid);
@@ -1702,7 +1702,7 @@ static void print_alerts(HttpResponse res, Mail_T s) {
                                 StringBuffer_append(res->outputbuffer, "Data ");
                         if (IS_EVENT_SET(r->events, Event_Exec))
                                 StringBuffer_append(res->outputbuffer, "Exec ");
-                        if (IS_EVENT_SET(r->events, Event_Fsflag))
+                        if (IS_EVENT_SET(r->events, Event_FsFlag))
                                 StringBuffer_append(res->outputbuffer, "Fsflags ");
                         if (IS_EVENT_SET(r->events, Event_Gid))
                                 StringBuffer_append(res->outputbuffer, "Gid ");
@@ -1712,7 +1712,7 @@ static void print_alerts(HttpResponse res, Mail_T s) {
                                 StringBuffer_append(res->outputbuffer, "Invalid ");
                         if (IS_EVENT_SET(r->events, Event_Link))
                                 StringBuffer_append(res->outputbuffer, "Link ");
-                        if (IS_EVENT_SET(r->events, Event_Nonexist))
+                        if (IS_EVENT_SET(r->events, Event_NonExist))
                                 StringBuffer_append(res->outputbuffer, "Nonexist ");
                         if (IS_EVENT_SET(r->events, Event_Permission))
                                 StringBuffer_append(res->outputbuffer, "Permission ");
@@ -1818,7 +1818,7 @@ static void print_service_rules_timeout(HttpResponse res, Service_T s) {
 
 
 static void print_service_rules_existence(HttpResponse res, Service_T s) {
-        for (Nonexist_T l = s->nonexistlist; l; l = l->next) {
+        for (NonExist_T l = s->nonexistlist; l; l = l->next) {
                 StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Existence</td><td>");
                 Util_printRule(res->outputbuffer, l->action, "If doesn't exist");
                 StringBuffer_append(res->outputbuffer, "</td></tr>");
@@ -1940,7 +1940,7 @@ static void print_service_rules_timestamp(HttpResponse res, Service_T s) {
 
 
 static void print_service_rules_fsflags(HttpResponse res, Service_T s) {
-        for (Fsflag_T l = s->fsflaglist; l; l = l->next) {
+        for (FsFlag_T l = s->fsflaglist; l; l = l->next) {
                 StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Filesystem flags</td><td>");
                 Util_printRule(res->outputbuffer, l->action, "If changed");
                 StringBuffer_append(res->outputbuffer, "</td></tr>");
@@ -1949,7 +1949,7 @@ static void print_service_rules_fsflags(HttpResponse res, Service_T s) {
 
 
 static void print_service_rules_filesystem(HttpResponse res, Service_T s) {
-        for (Filesystem_T dl = s->filesystemlist; dl; dl = dl->next) {
+        for (FileSystem_T dl = s->filesystemlist; dl; dl = dl->next) {
                 if (dl->resource == Resource_Inode) {
                         StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Inodes usage limit</td><td>");
                         if (dl->limit_absolute > -1)

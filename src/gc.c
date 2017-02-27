@@ -47,7 +47,7 @@ static void _gc_service(Service_T *);
 static void _gc_servicegroup(ServiceGroup_T *);
 static void _gc_mail_server(MailServer_T *);
 static void _gcportlist(Port_T *);
-static void _gcfilesystem(Filesystem_T *);
+static void _gcfilesystem(FileSystem_T *);
 static void _gcicmp(Icmp_T *);
 static void _gcpql(Resource_T *);
 static void _gcptl(Timestamp_T *);
@@ -68,8 +68,8 @@ static void _gcuid(Uid_T *);
 static void _gcgid(Gid_T *);
 static void _gcpid(Pid_T *);
 static void _gcppid(Pid_T *);
-static void _gcfsflag(Fsflag_T *);
-static void _gcnonexist(Nonexist_T *);
+static void _gcfsflag(FsFlag_T *);
+static void _gcnonexist(NonExist_T *);
 static void _gcgeneric(Generic_T *);
 static void _gcath(Auth_T *);
 static void _gc_mmonit(Mmonit_T *);
@@ -412,7 +412,7 @@ static void _gcportlist(Port_T *p) {
 }
 
 
-static void _gcfilesystem(Filesystem_T *d) {
+static void _gcfilesystem(FileSystem_T *d) {
         ASSERT(d&&*d);
         if ((*d)->next)
                 _gcfilesystem(&(*d)->next);
@@ -589,7 +589,7 @@ static void _gcppid(Pid_T *s) {
 }
 
 
-static void _gcfsflag(Fsflag_T *s) {
+static void _gcfsflag(FsFlag_T *s) {
         ASSERT(s);
         if ((*s)->next)
                 _gcfsflag(&(*s)->next);
@@ -599,7 +599,7 @@ static void _gcfsflag(Fsflag_T *s) {
 }
 
 
-static void _gcnonexist(Nonexist_T *s) {
+static void _gcnonexist(NonExist_T *s) {
         ASSERT(s);
         if ((*s)->next)
                 _gcnonexist(&(*s)->next);

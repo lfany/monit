@@ -122,7 +122,7 @@ static void waitforchildren(void); /* Wait for any child process not running */
 
 
 const char *prog;                              /**< The Name of this Program */
-struct myrun Run;                      /**< Struct holding runtime constants */
+struct Run_T Run;                      /**< Struct holding runtime constants */
 Service_T servicelist;                /**< The service list (created in p.y) */
 Service_T servicelist_conf;   /**< The service list in conf file (c. in p.y) */
 ServiceGroup_T servicegrouplist;/**< The service group list (created in p.y) */

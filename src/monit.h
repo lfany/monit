@@ -425,7 +425,7 @@ typedef char MD_T[MD_SIZE];
 
 
 /** Defines monit limits object */
-typedef struct mylimits {
+typedef struct Limits_T {
         uint32_t sendExpectBuffer;  /**< Maximum send/expect response length [B] */
         uint32_t fileContentBuffer;  /**< Maximum tested file content length [B] */
         uint32_t httpContentBuffer;  /**< Maximum tested HTTP content length [B] */
@@ -443,9 +443,10 @@ typedef struct mylimits {
  * array must be NULL terminated and the first entry is the program
  * itself. In addition, a user and group may be set for the Command
  * which means that the Command should run as a certain user and with
- * certain group.
+ * certain group. To avoid name collision with Command_T in libmonit 
+ * this structure uses lower case.
  */
-typedef struct mycommand {
+typedef struct command_t {
         char *arg[ARGMAX];                             /**< Program with arguments */
         short length;                       /**< The length of the arguments array */
         boolean_t has_uid;      /**< true if a new uid is defined for this Command */
@@ -457,7 +458,7 @@ typedef struct mycommand {
 
 
 /** Defines an event action object */
-typedef struct myaction {
+typedef struct Action_T {
         Action_Type id;                                   /**< Action to be done */
         uint8_t count;             /**< Event count needed to trigger the action */
         uint8_t cycles;      /**< Cycles during which count limit can be reached */
@@ -467,14 +468,14 @@ typedef struct myaction {
 
 
 /** Defines event's up and down actions */
-typedef struct myeventaction {
+typedef struct EventAction_T {
         Action_T  failed;                  /**< Action in the case of failure down */
         Action_T  succeeded;                    /**< Action in the case of failure up */
 } *EventAction_T;
 
 
 /** Defines an url object */
-typedef struct myurl {
+typedef struct URL_T {
         char *url;                                                  /**< Full URL */
         char *protocol;                                    /**< URL protocol type */
         char *user;                                        /**< URL user     part */
@@ -488,7 +489,7 @@ typedef struct myurl {
 
 
 /** Defines a HTTP client request object */
-typedef struct myrequest {
+typedef struct Request_T {
         URL_T url;                                               /**< URL request */
         Operator_Type operator;         /**< Response content comparison operator */
         regex_t *regex;                   /* regex used to test the response body */
@@ -496,19 +497,19 @@ typedef struct myrequest {
 
 
 /** Defines an event notification and status receiver object */
-typedef struct mymmonit {
+typedef struct Mmonit_T {
         URL_T url;                                             /**< URL definition */
         struct SslOptions_T ssl;                               /**< SSL definition */
         int timeout;                /**< The timeout to wait for connection or i/o */
         MmonitCompress_Type compress;                        /**< Compression flag */
 
         /** For internal use */
-        struct mymmonit *next;                         /**< next receiver in chain */
+        struct Mmonit_T *next;                         /**< next receiver in chain */
 } *Mmonit_T;
 
 
 /** Defines a mailinglist object */
-typedef struct mymail {
+typedef struct Mail_T {
         char *to;                         /**< Mail address for alert notification */
         Address_T from;                                 /**< The mail from address */
         Address_T replyto;                          /**< Optional reply-to address */
@@ -519,12 +520,12 @@ typedef struct mymail {
         unsigned int reminder;              /*< Send error reminder each Xth cycle */
 
         /** For internal use */
-        struct mymail *next;                          /**< next recipient in chain */
+        struct Mail_T *next;                          /**< next recipient in chain */
 } *Mail_T;
 
 
 /** Defines a mail server address */
-typedef struct mymailserver {
+typedef struct MailServer_T {
         char *host;     /**< Server host address, may be a IP or a hostname string */
         int   port;                                               /**< Server port */
         char *username;                               /** < Username for SMTP_AUTH */
@@ -533,23 +534,23 @@ typedef struct mymailserver {
         Socket_T socket;                                     /**< Connected socket */
 
         /** For internal use */
-        struct mymailserver *next;        /**< Next server to try on connect error */
+        struct MailServer_T *next;        /**< Next server to try on connect error */
 } *MailServer_T;
 
 
-typedef struct myauthentication {
+typedef struct Auth_T {
         char *uname;                  /**< User allowed to connect to monit httpd */
         char *passwd;                                /**< The users password data */
         char *groupname;                                      /**< PAM group name */
         Digest_Type digesttype;                /**< How did we store the password */
         boolean_t is_readonly; /**< true if this is a read-only authenticated user*/
-        struct myauthentication *next;       /**< Next credential or NULL if last */
+        struct Auth_T *next;                 /**< Next credential or NULL if last */
 } *Auth_T;
 
 
 /** Defines data for systemwide statistic */
 //FIXME: structurize the data
-typedef struct mysysteminfo {
+typedef struct SystemInfo_T {
         int cpus;                                                                       /**< Number of CPUs */
         float total_mem_percent;                                /**< Total real memory in use in the system */
         float total_swap_percent;                                      /**< Total swap in use in the system */
@@ -578,15 +579,15 @@ typedef struct Protocol_T {
 
 
 /** Defines a send/expect object used for generic protocol tests */
-typedef struct mygenericproto {
+typedef struct Generic_T {
         char *send;                           /* string to send, or NULL if expect */
         regex_t *expect;                  /* regex code to expect, or NULL if send */
         /** For internal use */
-        struct mygenericproto *next;
+        struct Generic_T *next;
 } *Generic_T;
 
 
-typedef struct outgoing {
+typedef struct Outgoing_T {
         char *ip;                                         /**< Outgoing IP address */
         struct sockaddr_storage addr;
         socklen_t addrlen;
@@ -594,7 +595,7 @@ typedef struct outgoing {
 
 
 /** Defines a port object */
-typedef struct myport {
+typedef struct Port_T {
         char *hostname;                                     /**< Hostname to check */
         union {
                 struct {
@@ -686,12 +687,12 @@ typedef struct myport {
         Request_T url_request;             /**< Optional url client request object */
 
         /** For internal use */
-        struct myport *next;                               /**< next port in chain */
+        struct Port_T *next;                               /**< next port in chain */
 } *Port_T;
 
 
 /** Defines a ICMP/Ping object */
-typedef struct myicmp {
+typedef struct Icmp_T {
         int type;                                              /**< ICMP type used */
         int size;                                     /**< ICMP echo requests size */
         int count;                                   /**< ICMP echo requests count */
@@ -703,32 +704,32 @@ typedef struct myicmp {
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
-        struct myicmp *next;                               /**< next icmp in chain */
+        struct Icmp_T *next;                               /**< next icmp in chain */
 } *Icmp_T;
 
 
-typedef struct mydependant {
+typedef struct Dependant_T {
         char *dependant;                            /**< name of dependant service */
 
         /** For internal use */
-        struct mydependant *next;             /**< next dependant service in chain */
+        struct Dependant_T *next;             /**< next dependant service in chain */
 } *Dependant_T;
 
 
 /** Defines resource data */
-typedef struct myresource {
+typedef struct Resource_T {
         Resource_Type resource_id;                     /**< Which value is checked */
         Operator_Type operator;                           /**< Comparison operator */
         double limit;                                   /**< Limit of the resource */
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
-        struct myresource *next;                       /**< next resource in chain */
+        struct Resource_T *next;                       /**< next resource in chain */
 } *Resource_T;
 
 
 /** Defines timestamp object */
-typedef struct mytimestamp {
+typedef struct Timestamp_T {
         boolean_t initialized;              /**< true if timestamp was initialized */
         boolean_t test_changes;       /**< true if we only should test for changes */
         Operator_Type operator;                           /**< Comparison operator */
@@ -737,24 +738,24 @@ typedef struct mytimestamp {
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
-        struct mytimestamp *next;                     /**< next timestamp in chain */
+        struct Timestamp_T *next;                     /**< next timestamp in chain */
 } *Timestamp_T;
 
 
 /** Defines action rate object */
-typedef struct myactionrate {
+typedef struct ActionRate_T {
         int  count;                                            /**< Action counter */
         int  cycle;                                             /**< Cycle counter */
         EventAction_T action;    /**< Description of the action upon matching rate */
 
         /** For internal use */
-        struct myactionrate *next;                   /**< next actionrate in chain */
+        struct ActionRate_T *next;                   /**< next actionrate in chain */
 } *ActionRate_T;
 
 
 /** Defines when to run a check for a service. This type suports both the old
  cycle based every statement and the new cron-format version */
-typedef struct myevery {
+typedef struct Every_T {
         Every_Type type; /**< 0 = not set, 1 = cycle, 2 = cron, 3 = negated cron */
         time_t last_run;
         union {
@@ -767,18 +768,18 @@ typedef struct myevery {
 } Every_T;
 
 
-typedef struct mystatus {
+typedef struct Status_T {
         boolean_t initialized;                 /**< true if status was initialized */
         Operator_Type operator;                           /**< Comparison operator */
         int return_value;                /**< Return value of the program to check */
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
-        struct mystatus *next;                       /**< next exit value in chain */
+        struct Status_T *next;                       /**< next exit value in chain */
 } *Status_T;
 
 
-typedef struct myprogram {
+typedef struct Program_T {
         Process_T P;          /**< A Process_T object representing the sub-process */
         Command_T C;          /**< A Command_T object for creating the sub-process */
         command_t args;                                     /**< Program arguments */
@@ -790,7 +791,7 @@ typedef struct myprogram {
 
 
 /** Defines size object */
-typedef struct mysize {
+typedef struct Size_T {
         boolean_t initialized;                   /**< true if size was initialized */
         boolean_t test_changes;       /**< true if we only should test for changes */
         Operator_Type operator;                           /**< Comparison operator */
@@ -798,50 +799,50 @@ typedef struct mysize {
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
-        struct mysize *next;                               /**< next size in chain */
+        struct Size_T *next;                               /**< next size in chain */
 } *Size_T;
 
 
 /** Defines uptime object */
-typedef struct myuptime {
+typedef struct Uptime_T {
         Operator_Type operator;                           /**< Comparison operator */
         unsigned long long uptime;                           /**< Uptime watermark */
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
-        struct myuptime *next;                           /**< next uptime in chain */
+        struct Uptime_T *next;                           /**< next uptime in chain */
 } *Uptime_T;
 
 
-typedef struct mylinkstatus {
+typedef struct LinkStatus_T {
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
-        struct mylinkstatus *next;                      /**< next link in chain */
+        struct LinkStatus_T *next;                      /**< next link in chain */
 } *LinkStatus_T;
 
 
-typedef struct mylinkspeed {
+typedef struct LinkSpeed_T {
         int duplex;                                        /**< Last duplex status */
         long long speed;                                     /**< Last speed [bps] */
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
-        struct mylinkspeed *next;                       /**< next link in chain */
+        struct LinkSpeed_T *next;                       /**< next link in chain */
 } *LinkSpeed_T;
 
 
-typedef struct mylinksaturation {
+typedef struct LinkSaturation_T {
         Operator_Type operator;                           /**< Comparison operator */
         float limit;                                     /**< Saturation limit [%] */
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
-        struct mylinksaturation *next;                  /**< next link in chain */
+        struct LinkSaturation_T *next;                  /**< next link in chain */
 } *LinkSaturation_T;
 
 
-typedef struct mybandwidth {
+typedef struct Bandwidth_T {
         Operator_Type operator;                           /**< Comparison operator */
         Time_Type range;                            /**< Time range to watch: unit */
         int rangecount;                            /**< Time range to watch: count */
@@ -849,12 +850,12 @@ typedef struct mybandwidth {
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
-        struct mybandwidth *next;                     /**< next bandwidth in chain */
+        struct Bandwidth_T *next;                     /**< next bandwidth in chain */
 } *Bandwidth_T;
 
 
 /** Defines checksum object */
-typedef struct mychecksum {
+typedef struct Checksum_T {
         boolean_t initialized;               /**< true if checksum was initialized */
         boolean_t test_changes;       /**< true if we only should test for changes */
         Hash_Type type;                   /**< The type of hash (e.g. md5 or sha1) */
@@ -865,14 +866,14 @@ typedef struct mychecksum {
 
 
 /** Defines permission object */
-typedef struct myperm {
+typedef struct Perm_T {
         boolean_t test_changes;       /**< true if we only should test for changes */
         int perm;                                           /**< Access permission */
         EventAction_T action;  /**< Description of the action upon event occurence */
 } *Perm_T;
 
 /** Defines match object */
-typedef struct mymatch {
+typedef struct Match_T {
         boolean_t ignore;                                        /**< Ignore match */
         boolean_t not;                                           /**< Invert match */
         char    *match_string;                                   /**< Match string */ //FIXME: union?
@@ -882,51 +883,59 @@ typedef struct mymatch {
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
-        struct mymatch *next;                             /**< next match in chain */
+        struct Match_T *next;                             /**< next match in chain */
 } *Match_T;
 
 
 /** Defines uid object */
-typedef struct myuid {
+typedef struct Uid_T {
         uid_t     uid;                                            /**< Owner's uid */
         EventAction_T action;  /**< Description of the action upon event occurence */
 } *Uid_T;
 
 
 /** Defines gid object */
-typedef struct mygid {
+typedef struct Gid_T {
         gid_t     gid;                                            /**< Owner's gid */
         EventAction_T action;  /**< Description of the action upon event occurence */
 } *Gid_T;
 
 
 /** Defines pid object */
-typedef struct mypid {
+typedef struct Pid_T {
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
-        struct mypid *next;                                 /**< next pid in chain */
+        struct Pid_T *next;                                 /**< next pid in chain */
 } *Pid_T;
 
 
-typedef struct myfsflag {
+typedef struct FsFlag_T {
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
-        struct myfsflag *next;
-} *Fsflag_T;
+        struct FsFlag_T *next;
+} *FsFlag_T;
 
 
-typedef struct mynonexist {
+typedef struct NonExist_T {
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
-        struct mynonexist *next;
-} *Nonexist_T;
+        struct NonExist_T *next;
+} *NonExist_T;
+
+
+typedef struct Exist_T {
+        EventAction_T action;  /**< Description of the action upon event occurence */
+
+        /** For internal use */
+        struct Exist_T *next;
+} *Exist_T;
 
 
 /** Defines filesystem configuration */
-typedef struct myfilesystem {
+typedef struct FileSystem_T {
         Resource_Type resource;               /**< Whether to check inode or space */
         Operator_Type operator;                           /**< Comparison operator */
         //FIXME: union
@@ -935,8 +944,8 @@ typedef struct myfilesystem {
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
-        struct myfilesystem *next;                   /**< next filesystem in chain */
-} *Filesystem_T;
+        struct FileSystem_T *next;                   /**< next filesystem in chain */
+} *FileSystem_T;
 
 
 typedef struct IOStatistics_T {
@@ -961,7 +970,7 @@ typedef struct Device_T {
 } *Device_T;
 
 
-typedef struct FilesystemInfo_T {
+typedef struct FileSystemInfo_T {
         long long  f_blocks;              /**< Total data blocks in filesystem */
         long long  f_blocksfree;   /**< Free blocks available to non-superuser */
         long long  f_blocksfreetotal;           /**< Free blocks in filesystem */
@@ -986,7 +995,7 @@ typedef struct FilesystemInfo_T {
                 struct Statistics_T run;     /**< Time spend in run queue [ms] */
         } time;
         struct Device_T object;                             /**< Device object */
-} *FilesystemInfo_T;
+} *FileSystemInfo_T;
 
 
 typedef struct FileInfo_T {
@@ -1052,7 +1061,7 @@ typedef union Info_T {
         DirectoryInfo_T  directory;
         FifoInfo_T       fifo;
         FileInfo_T       file;
-        FilesystemInfo_T filesystem;
+        FileSystemInfo_T filesystem;
         NetInfo_T        net;
         ProcessInfo_T    process;
 } *Info_T;
@@ -1060,11 +1069,11 @@ typedef union Info_T {
 
 /** Defines service data */
 //FIXME: use union for type-specific rules
-typedef struct myservice {
+typedef struct Service_T {
 
         /** Common parameters */
         char *name;                                  /**< Service descriptive name */
-        State_Type (*check)(struct myservice *);/**< Service verification function */
+        State_Type (*check)(struct Service_T *);/**< Service verification function */
         boolean_t visited; /**< Service visited flag, set if dependencies are used */
         Service_Type type;                             /**< Monitored service type */
         Monitor_State monitor;                             /**< Monitor state flag */
@@ -1085,7 +1094,7 @@ typedef struct myservice {
         /** Test rules and event handlers */
         ActionRate_T actionratelist;                    /**< ActionRate check list */
         Checksum_T  checksum;                                  /**< Checksum check */
-        Filesystem_T filesystemlist;                    /**< Filesystem check list */
+        FileSystem_T filesystemlist;                    /**< Filesystem check list */
         Icmp_T      icmplist;                                 /**< ICMP check list */
         Perm_T      perm;                                    /**< Permission check */
         Port_T      portlist;                            /**< Portnumbers to check */
@@ -1099,8 +1108,9 @@ typedef struct myservice {
         Pid_T       pidlist;                                   /**< Pid check list */
         Pid_T       ppidlist;                                 /**< PPid check list */
         Status_T    statuslist;           /**< Program execution status check list */
-        Fsflag_T    fsflaglist;           /**< Action upon filesystem flags change */
-        Nonexist_T  nonexistlist;  /**< Action upon test subject existence failure */
+        FsFlag_T    fsflaglist;           /**< Action upon filesystem flags change */
+        NonExist_T  nonexistlist;      /**< Actions if test subject does not exist */
+        Exist_T     existlist;                  /**< Actions if test subject exist */
         Uid_T       uid;                                            /**< Uid check */
         Uid_T       euid;                                 /**< Effective Uid check */
         Gid_T       gid;                                            /**< Gid check */
@@ -1134,7 +1144,7 @@ typedef struct myservice {
                 #define           EVENT_VERSION  4      /**< The event structure version */
                 long              id;                      /**< The event identification */
                 struct timeval    collected;                /**< When the event occurred */
-                struct myservice *source;                              /**< Event source */
+                struct Service_T *source;                              /**< Event source */
                 Monitor_Mode      mode;             /**< Monitoring mode for the service */
                 Service_Type      type;                      /**< Monitored service type */
                 State_Type        state;                                 /**< Test state */
@@ -1153,26 +1163,26 @@ typedef struct myservice {
 
         /** For internal use */
         Mutex_T mutex;                  /**< Mutex used for action synchronization */
-        struct myservice *next;                         /**< next service in chain */
-        struct myservice *next_conf;      /**< next service according to conf file */
-        struct myservice *next_depend;           /**< next depend service in chain */
+        struct Service_T *next;                         /**< next service in chain */
+        struct Service_T *next_conf;      /**< next service according to conf file */
+        struct Service_T *next_depend;           /**< next depend service in chain */
 } *Service_T;
 
 
 typedef struct myevent *Event_T;
 
 
-typedef struct myservicegroup {
+typedef struct ServiceGroup_T {
         char *name;                                     /**< name of service group */
         List_T members;                                 /**< Service group members */
 
         /** For internal use */
-        struct myservicegroup *next;              /**< next service group in chain */
+        struct ServiceGroup_T *next;              /**< next service group in chain */
 } *ServiceGroup_T;
 
 
-/** Defines data for application runtime */
-struct myrun {
+/** Data for application runtime */
+struct Run_T {
         uint8_t debug;                                            /**< Debug level */
         volatile Run_Flags flags;
         Handler_Type handler_flag;                    /**< The handlers state flag */
@@ -1242,7 +1252,7 @@ struct myrun {
 
 
 extern const char    *prog;
-extern struct myrun   Run;
+extern struct Run_T   Run;
 extern Service_T      servicelist;
 extern Service_T      servicelist_conf;
 extern ServiceGroup_T servicegrouplist;

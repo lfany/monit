@@ -39,11 +39,11 @@ typedef enum {
         Event_Permission = 0x40,
         Event_Uid        = 0x80,
         Event_Gid        = 0x100,
-        Event_Nonexist   = 0x200,
+        Event_NonExist   = 0x200,
         Event_Invalid    = 0x400,
         Event_Data       = 0x800,
         Event_Exec       = 0x1000,
-        Event_Fsflag     = 0x2000,
+        Event_FsFlag     = 0x2000,
         Event_Icmp       = 0x4000,
         Event_Content    = 0x8000,
         Event_Instance   = 0x10000,
@@ -60,6 +60,7 @@ typedef enum {
         Event_ByteOut    = 0x8000000,
         Event_PacketIn   = 0x10000000,
         Event_PacketOut  = 0x20000000,
+        Event_Exist      = 0x40000000,
         Event_All        = 0x7FFFFFFF
 } Event_Type;
 
@@ -124,7 +125,7 @@ Action_Type Event_get_action(Event_T E);
 
 /**
  * Get a textual description of actual event action. For instance if the
- * event type is possitive Event_Nonexist, the textual description of
+ * event type is possitive Event_NonExist, the textual description of
  * failed state related action is "restart". Likewise if the event type is
  * negative Event_Checksum the textual description of recovery related action
  * is "alert" and so on.

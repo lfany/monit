@@ -267,7 +267,7 @@ static void printevents(unsigned int events) {
                         printf("Data ");
                 if (IS_EVENT_SET(events, Event_Exec))
                         printf("Exec ");
-                if (IS_EVENT_SET(events, Event_Fsflag))
+                if (IS_EVENT_SET(events, Event_FsFlag))
                         printf("Fsflags ");
                 if (IS_EVENT_SET(events, Event_Gid))
                         printf("Gid ");
@@ -279,7 +279,7 @@ static void printevents(unsigned int events) {
                         printf("Invalid ");
                 if (IS_EVENT_SET(events, Event_Link))
                         printf("Link ");
-                if (IS_EVENT_SET(events, Event_Nonexist))
+                if (IS_EVENT_SET(events, Event_NonExist))
                         printf("Nonexist ");
                 if (IS_EVENT_SET(events, Event_PacketIn))
                         printf("PacketIn ");
@@ -1003,7 +1003,7 @@ void Util_printService(Service_T s) {
                 printf("\n");
         }
 
-        for (Nonexist_T o = s->nonexistlist; o; o = o->next) {
+        for (NonExist_T o = s->nonexistlist; o; o = o->next) {
                 StringBuffer_clear(buf);
                 printf(" %-20s = %s\n", "Existence", StringBuffer_toString(Util_printRule(buf, o->action, "if does not exist")));
         }
@@ -1022,7 +1022,7 @@ void Util_printService(Service_T s) {
                 printf(" %-20s = %s\n", "PPid", StringBuffer_toString(Util_printRule(buf, o->action, "if changed")));
         }
 
-        for (Fsflag_T o = s->fsflaglist; o; o = o->next) {
+        for (FsFlag_T o = s->fsflaglist; o; o = o->next) {
                 StringBuffer_clear(buf);
                 printf(" %-20s = %s\n", "Filesystem flags", StringBuffer_toString(Util_printRule(buf, o->action, "if changed")));
         }
@@ -1217,7 +1217,7 @@ void Util_printService(Service_T s) {
                 }
         }
 
-        for (Filesystem_T o = s->filesystemlist; o; o = o->next) {
+        for (FileSystem_T o = s->filesystemlist; o; o = o->next) {
                 StringBuffer_clear(buf);
                 if (o->resource == Resource_Inode) {
                         printf(" %-20s = %s\n", "Inodes usage limit",
@@ -1777,7 +1777,7 @@ void Util_resetInfo(Service_T s) {
 
 
 boolean_t Util_hasServiceStatus(Service_T s) {
-        return((s->monitor & Monitor_Yes) && ! (s->error & Event_Nonexist) && ! (s->error & Event_Data));
+        return((s->monitor & Monitor_Yes) && ! (s->error & Event_NonExist) && ! (s->error & Event_Data));
 }
 
 

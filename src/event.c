@@ -85,14 +85,14 @@ EventTable_T Event_Table[] = {
         {Event_Content,    "Content failed",            "Content succeeded",          "Content match",            "Content doesn't match"},
         {Event_Data,       "Data access error",         "Data access succeeded",      "Data access changed",      "Data access not changed"},
         {Event_Exec,       "Execution failed",          "Execution succeeded",        "Execution changed",        "Execution not changed"},
-        {Event_Fsflag,     "Filesystem flags failed",   "Filesystem flags succeeded", "Filesystem flags changed", "Filesystem flags not changed"},
+        {Event_FsFlag,     "Filesystem flags failed",   "Filesystem flags succeeded", "Filesystem flags changed", "Filesystem flags not changed"},
         {Event_Gid,        "GID failed",                "GID succeeded",              "GID changed",              "GID not changed"},
         {Event_Heartbeat,  "Heartbeat failed",          "Heartbeat succeeded",        "Heartbeat changed",        "Heartbeat not changed"},
         {Event_Icmp,       "ICMP failed",               "ICMP succeeded",             "ICMP changed",             "ICMP not changed"},
         {Event_Instance,   "Monit instance failed",     "Monit instance succeeded",   "Monit instance changed",   "Monit instance not changed"},
         {Event_Invalid,    "Invalid type",              "Type succeeded",             "Type changed",             "Type not changed"},
         {Event_Link,       "Link down",                 "Link up",                    "Link changed",             "Link not changed"},
-        {Event_Nonexist,   "Does not exist",            "Exists",                     "Existence changed",        "Existence not changed"},
+        {Event_NonExist,   "Does not exist",            "Exists",                     "Existence changed",        "Existence not changed"},
         {Event_PacketIn,   "Download packets exceeded", "Download packets ok",        "Download packets changed", "Download packets not changed"},
         {Event_PacketOut,  "Upload packets exceeded",   "Upload packets ok",          "Upload packets changed",   "Upload packets not changed"},
         {Event_Permission, "Permission failed",         "Permission succeeded",       "Permission changed",       "Permission not changed"},
@@ -107,6 +107,7 @@ EventTable_T Event_Table[] = {
         {Event_Timestamp,  "Timestamp failed",          "Timestamp succeeded",        "Timestamp changed",        "Timestamp not changed"},
         {Event_Uid,        "UID failed",                "UID succeeded",              "UID changed",              "UID not changed"},
         {Event_Uptime,     "Uptime failed",             "Uptime succeeded",           "Uptime changed",           "Uptime not changed"},
+        {Event_Exist,      "Does exist",                "Exists not",                 "Existence changed",        "Existence not changed"},
         /* Virtual events */
         {Event_Null,       "No Event",                  "No Event",                   "No Event",                 "No Event"}
 };
@@ -498,7 +499,7 @@ Action_Type Event_get_action(Event_T E) {
 
 /**
  * Get a textual description of actual event action. For instance if the
- * event type is possitive Event_Nonexist, the textual description of
+ * event type is possitive Event_NonExist, the textual description of
  * failed state related action is "restart". Likewise if the event type is
  * negative Event_Checksumthe textual description of recovery related action
  * is "alert" and so on.

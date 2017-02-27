@@ -135,18 +135,16 @@
 /* ------------------------------------------------------------- Definitions */
 
 
-struct IHavePrecedence {
+struct precedence_t {
         boolean_t daemon;
         boolean_t logfile;
         boolean_t pidfile;
 };
 
-
-struct myrate {
+struct rate_t {
         unsigned count;
         unsigned cycles;
 };
-
 
 /* yacc interface */
 void  yyerror(const char *,...);
@@ -174,36 +172,36 @@ static command_t command = NULL;
 static command_t command1 = NULL;
 static command_t command2 = NULL;
 static Service_T depend_list = NULL;
-static struct myuid uidset;
-static struct mygid gidset;
-static struct mypid pidset;
-static struct mypid ppidset;
-static struct myfsflag fsflagset;
-static struct mynonexist nonexistset;
-static struct mystatus statusset;
-static struct myperm permset;
-static struct mysize sizeset;
-static struct myuptime uptimeset;
-static struct mylinkstatus linkstatusset;
-static struct mylinkspeed linkspeedset;
-static struct mylinksaturation linksaturationset;
-static struct mybandwidth bandwidthset;
-static struct mymatch matchset;
-static struct myicmp icmpset;
-static struct mymail mailset;
+static struct Uid_T uidset;
+static struct Gid_T gidset;
+static struct Pid_T pidset;
+static struct Pid_T ppidset;
+static struct FsFlag_T fsflagset;
+static struct NonExist_T nonexistset;
+static struct Status_T statusset;
+static struct Perm_T permset;
+static struct Size_T sizeset;
+static struct Uptime_T uptimeset;
+static struct LinkStatus_T linkstatusset;
+static struct LinkSpeed_T linkspeedset;
+static struct LinkSaturation_T linksaturationset;
+static struct Bandwidth_T bandwidthset;
+static struct Match_T matchset;
+static struct Icmp_T icmpset;
+static struct Mail_T mailset;
 static struct SslOptions_T sslset;
-static struct myport portset;
-static struct mymailserver mailserverset;
-static struct mymmonit mmonitset;
-static struct myfilesystem filesystemset;
-static struct myresource resourceset;
-static struct mychecksum checksumset;
-static struct mytimestamp timestampset;
-static struct myactionrate actionrateset;
-static struct IHavePrecedence ihp = {false, false, false};
-static struct myrate rate = {1, 1};
-static struct myrate rate1 = {1, 1};
-static struct myrate rate2 = {1, 1};
+static struct Port_T portset;
+static struct MailServer_T mailserverset;
+static struct Mmonit_T mmonitset;
+static struct FileSystem_T filesystemset;
+static struct Resource_T resourceset;
+static struct Checksum_T checksumset;
+static struct Timestamp_T timestampset;
+static struct ActionRate_T actionrateset;
+static struct precedence_t ihp = {false, false, false};
+static struct rate_t rate = {1, 1};
+static struct rate_t rate1 = {1, 1};
+static struct rate_t rate2 = {1, 1};
 static char * htpasswd_file = NULL;
 static unsigned repeat = 0;
 static unsigned repeat1 = 0;
@@ -232,13 +230,13 @@ static void  addsize(Size_T);
 static void  adduptime(Uptime_T);
 static void  addpid(Pid_T);
 static void  addppid(Pid_T);
-static void  addfsflag(Fsflag_T);
-static void  addnonexist(Nonexist_T);
+static void  addfsflag(FsFlag_T);
+static void  addnonexist(NonExist_T);
 static void  addlinkstatus(Service_T, LinkStatus_T);
 static void  addlinkspeed(Service_T, LinkSpeed_T);
 static void  addlinksaturation(Service_T, LinkSaturation_T);
 static void  addbandwidth(Bandwidth_T *, Bandwidth_T);
-static void  addfilesystem(Filesystem_T);
+static void  addfilesystem(FileSystem_T);
 static void  addicmp(Icmp_T);
 static void  addgeneric(Port_T, char*, char*);
 static void  addcommand(int, unsigned);
@@ -291,7 +289,7 @@ static void  reset_gidset();
 static void  reset_statusset();
 static void  reset_filesystemset();
 static void  reset_icmpset();
-static void  reset_rateset(struct myrate *);
+static void  reset_rateset(struct rate_t *);
 static void  check_name(char *);
 static int   check_perm(int);
 static void  check_exec(char *);
@@ -1789,6 +1787,10 @@ exist           : IF NOT EXIST rate1 THEN action1 recovery {
                         addeventaction(&(nonexistset).action, $<number>6, $<number>7);
                         addnonexist(&nonexistset);
                   }
+                | IF EXIST rate1 THEN action1 recovery {
+                        addeventaction(&(nonexistset).action, $<number>5, $<number>6);
+                        addnonexist(&nonexistset);
+                  }
                 ;
 
 
@@ -1939,13 +1941,13 @@ eventoption     : ACTION          { mailset.events |= Event_Action; }
                 | CONTENT         { mailset.events |= Event_Content; }
                 | DATA            { mailset.events |= Event_Data; }
                 | EXEC            { mailset.events |= Event_Exec; }
-                | FSFLAG          { mailset.events |= Event_Fsflag; }
+                | FSFLAG          { mailset.events |= Event_FsFlag; }
                 | GID             { mailset.events |= Event_Gid; }
                 | ICMP            { mailset.events |= Event_Icmp; }
                 | INSTANCE        { mailset.events |= Event_Instance; }
                 | INVALID         { mailset.events |= Event_Invalid; }
                 | LINK            { mailset.events |= Event_Link; }
-                | NONEXIST        { mailset.events |= Event_Nonexist; }
+                | NONEXIST        { mailset.events |= Event_NonExist; }
                 | PACKETIN        { mailset.events |= Event_PacketIn; }
                 | PACKETOUT       { mailset.events |= Event_PacketOut; }
                 | PERMISSION      { mailset.events |= Event_Permission; }
@@ -3484,10 +3486,10 @@ static void addppid(Pid_T pp) {
 /*
  * Add a new Fsflag object to the current service fsflag list
  */
-static void addfsflag(Fsflag_T ff) {
+static void addfsflag(FsFlag_T ff) {
         ASSERT(ff);
 
-        Fsflag_T f;
+        FsFlag_T f;
         NEW(f);
         f->action = ff->action;
 
@@ -3501,10 +3503,10 @@ static void addfsflag(Fsflag_T ff) {
 /*
  * Add a new Nonexist object to the current service list
  */
-static void addnonexist(Nonexist_T ff) {
+static void addnonexist(NonExist_T ff) {
         ASSERT(ff);
 
-        Nonexist_T f;
+        NonExist_T f;
         NEW(f);
         f->action = ff->action;
 
@@ -3822,8 +3824,8 @@ static Gid_T addgid(Gid_T g) {
 /*
  * Add a new filesystem to the current service's filesystem list
  */
-static void addfilesystem(Filesystem_T ds) {
-        Filesystem_T dev;
+static void addfilesystem(FileSystem_T ds) {
+        FileSystem_T dev;
 
         ASSERT(ds);
 
@@ -4408,7 +4410,7 @@ static void reset_sslset() {
  * Reset the current mailset for reuse
  */
 static void reset_mailset() {
-        memset(&mailset, 0, sizeof(struct mymail));
+        memset(&mailset, 0, sizeof(struct Mail_T));
 }
 
 
@@ -4416,7 +4418,7 @@ static void reset_mailset() {
  * Reset the mailserver set to default values
  */
 static void reset_mailserverset() {
-        memset(&mailserverset, 0, sizeof(struct mymailserver));
+        memset(&mailserverset, 0, sizeof(struct MailServer_T));
         mailserverset.port = PORT_SMTP;
 }
 
@@ -4425,7 +4427,7 @@ static void reset_mailserverset() {
  * Reset the mmonit set to default values
  */
 static void reset_mmonitset() {
-        memset(&mmonitset, 0, sizeof(struct mymmonit));
+        memset(&mmonitset, 0, sizeof(struct Mmonit_T));
         mmonitset.timeout = Run.limits.networkTimeout;
 }
 
@@ -4434,7 +4436,7 @@ static void reset_mmonitset() {
  * Reset the Port set to default values
  */
 static void reset_portset() {
-        memset(&portset, 0, sizeof(struct myport));
+        memset(&portset, 0, sizeof(struct Port_T));
         portset.socket = -1;
         portset.type = Socket_Tcp;
         portset.family = Socket_Ip;
@@ -4635,7 +4637,7 @@ static void reset_icmpset() {
 /*
  * Reset the Rate set to default values
  */
-static void reset_rateset(struct myrate *r) {
+static void reset_rateset(struct rate_t *r) {
         r->count = 1;
         r->cycles = 1;
 }
