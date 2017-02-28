@@ -1724,8 +1724,9 @@ void Util_resetInfo(Service_T s) {
                         Statistics_reset(&(s->inf.filesystem->time.run));
                         break;
                 case Service_File:
-                        // persistent: st_inode, readpos
                         s->inf.file->size  = -1;
+                        s->inf.file->readpos = 0;
+                        s->inf.file->inode = 0;
                         s->inf.file->inode_prev = 0;
                         s->inf.file->mode = -1;
                         s->inf.file->uid = -1;
