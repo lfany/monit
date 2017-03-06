@@ -2567,24 +2567,10 @@ static char *get_monitoring_status(Output_Type type, Service_T s, char *buf, int
 static char *get_service_status(Output_Type type, Service_T s, char *buf, int buflen) {
         ASSERT(s);
         ASSERT(buf);
-        char *statusnames[] = {
-                "Accessible",
-                "Accessible",
-                "Accessible",
-                "Running",
-                "Online with all services",
-                "Running",
-                "Accessible",
-                "Status ok",
-                "UP"
-        };
         if (s->monitor == Monitor_Not || s->monitor & Monitor_Init) {
                 get_monitoring_status(type, s, buf, buflen);
         } else if (s->error == 0) {
-                if (type == HTML)
-                        snprintf(buf, buflen, "<span class='green-text'>%s%s</span>", s->existlist ? "Not " : "", statusnames[s->type]);
-                else
-                        snprintf(buf, buflen, Color_lightGreen("%s%s", s->existlist ? "Not " : "", statusnames[s->type]));
+                snprintf(buf, buflen, type == HTML ? "<span class='green-text'>OK</span>" : Color_lightGreen("OK"));
         } else {
                 // In the case that the service has actualy some failure, the error bitmap will be non zero
                 char *p = buf;
