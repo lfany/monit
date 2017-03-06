@@ -1858,16 +1858,15 @@ This test allows to trigger an action based on the monitored object existence.
 It is supported for I<process>, I<file>, I<directory>, I<filesystem> and I<fifo>
 services.
 
-If no existance test is defined, the implicit non-existence test with restart
+If no existence test is defined, the implicit non-existence test with restart
 action is activated, so for example if the process stops, Monit will restart it.
 
 There are two object existence tests:
 
 =head3 OBJECT NON-EXISTENCE
 
-This test will trigger the action if the object (for example process or filesystem),
-doesn't exist. It can be used for example to make sure apache is running, data filesystem
-is mounted, etc.
+This test will trigger the action if the object doesn't exist. It can be used for
+example to make sure apache is running, data filesystem is mounted, etc.
 
  IF [DOES] NOT EXIST THEN <action>
 
@@ -1875,12 +1874,14 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP", "EXEC" or "UNMONIT
 
 Example: exec script if the filesystem does NOT exist:
 
- check file with path /cifs/mydata
-       if does not exist then exec "/usr/bin/mount_cifs.sh"
+ check process apache with pidfile /var/run/apache2/apache2.pid
+       start program = "/etc/init.d/apache2 start"
+       stop program = "/etc/init.d/apache2 stop"
+       if does not exist then restart
 
 =head3 OBJECT EXISTENCE
 
-This test is opossite if the non-existence test: it will trigger the action if the object
+This test is opossite of the non-existence test: it will trigger the action if the object
 DOES exist. It can be used for example to kill the process which shouldn't be running.
 
  IF [DOES] EXIST THEN <action>
