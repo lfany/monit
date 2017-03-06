@@ -178,6 +178,7 @@ static struct Pid_T pidset;
 static struct Pid_T ppidset;
 static struct FsFlag_T fsflagset;
 static struct NonExist_T nonexistset;
+static struct Exist_T existset;
 static struct Status_T statusset;
 static struct Perm_T permset;
 static struct Size_T sizeset;
@@ -232,6 +233,7 @@ static void  addpid(Pid_T);
 static void  addppid(Pid_T);
 static void  addfsflag(FsFlag_T);
 static void  addnonexist(NonExist_T);
+static void  addexist(Exist_T);
 static void  addlinkstatus(Service_T, LinkStatus_T);
 static void  addlinkspeed(Service_T, LinkSpeed_T);
 static void  addlinksaturation(Service_T, LinkSaturation_T);
@@ -278,6 +280,7 @@ static void  reset_pidset();
 static void  reset_ppidset();
 static void  reset_fsflagset();
 static void  reset_nonexistset();
+static void  reset_existset();
 static void  reset_linkstatusset();
 static void  reset_linkspeedset();
 static void  reset_linksaturationset();
@@ -1788,8 +1791,8 @@ exist           : IF NOT EXIST rate1 THEN action1 recovery {
                         addnonexist(&nonexistset);
                   }
                 | IF EXIST rate1 THEN action1 recovery {
-                        addeventaction(&(nonexistset).action, $<number>5, $<number>6);
-                        addnonexist(&nonexistset);
+                        addeventaction(&(existset).action, $<number>5, $<number>6);
+                        addexist(&existset);
                   }
                 ;
 
@@ -1941,6 +1944,7 @@ eventoption     : ACTION          { mailset.events |= Event_Action; }
                 | CONTENT         { mailset.events |= Event_Content; }
                 | DATA            { mailset.events |= Event_Data; }
                 | EXEC            { mailset.events |= Event_Exec; }
+                | EXIST           { mailset.events |= Event_Exist; }
                 | FSFLAG          { mailset.events |= Event_FsFlag; }
                 | GID             { mailset.events |= Event_Gid; }
                 | ICMP            { mailset.events |= Event_Icmp; }
@@ -3149,8 +3153,8 @@ static void addservice(Service_T s) {
                         }
                         break;
                 case Service_Filesystem:
-                        if (! s->nonexistlist) {
-                                // Add existence test if not defined
+                        if (! s->nonexistlist && ! s->existlist) {
+                                // Add non-existence test if not defined
                                 addeventaction(&(nonexistset).action, Action_Restart, Action_Alert);
                                 addnonexist(&nonexistset);
                         }
@@ -3164,7 +3168,7 @@ static void addservice(Service_T s) {
                 case Service_Fifo:
                 case Service_File:
                 case Service_Process:
-                        if (! s->nonexistlist) {
+                        if (! s->nonexistlist && ! s->existlist) {
                                 // Add existence test if not defined
                                 addeventaction(&(nonexistset).action, Action_Restart, Action_Alert);
                                 addnonexist(&nonexistset);
@@ -3514,6 +3518,17 @@ static void addnonexist(NonExist_T ff) {
         current->nonexistlist = f;
 
         reset_nonexistset();
+}
+
+
+static void addexist(Exist_T rule) {
+        ASSERT(rule);
+        Exist_T r;
+        NEW(r);
+        r->action = rule->action;
+        r->next = current->existlist;
+        current->existlist = r;
+        reset_existset();
 }
 
 
@@ -4557,6 +4572,11 @@ static void reset_fsflagset() {
  */
 static void reset_nonexistset() {
         nonexistset.action = NULL;
+}
+
+
+static void reset_existset() {
+        existset.action = NULL;
 }
 
 

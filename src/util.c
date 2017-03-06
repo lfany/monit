@@ -267,6 +267,8 @@ static void printevents(unsigned int events) {
                         printf("Data ");
                 if (IS_EVENT_SET(events, Event_Exec))
                         printf("Exec ");
+                if (IS_EVENT_SET(events, Event_Exist))
+                        printf("Exist ");
                 if (IS_EVENT_SET(events, Event_FsFlag))
                         printf("Fsflags ");
                 if (IS_EVENT_SET(events, Event_Gid))
@@ -1006,6 +1008,11 @@ void Util_printService(Service_T s) {
         for (NonExist_T o = s->nonexistlist; o; o = o->next) {
                 StringBuffer_clear(buf);
                 printf(" %-20s = %s\n", "Existence", StringBuffer_toString(Util_printRule(buf, o->action, "if does not exist")));
+        }
+
+        for (Exist_T o = s->existlist; o; o = o->next) {
+                StringBuffer_clear(buf);
+                printf(" %-20s = %s\n", "Non-Existence", StringBuffer_toString(Util_printRule(buf, o->action, "if exist")));
         }
 
         for (Dependant_T o = s->dependantlist; o; o = o->next)

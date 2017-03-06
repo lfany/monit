@@ -1256,12 +1256,22 @@ State_Type check_process(Service_T s) {
         State_Type rv = State_Succeeded;
         pid_t pid = ProcessTree_findProcess(s);
         if (! pid) {
-                for (NonExist_T l = s->nonexistlist; l; l = l->next)
+                for (NonExist_T l = s->nonexistlist; l; l = l->next) {
+                        rv = State_Failed;
                         Event_post(s, Event_NonExist, State_Failed, l->action, "process is not running");
-                return State_Failed;
+                }
+                for (Exist_T l = s->existlist; l; l = l->next) {
+                        Event_post(s, Event_Exist, State_Succeeded, l->action, "process is not running");
+                }
+                return rv;
         } else {
-                for (NonExist_T l = s->nonexistlist; l; l = l->next)
+                for (NonExist_T l = s->nonexistlist; l; l = l->next) {
                         Event_post(s, Event_NonExist, State_Succeeded, l->action, "process is running with pid %d", (int)pid);
+                }
+                for (Exist_T l = s->existlist; l; l = l->next) {
+                        rv = State_Failed;
+                        Event_post(s, Event_Exist, State_Failed, l->action, "process is running with pid %d", (int)pid);
+                }
         }
         /* Reset the exec and timeout errors if active ... the process is running (most probably after manual intervention) */
         if (IS_EVENT_SET(s->error, Event_Exec))
@@ -1328,12 +1338,22 @@ State_Type check_filesystem(Service_T s) {
         ASSERT(s);
         State_Type rv = State_Succeeded;
         if (! filesystem_usage(s)) {
-                for (NonExist_T l = s->nonexistlist; l; l = l->next)
+                for (NonExist_T l = s->nonexistlist; l; l = l->next) {
+                        rv = State_Failed;
                         Event_post(s, Event_NonExist, State_Failed, l->action, "unable to read filesystem '%s' state", s->path);
-                return State_Failed;
+                }
+                for (Exist_T l = s->existlist; l; l = l->next) {
+                        Event_post(s, Event_Exist, State_Succeeded, l->action, "filesystem '%s' doesn't exist", s->path);
+                }
+                return rv;
         }
-        for (NonExist_T l = s->nonexistlist; l; l = l->next)
+        for (NonExist_T l = s->nonexistlist; l; l = l->next) {
                 Event_post(s, Event_NonExist, State_Succeeded, l->action, "succeeded getting filesystem statistics for '%s'", s->path);
+        }
+        for (Exist_T l = s->existlist; l; l = l->next) {
+                rv = State_Failed;
+                Event_post(s, Event_Exist, State_Failed, l->action, "filesystem '%s' exists", s->path);
+        }
         if (_checkPerm(s, s->inf.filesystem->mode) == State_Failed)
                 rv = State_Failed;
         if (_checkUid(s, s->inf.filesystem->uid) == State_Failed)
@@ -1358,9 +1378,14 @@ State_Type check_file(Service_T s) {
         struct stat stat_buf;
         State_Type rv = State_Succeeded;
         if (stat(s->path, &stat_buf) != 0) {
-                for (NonExist_T l = s->nonexistlist; l; l = l->next)
+                for (NonExist_T l = s->nonexistlist; l; l = l->next) {
+                        rv = State_Failed;
                         Event_post(s, Event_NonExist, State_Failed, l->action, "file doesn't exist");
-                return State_Failed;
+                }
+                for (Exist_T l = s->existlist; l; l = l->next) {
+                        Event_post(s, Event_Exist, State_Succeeded, l->action, "file doesn't exist");
+                }
+                return rv;
         } else {
                 s->inf.file->mode = stat_buf.st_mode;
                 if (s->inf.file->inode) {
@@ -1376,8 +1401,13 @@ State_Type check_file(Service_T s) {
                 s->inf.file->gid = stat_buf.st_gid;
                 s->inf.file->size = stat_buf.st_size;
                 s->inf.file->timestamp = MAX(stat_buf.st_mtime, stat_buf.st_ctime);
-                for (NonExist_T l = s->nonexistlist; l; l = l->next)
+                for (NonExist_T l = s->nonexistlist; l; l = l->next) {
                         Event_post(s, Event_NonExist, State_Succeeded, l->action, "file exists");
+                }
+                for (Exist_T l = s->existlist; l; l = l->next) {
+                        rv = State_Failed;
+                        Event_post(s, Event_Exist, State_Failed, l->action, "file exists");
+                }
         }
         if (! S_ISREG(s->inf.file->mode) && ! S_ISSOCK(s->inf.file->mode)) {
                 Event_post(s, Event_Invalid, State_Failed, s->action_INVALID, "is neither a regular file nor a socket");
@@ -1412,16 +1442,26 @@ State_Type check_directory(Service_T s) {
         struct stat stat_buf;
         State_Type rv = State_Succeeded;
         if (stat(s->path, &stat_buf) != 0) {
-                for (NonExist_T l = s->nonexistlist; l; l = l->next)
+                for (NonExist_T l = s->nonexistlist; l; l = l->next) {
+                        rv = State_Failed;
                         Event_post(s, Event_NonExist, State_Failed, l->action, "directory doesn't exist");
-                return State_Failed;
+                }
+                for (Exist_T l = s->existlist; l; l = l->next) {
+                        Event_post(s, Event_Exist, State_Succeeded, l->action, "directory doesn't exist");
+                }
+                return rv;
         } else {
                 s->inf.directory->mode = stat_buf.st_mode;
                 s->inf.directory->uid = stat_buf.st_uid;
                 s->inf.directory->gid = stat_buf.st_gid;
                 s->inf.directory->timestamp = MAX(stat_buf.st_mtime, stat_buf.st_ctime);
-                for (NonExist_T l = s->nonexistlist; l; l = l->next)
+                for (NonExist_T l = s->nonexistlist; l; l = l->next) {
                         Event_post(s, Event_NonExist, State_Succeeded, l->action, "directory exists");
+                }
+                for (Exist_T l = s->existlist; l; l = l->next) {
+                        rv = State_Failed;
+                        Event_post(s, Event_Exist, State_Failed, l->action, "directory exists");
+                }
         }
         if (! S_ISDIR(s->inf.directory->mode)) {
                 Event_post(s, Event_Invalid, State_Failed, s->action_INVALID, "is not directory");
@@ -1450,16 +1490,26 @@ State_Type check_fifo(Service_T s) {
         struct stat stat_buf;
         State_Type rv = State_Succeeded;
         if (stat(s->path, &stat_buf) != 0) {
-                for (NonExist_T l = s->nonexistlist; l; l = l->next)
+                for (NonExist_T l = s->nonexistlist; l; l = l->next) {
+                        rv = State_Failed;
                         Event_post(s, Event_NonExist, State_Failed, l->action, "fifo doesn't exist");
-                return State_Failed;
+                }
+                for (Exist_T l = s->existlist; l; l = l->next) {
+                        Event_post(s, Event_Exist, State_Succeeded, l->action, "fifo doesn't exist");
+                }
+                return rv;
         } else {
                 s->inf.fifo->mode = stat_buf.st_mode;
                 s->inf.fifo->uid = stat_buf.st_uid;
                 s->inf.fifo->gid = stat_buf.st_gid;
                 s->inf.fifo->timestamp = MAX(stat_buf.st_mtime, stat_buf.st_ctime);
-                for (NonExist_T l = s->nonexistlist; l; l = l->next)
+                for (NonExist_T l = s->nonexistlist; l; l = l->next) {
                         Event_post(s, Event_NonExist, State_Succeeded, l->action, "fifo exists");
+                }
+                for (Exist_T l = s->existlist; l; l = l->next) {
+                        rv = State_Failed;
+                        Event_post(s, Event_Exist, State_Failed, l->action, "fifo exists");
+                }
         }
         if (! S_ISFIFO(s->inf.fifo->mode)) {
                 Event_post(s, Event_Invalid, State_Failed, s->action_INVALID, "is not fifo");

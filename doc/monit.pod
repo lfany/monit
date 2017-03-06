@@ -1854,21 +1854,43 @@ Note: the maximum value for cycles is 64.
 
 =head2 EXISTENCE TESTING
 
-This test is implicit and always active for service checks of type,
-I<process>, I<file>, I<directory>, I<filesystem> and I<fifo>. If not
-defined, it defaults to a restart action.
+This test allows to trigger an action based on the monitored object existence.
+It is supported for I<process>, I<file>, I<directory>, I<filesystem> and I<fifo>
+services.
 
-You can override the default action with the following statement:
+If no existance test is defined, the implicit non-existence test with restart
+action is activated, so for example if the process stops, Monit will restart it.
+
+There are two object existence tests:
+
+=head3 OBJECT NON-EXISTENCE
+
+This test will trigger the action if the object (for example process or filesystem),
+doesn't exist. It can be used for example to make sure apache is running, data filesystem
+is mounted, etc.
 
  IF [DOES] NOT EXIST THEN <action>
 
-I<action> is a choice of "ALERT", "RESTART", "START", "STOP", "EXEC" or
-"UNMONITOR".
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP", "EXEC" or "UNMONITOR".
 
-Example:
+Example: exec script if the filesystem does NOT exist:
 
  check file with path /cifs/mydata
        if does not exist then exec "/usr/bin/mount_cifs.sh"
+
+=head3 OBJECT EXISTENCE
+
+This test is opossite if the non-existence test: it will trigger the action if the object
+DOES exist. It can be used for example to kill the process which shouldn't be running.
+
+ IF [DOES] EXIST THEN <action>
+
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP", "EXEC" or "UNMONITOR".
+
+Example: kill the process if it was started:
+
+ check process matching "EvilProcess"
+       if does exist then exec "/usr/bin/pkill -9 EvilProcess"
 
 
 =head2 RESOURCE TESTING

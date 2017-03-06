@@ -1264,7 +1264,6 @@ extern char *onrebootnames[];
 extern char *checksumnames[];
 extern char *operatornames[];
 extern char *operatorshortnames[];
-extern char *statusnames[];
 extern char *servicetypes[];
 extern char *pathnames[];
 extern char *icmpnames[];

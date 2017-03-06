@@ -30,7 +30,14 @@ New: It is now possible to use NFS/CIFS/SSHFS/etc. connection strings for filesy
 
 New: Report filesystem type in the status output
 
-New: Linux and Solaris: cache per-filesystem mount table status and refresh only if changed (some filesystem mounted/unmounted).
+New: Linux and Solaris: cache per-filesystem mount table status and refresh only if changed
+(some filesystem mounted/unmounted).
+
+New: Extended the existence test, to allow to check that the object doesn't exist (for example
+the process is stopped). Note: this test is available for process, file, filesystem, fifo and
+directory checks only (same as non-existence test). Example:
+    check process thisShouldNotRun matching "FooBar"
+        if exists then exec "/usr/bin/pkill -9 FooBar"
 
 New: The Monit HTTP interface now allows to set the SSL/TLS version as well. The
 syntax follows the generic SSL/TLS options settings, which was introduced in

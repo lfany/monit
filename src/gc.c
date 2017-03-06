@@ -70,6 +70,7 @@ static void _gcpid(Pid_T *);
 static void _gcppid(Pid_T *);
 static void _gcfsflag(FsFlag_T *);
 static void _gcnonexist(NonExist_T *);
+static void _gcexist(Exist_T *);
 static void _gcgeneric(Generic_T *);
 static void _gcath(Auth_T *);
 static void _gc_mmonit(Mmonit_T *);
@@ -246,6 +247,8 @@ static void _gc_service(Service_T *s) {
                 _gcfsflag(&(*s)->fsflaglist);
         if ((*s)->nonexistlist)
                 _gcnonexist(&(*s)->nonexistlist);
+        if ((*s)->existlist)
+                _gcexist(&(*s)->existlist);
         if ((*s)->dependantlist)
                 _gcpdl(&(*s)->dependantlist);
         if ((*s)->start)
@@ -603,6 +606,16 @@ static void _gcnonexist(NonExist_T *s) {
         ASSERT(s);
         if ((*s)->next)
                 _gcnonexist(&(*s)->next);
+        if ((*s)->action)
+                _gc_eventaction(&(*s)->action);
+        FREE(*s);
+}
+
+
+static void _gcexist(Exist_T *s) {
+        ASSERT(s);
+        if ((*s)->next)
+                _gcexist(&(*s)->next);
         if ((*s)->action)
                 _gc_eventaction(&(*s)->action);
         FREE(*s);

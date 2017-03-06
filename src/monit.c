@@ -139,7 +139,6 @@ char *onrebootnames[] = {"start", "nostart", "laststate"};
 char *checksumnames[] = {"UNKNOWN", "MD5", "SHA1"};
 char *operatornames[] = {"less than", "less than or equal to", "greater than", "greater than or equal to", "equal to", "not equal to", "changed"};
 char *operatorshortnames[] = {"<", "<=", ">", ">=", "=", "!=", "<>"};
-char *statusnames[] = {"Accessible", "Accessible", "Accessible", "Running", "Online with all services", "Running", "Accessible", "Status ok", "UP"};
 char *servicetypes[] = {"Filesystem", "Directory", "File", "Process", "Remote Host", "System", "Fifo", "Program", "Network"};
 char *pathnames[] = {"Path", "Path", "Path", "Pid file", "Path", "", "Path"};
 char *icmpnames[] = {"Reply", "", "", "Destination Unreachable", "Source Quench", "Redirect", "", "", "Ping", "", "", "Time Exceeded", "Parameter Problem", "Timestamp Request", "Timestamp Reply", "Information Request", "Information Reply", "Address Mask Request", "Address Mask Reply"};

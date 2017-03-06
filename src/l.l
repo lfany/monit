@@ -393,8 +393,8 @@ md5               { return MD5HASH; }
 sha1              { return SHA1HASH; }
 crypt             { return CRYPT; }
 signature         { return SIGNATURE; }
-nonexist          { return NONEXIST; }
-exist             { return EXIST; }
+nonexist(s)?      { return NONEXIST; }
+exist(s)?         { return EXIST; }
 invalid           { return INVALID; }
 data              { return DATA; }
 recovered         { return RECOVERED; }
