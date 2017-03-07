@@ -244,10 +244,10 @@ static State_Type _checkProcessResources(Service_T s, Resource_T r) {
                                 if (s->type == Service_System) {
                                         cpu =
 #ifdef HAVE_CPU_WAIT
-                                                (systeminfo.total_cpu_wait_percent > 0. ? systeminfo.total_cpu_wait_percent : 0.) +
+                                                (systeminfo.cpu.usage.wait > 0. ? systeminfo.cpu.usage.wait : 0.) +
 #endif
-                                                (systeminfo.total_cpu_syst_percent > 0. ? systeminfo.total_cpu_syst_percent : 0.) +
-                                                (systeminfo.total_cpu_user_percent > 0. ? systeminfo.total_cpu_user_percent : 0.);
+                                                (systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.) +
+                                                (systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0.);
                                 } else {
                                         cpu = s->inf.process->cpu_percent;
                                 }
@@ -276,48 +276,48 @@ static State_Type _checkProcessResources(Service_T s, Resource_T r) {
                         break;
 
                 case Resource_CpuUser:
-                        if (systeminfo.total_cpu_user_percent < 0.) {
+                        if (systeminfo.cpu.usage.user < 0.) {
                                 DEBUG("'%s' cpu user usage check skipped (initializing)\n", s->name);
                                 return State_Init;
-                        } else if (Util_evalDoubleQExpression(r->operator, systeminfo.total_cpu_user_percent, r->limit)) {
+                        } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.user, r->limit)) {
                                 rv = State_Failed;
-                                snprintf(report, STRLEN, "cpu user usage of %.1f%% matches resource limit [cpu user usage %s %.1f%%]", systeminfo.total_cpu_user_percent, operatorshortnames[r->operator], r->limit);
+                                snprintf(report, STRLEN, "cpu user usage of %.1f%% matches resource limit [cpu user usage %s %.1f%%]", systeminfo.cpu.usage.user, operatorshortnames[r->operator], r->limit);
                         } else {
-                                snprintf(report, STRLEN, "cpu user usage check succeeded [current cpu user usage = %.1f%%]", systeminfo.total_cpu_user_percent);
+                                snprintf(report, STRLEN, "cpu user usage check succeeded [current cpu user usage = %.1f%%]", systeminfo.cpu.usage.user);
                         }
                         break;
 
                 case Resource_CpuSystem:
-                        if (systeminfo.total_cpu_syst_percent < 0.) {
+                        if (systeminfo.cpu.usage.system < 0.) {
                                 DEBUG("'%s' cpu system usage check skipped (initializing)\n", s->name);
                                 return State_Init;
-                        } else if (Util_evalDoubleQExpression(r->operator, systeminfo.total_cpu_syst_percent, r->limit)) {
+                        } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.system, r->limit)) {
                                 rv = State_Failed;
-                                snprintf(report, STRLEN, "cpu system usage of %.1f%% matches resource limit [cpu system usage %s %.1f%%]", systeminfo.total_cpu_syst_percent, operatorshortnames[r->operator], r->limit);
+                                snprintf(report, STRLEN, "cpu system usage of %.1f%% matches resource limit [cpu system usage %s %.1f%%]", systeminfo.cpu.usage.system, operatorshortnames[r->operator], r->limit);
                         } else {
-                                snprintf(report, STRLEN, "cpu system usage check succeeded [current cpu system usage = %.1f%%]", systeminfo.total_cpu_syst_percent);
+                                snprintf(report, STRLEN, "cpu system usage check succeeded [current cpu system usage = %.1f%%]", systeminfo.cpu.usage.system);
                         }
                         break;
 
                 case Resource_CpuWait:
-                        if (systeminfo.total_cpu_wait_percent < 0.) {
+                        if (systeminfo.cpu.usage.wait < 0.) {
                                 DEBUG("'%s' cpu wait usage check skipped (initializing)\n", s->name);
                                 return State_Init;
-                        } else if (Util_evalDoubleQExpression(r->operator, systeminfo.total_cpu_wait_percent, r->limit)) {
+                        } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.wait, r->limit)) {
                                 rv = State_Failed;
-                                snprintf(report, STRLEN, "cpu wait usage of %.1f%% matches resource limit [cpu wait usage %s %.1f%%]", systeminfo.total_cpu_wait_percent, operatorshortnames[r->operator], r->limit);
+                                snprintf(report, STRLEN, "cpu wait usage of %.1f%% matches resource limit [cpu wait usage %s %.1f%%]", systeminfo.cpu.usage.wait, operatorshortnames[r->operator], r->limit);
                         } else {
-                                snprintf(report, STRLEN, "cpu wait usage check succeeded [current cpu wait usage = %.1f%%]", systeminfo.total_cpu_wait_percent);
+                                snprintf(report, STRLEN, "cpu wait usage check succeeded [current cpu wait usage = %.1f%%]", systeminfo.cpu.usage.wait);
                         }
                         break;
 
                 case Resource_MemoryPercent:
                         if (s->type == Service_System) {
-                                if (Util_evalDoubleQExpression(r->operator, systeminfo.total_mem_percent, r->limit)) {
+                                if (Util_evalDoubleQExpression(r->operator, systeminfo.memory.usage.percent, r->limit)) {
                                         rv = State_Failed;
-                                        snprintf(report, STRLEN, "mem usage of %.1f%% matches resource limit [mem usage %s %.1f%%]", systeminfo.total_mem_percent, operatorshortnames[r->operator], r->limit);
+                                        snprintf(report, STRLEN, "mem usage of %.1f%% matches resource limit [mem usage %s %.1f%%]", systeminfo.memory.usage.percent, operatorshortnames[r->operator], r->limit);
                                 } else {
-                                        snprintf(report, STRLEN, "mem usage check succeeded [current mem usage = %.1f%%]", systeminfo.total_mem_percent);
+                                        snprintf(report, STRLEN, "mem usage check succeeded [current mem usage = %.1f%%]", systeminfo.memory.usage.percent);
                                 }
                         } else {
                                 if (s->inf.process->mem_percent < 0.) {
@@ -334,11 +334,11 @@ static State_Type _checkProcessResources(Service_T s, Resource_T r) {
 
                 case Resource_MemoryKbyte:
                         if (s->type == Service_System) {
-                                if (Util_evalDoubleQExpression(r->operator, systeminfo.total_mem, r->limit)) {
+                                if (Util_evalDoubleQExpression(r->operator, systeminfo.memory.usage.bytes, r->limit)) {
                                         rv = State_Failed;
-                                        snprintf(report, STRLEN, "mem amount of %s matches resource limit [mem amount %s %s]", Str_bytesToSize(systeminfo.total_mem, buf1), operatorshortnames[r->operator], Str_bytesToSize(r->limit, buf2));
+                                        snprintf(report, STRLEN, "mem amount of %s matches resource limit [mem amount %s %s]", Str_bytesToSize(systeminfo.memory.usage.bytes, buf1), operatorshortnames[r->operator], Str_bytesToSize(r->limit, buf2));
                                 } else {
-                                        snprintf(report, STRLEN, "mem amount check succeeded [current mem amount = %s]", Str_bytesToSize(systeminfo.total_mem, buf1));
+                                        snprintf(report, STRLEN, "mem amount check succeeded [current mem amount = %s]", Str_bytesToSize(systeminfo.memory.usage.bytes, buf1));
                                 }
                         } else {
                                 if (s->inf.process->mem == 0) {
@@ -355,22 +355,22 @@ static State_Type _checkProcessResources(Service_T s, Resource_T r) {
 
                 case Resource_SwapPercent:
                         if (s->type == Service_System) {
-                                if (Util_evalDoubleQExpression(r->operator, systeminfo.total_swap_percent, r->limit)) {
+                                if (Util_evalDoubleQExpression(r->operator, systeminfo.swap.usage.percent, r->limit)) {
                                         rv = State_Failed;
-                                        snprintf(report, STRLEN, "swap usage of %.1f%% matches resource limit [swap usage %s %.1f%%]", systeminfo.total_swap_percent, operatorshortnames[r->operator], r->limit);
+                                        snprintf(report, STRLEN, "swap usage of %.1f%% matches resource limit [swap usage %s %.1f%%]", systeminfo.swap.usage.percent, operatorshortnames[r->operator], r->limit);
                                 } else {
-                                        snprintf(report, STRLEN, "swap usage check succeeded [current swap usage = %.1f%%]", systeminfo.total_swap_percent);
+                                        snprintf(report, STRLEN, "swap usage check succeeded [current swap usage = %.1f%%]", systeminfo.swap.usage.percent);
                                 }
                         }
                         break;
 
                 case Resource_SwapKbyte:
                         if (s->type == Service_System) {
-                                if (Util_evalDoubleQExpression(r->operator, systeminfo.total_swap, r->limit)) {
+                                if (Util_evalDoubleQExpression(r->operator, systeminfo.swap.usage.bytes, r->limit)) {
                                         rv = State_Failed;
-                                        snprintf(report, STRLEN, "swap amount of %s matches resource limit [swap amount %s %s]", Str_bytesToSize(systeminfo.total_swap, buf1), operatorshortnames[r->operator], Str_bytesToSize(r->limit, buf2));
+                                        snprintf(report, STRLEN, "swap amount of %s matches resource limit [swap amount %s %s]", Str_bytesToSize(systeminfo.swap.usage.bytes, buf1), operatorshortnames[r->operator], Str_bytesToSize(r->limit, buf2));
                                 } else {
-                                        snprintf(report, STRLEN, "swap amount check succeeded [current swap amount = %s]", Str_bytesToSize(systeminfo.total_swap, buf1));
+                                        snprintf(report, STRLEN, "swap amount check succeeded [current swap amount = %s]", Str_bytesToSize(systeminfo.swap.usage.bytes, buf1));
                                 }
                         }
                         break;

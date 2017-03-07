@@ -109,9 +109,9 @@ static long   old_total = 0;
 #define MAXSTRSIZE 80
 
 boolean_t init_process_info_sysdep(void) {
-        systeminfo.cpus = sysconf( _SC_NPROCESSORS_ONLN);
+        systeminfo.cpu.count = sysconf( _SC_NPROCESSORS_ONLN);
         page_size = getpagesize();
-        systeminfo.mem_max = (uint64_t)sysconf(_SC_PHYS_PAGES) * (uint64_t)page_size;
+        systeminfo.memory.size = (uint64_t)sysconf(_SC_PHYS_PAGES) * (uint64_t)page_size;
         kstat_ctl_t *kctl = kstat_open();
         if (kctl) {
                 kstat_t *kstat = kstat_lookup(kctl, "unix", 0, "system_misc");
@@ -234,7 +234,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
                         }
                         kstat_named_t *rss = kstat_data_lookup(kstat, "rss");
                         if (rss)
-                                si->total_mem = (uint64_t)rss->value.i64;
+                                si->memory.usage.bytes = (uint64_t)rss->value.i64;
                 } else {
                         /* Solaris Zone */
                         size_t nres;
@@ -244,7 +244,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
                                 kstat_close(kctl);
                                 return false;
                         }
-                        si->total_mem = (uint64_t)result.vmu_rss_all;
+                        si->memory.usage.bytes = (uint64_t)result.vmu_rss_all;
                 }
         } else {
                 kstat = kstat_lookup(kctl, "unix", 0, "system_pages");
@@ -261,7 +261,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
                                 knamed = kstat_data_lookup(kstat, "size");
                                 arcsize = (uint64_t)knamed->value.ul;
                         }
-                        si->total_mem = systeminfo.mem_max - freemem - arcsize;
+                        si->memory.usage.bytes = systeminfo.memory.size - freemem - arcsize;
                 }
         }
         kstat_close(kctl);
@@ -274,7 +274,7 @@ again:
         }
         if (num == 0) {
                 DEBUG("system statistic -- no swap configured\n");
-                si->swap_max = 0ULL;
+                si->swap.size = 0ULL;
                 return true;
         }
         s = (swaptbl_t *)ALLOC(num * sizeof(swapent_t) + sizeof(struct swaptable));
@@ -284,7 +284,7 @@ again:
         s->swt_n = num + 1;
         if ((n = swapctl(SC_LIST, s)) < 0) {
                 LogError("system statistic error -- swap usage data collection failed: %s\n", STRERROR);
-                si->swap_max = 0ULL;
+                si->swap.size = 0ULL;
                 FREE(s);
                 FREE(strtab);
                 return false;
@@ -303,8 +303,8 @@ again:
         }
         FREE(s);
         FREE(strtab);
-        si->swap_max = (uint64_t)total * (uint64_t)page_size;
-        si->total_swap = (uint64_t)used * (uint64_t)page_size;
+        si->swap.size = (uint64_t)total * (uint64_t)page_size;
+        si->swap.usage.bytes = (uint64_t)used * (uint64_t)page_size;
 
         return true;
 }
@@ -323,7 +323,7 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
         kstat_t       **cpu_ks;
         cpu_stat_t     *cpu_stat;
 
-        si->total_cpu_user_percent = si->total_cpu_syst_percent = si->total_cpu_wait_percent = 0;
+        si->cpu.usage.user = si->cpu.usage.system = si->cpu.usage.wait = 0;
 
         kctl  = kstat_open();
         kstat = kstat_lookup(kctl, "unix", 0, "system_misc");
@@ -371,11 +371,11 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
         }
 
         if (old_total == 0) {
-                si->total_cpu_user_percent = si->total_cpu_syst_percent = si->total_cpu_wait_percent = -1.;
+                si->cpu.usage.user = si->cpu.usage.system = si->cpu.usage.wait = -1.;
         } else if ((diff_total = total - old_total) > 0) {
-                si->total_cpu_user_percent = (100. * (cpu_user - old_cpu_user)) / diff_total;
-                si->total_cpu_syst_percent = (100. * (cpu_syst - old_cpu_syst)) / diff_total;
-                si->total_cpu_wait_percent = (100. * (cpu_wait - old_cpu_wait)) / diff_total;
+                si->cpu.usage.user = (100. * (cpu_user - old_cpu_user)) / diff_total;
+                si->cpu.usage.system = (100. * (cpu_syst - old_cpu_syst)) / diff_total;
+                si->cpu.usage.wait = (100. * (cpu_wait - old_cpu_wait)) / diff_total;
         }
 
         old_cpu_user = cpu_user;

@@ -131,9 +131,9 @@ boolean_t init_process_info_sysdep(void) {
                 return false;
         }
 
-        page_size          = getpagesize();
-        systeminfo.mem_max = (uint64_t)mem.real_total * (uint64_t)page_size;
-        systeminfo.cpus    = sysconf(_SC_NPROCESSORS_ONLN);
+        page_size = getpagesize();
+        systeminfo.memory.size = (uint64_t)mem.real_total * (uint64_t)page_size;
+        systeminfo.cpu.count = sysconf(_SC_NPROCESSORS_ONLN);
 
         setutxent();
         struct utmpx _booted = {.ut_type = BOOT_TIME};
@@ -272,11 +272,11 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
                 LogError("system statistic error -- perfstat_memory_total failed: %s\n", STRERROR);
                 return false;
         }
-        si->total_mem = (uint64_t)(mem.real_total - mem.real_free - mem.numperm) * (uint64_t)page_size;
+        si->memory.usage.bytes = (uint64_t)(mem.real_total - mem.real_free - mem.numperm) * (uint64_t)page_size;
 
         /* Swap */
-        si->swap_max   = (uint64_t)mem.pgsp_total * 4096;                   /* 4kB blocks */
-        si->total_swap = (uint64_t)(mem.pgsp_total - mem.pgsp_free) * 4096; /* 4kB blocks */
+        si->swap.size   = (uint64_t)mem.pgsp_total * 4096;                   /* 4kB blocks */
+        si->swap.usage.bytes = (uint64_t)(mem.pgsp_total - mem.pgsp_free) * 4096; /* 4kB blocks */
 
         return true;
 }
@@ -308,13 +308,13 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
 
         if (cpu_initialized) {
                 if (cpu_total > 0) {
-                        si->total_cpu_user_percent = 100. * ((double)(cpu_user - cpu_user_old) / (double)cpu_total);
-                        si->total_cpu_syst_percent = 100. * ((double)(cpu_syst - cpu_syst_old) / (double)cpu_total);
-                        si->total_cpu_wait_percent = 100. * ((double)(cpu_wait - cpu_wait_old) / (double)cpu_total);
+                        si->cpu.usage.user = 100. * ((double)(cpu_user - cpu_user_old) / (double)cpu_total);
+                        si->cpu.usage.system = 100. * ((double)(cpu_syst - cpu_syst_old) / (double)cpu_total);
+                        si->cpu.usage.wait = 100. * ((double)(cpu_wait - cpu_wait_old) / (double)cpu_total);
                 } else {
-                        si->total_cpu_user_percent = 0.;
-                        si->total_cpu_syst_percent = 0.;
-                        si->total_cpu_wait_percent = 0.;
+                        si->cpu.usage.user = 0.;
+                        si->cpu.usage.system = 0.;
+                        si->cpu.usage.wait = 0.;
                 }
         }
 

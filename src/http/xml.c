@@ -140,9 +140,9 @@ static void document_head(StringBuffer_T B, int V, const char *myip) {
                             systeminfo.uname.release,
                             systeminfo.uname.version,
                             systeminfo.uname.machine,
-                            systeminfo.cpus,
-                            (unsigned long long)((double)systeminfo.mem_max / 1024.),   // Send as kB for backward compatibility
-                            (unsigned long long)((double)systeminfo.swap_max / 1024.)); // Send as kB for backward compatibility
+                            systeminfo.cpu.count,
+                            (unsigned long long)((double)systeminfo.memory.size / 1024.),   // Send as kB for backward compatibility
+                            (unsigned long long)((double)systeminfo.swap.size / 1024.)); // Send as kB for backward compatibility
 }
 
 
@@ -475,15 +475,15 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                             systeminfo.loadavg[0],
                                             systeminfo.loadavg[1],
                                             systeminfo.loadavg[2],
-                                            systeminfo.total_cpu_user_percent > 0. ? systeminfo.total_cpu_user_percent : 0.,
-                                            systeminfo.total_cpu_syst_percent > 0. ? systeminfo.total_cpu_syst_percent : 0.,
+                                            systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0.,
+                                            systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.,
 #ifdef HAVE_CPU_WAIT
-                                            systeminfo.total_cpu_wait_percent > 0. ? systeminfo.total_cpu_wait_percent : 0.,
+                                            systeminfo.cpu.usage.wait > 0. ? systeminfo.cpu.usage.wait : 0.,
 #endif
-                                            systeminfo.total_mem_percent,
-                                            (unsigned long long)((double)systeminfo.total_mem / 1024.),               // Send as kB for backward compatibility
-                                            systeminfo.total_swap_percent,
-                                            (unsigned long long)((double)systeminfo.total_swap / 1024.));             // Send as kB for backward compatibility
+                                            systeminfo.memory.usage.percent,
+                                            (unsigned long long)((double)systeminfo.memory.usage.bytes / 1024.),               // Send as kB for backward compatibility
+                                            systeminfo.swap.usage.percent,
+                                            (unsigned long long)((double)systeminfo.swap.usage.bytes / 1024.));             // Send as kB for backward compatibility
                 }
                 if (S->type == Service_Program && S->program->started) {
                         StringBuffer_append(B,

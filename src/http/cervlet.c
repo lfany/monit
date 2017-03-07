@@ -305,13 +305,13 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
 #ifdef HAVE_CPU_WAIT
                                         " %.1f%%wa"
 #endif
-                                        , systeminfo.total_cpu_user_percent > 0. ? systeminfo.total_cpu_user_percent : 0., systeminfo.total_cpu_syst_percent > 0. ? systeminfo.total_cpu_syst_percent : 0.
+                                        , systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0., systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.
 #ifdef HAVE_CPU_WAIT
-                                        , systeminfo.total_cpu_wait_percent > 0. ? systeminfo.total_cpu_wait_percent : 0.
+                                        , systeminfo.cpu.usage.wait > 0. ? systeminfo.cpu.usage.wait : 0.
 #endif
                                 );
-                                _formatStatus("memory usage", Event_Resource, type, res, s, true, "%s [%.1f%%]", Str_bytesToSize(systeminfo.total_mem, (char[10]){}), systeminfo.total_mem_percent);
-                                _formatStatus("swap usage", Event_Resource, type, res, s, true, "%s [%.1f%%]", Str_bytesToSize(systeminfo.total_swap, (char[10]){}), systeminfo.total_swap_percent);
+                                _formatStatus("memory usage", Event_Resource, type, res, s, true, "%s [%.1f%%]", Str_bytesToSize(systeminfo.memory.usage.bytes, (char[10]){}), systeminfo.memory.usage.percent);
+                                _formatStatus("swap usage", Event_Resource, type, res, s, true, "%s [%.1f%%]", Str_bytesToSize(systeminfo.swap.usage.bytes, (char[10]){}), systeminfo.swap.usage.percent);
                                 _formatStatus("uptime", Event_Uptime, type, res, s, systeminfo.booted > 0, "%s", _getUptime(Time_now() - systeminfo.booted, (char[256]){}));
                                 _formatStatus("boot time", Event_Null, type, res, s, true, "%s", Time_string(systeminfo.booted, (char[32]){}));
                                 break;
@@ -1185,18 +1185,18 @@ static void do_home_system(HttpResponse res) {
 #endif
                                     "</td>",
                                     systeminfo.loadavg[0], systeminfo.loadavg[1], systeminfo.loadavg[2],
-                                    systeminfo.total_cpu_user_percent > 0. ? systeminfo.total_cpu_user_percent : 0.,
-                                    systeminfo.total_cpu_syst_percent > 0. ? systeminfo.total_cpu_syst_percent : 0.
+                                    systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0.,
+                                    systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.
 #ifdef HAVE_CPU_WAIT
-                                    , systeminfo.total_cpu_wait_percent > 0. ? systeminfo.total_cpu_wait_percent : 0.
+                                    , systeminfo.cpu.usage.wait > 0. ? systeminfo.cpu.usage.wait : 0.
 #endif
                                     );
                 StringBuffer_append(res->outputbuffer,
                                     "<td class='right column'>%.1f%% [%s]</td>",
-                                    systeminfo.total_mem_percent, Str_bytesToSize(systeminfo.total_mem, buf));
+                                    systeminfo.memory.usage.percent, Str_bytesToSize(systeminfo.memory.usage.bytes, buf));
                 StringBuffer_append(res->outputbuffer,
                                     "<td class='right column'>%.1f%% [%s]</td>",
-                                    systeminfo.total_swap_percent, Str_bytesToSize(systeminfo.total_swap, buf));
+                                    systeminfo.swap.usage.percent, Str_bytesToSize(systeminfo.swap.usage.bytes, buf));
         }
         StringBuffer_append(res->outputbuffer,
                             "</tr>"
