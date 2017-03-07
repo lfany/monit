@@ -2313,7 +2313,7 @@ static void print_service_rules_resource(HttpResponse res, Service_T s) {
 
                         case Resource_ReadOperations:
                         case Resource_WriteOperations:
-                                Util_printRule(res->outputbuffer, q->action, "if %s %llu operations/s", operatornames[q->operator], q->limit);
+                                Util_printRule(res->outputbuffer, q->action, "if %s %.0f operations/s", operatornames[q->operator], q->limit);
                                 break;
 
                         default:
