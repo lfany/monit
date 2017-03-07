@@ -420,17 +420,17 @@ resources such as CPU usage, total memory usage or load average. The
 I<unique name> is used as the system hostname in mail alerts and as
 the initial name of the host entry in M/Monit.
 
-=head3 Custom
+=head3 Program
 
     CHECK PROGRAM <unique name> PATH <executable file> [TIMEOUT <number> SECONDS]
 
 <path> is the absolute path to the executable program or script. The
-L<status|/"PROGRAM STATUS TESTING"> test allows one to check the
-program's exit status. If the program does not finish executing within
-<number> seconds, Monit will terminate it. The default program timeout
-is 300 seconds (5 minutes). The output of the program is recorded and
-made available in the User Interface and in alerts, by default up to
-512B. You can customize the limits using the L<set limits|"LIMITS">
+L<status test|/"PROGRAM STATUS TEST"> allows one to check the program's
+exit status. If the program does not finish executing within <number>
+seconds, Monit will terminate it. The default program timeout is 300
+seconds (5 minutes). The output of the program is recorded and made
+available in the User Interface and in alerts, by default up to 512
+bytes. You can change the output limit using the L<set limits|"LIMITS">
 statement).
 
 =head3 Network
@@ -621,8 +621,7 @@ I<SELFSIGNED> self-signed certificates are rejected by default. Use
 this option to allow self-signed certificates (not recommended for
 production).
 
-I<CIPHERS> override the default SSL/TLS ciphers. The default settings
-is "ALL:!DES:!RC4:!aNULL:!LOW:!EXP:!IDEA:!MD5:@STRENGTH"
+I<CIPHERS> override default SSL/TLS ciphers. 
 
 I<PEMFILE> set the path to the SSL server certificate
 "database-file" in PEM format. This options has effect only for the
@@ -702,7 +701,7 @@ can also view Monit's informative dashboard in your web browser.
 
 Note that if HTTP support is disabled, the Monit CLI interface will
 have reduced functionality, as most CLI commands (such as "monit
-status") need to communicate with the Monit background process via
+status") needs to communicate with the Monit background process via
 the HTTP interface. We strongly recommend having HTTP support enabled.
 If security is a concern, bind the HTTP interface to local host only or
 use Unix Socket so Monit is not accessible from the outside.
@@ -740,12 +739,14 @@ usually setup on port 2812. Example:
 
 You can now use L<http://localhost:2812/|http://localhost:2812/> to
 access Monit's web interface from a browser, after you have entered
-username and password as credentials.
+username and password as credentials. You might need to use double
+quotes around the password if it cointains special chars such as
+"p@ssw:r#".
 
 B<ADDRESS> make Monit listen on a specific interface only. For example
 if you I<don't> want to expose Monit's web interface to the network,
-bind it to localhost only. Monit will accept connections on any address
-by default (if ADDRESS option is missing):
+bind it to localhost only. Monit will accept connections on any addresses
+if the ADDRESS option is not used:
 
  set httpd
      port 2812
@@ -762,7 +763,7 @@ I<address> is B<not> specified as in this example:
 
 Monit will bind to and listen on port 2812 on all interfaces, both IPv4
 and IPv6 if available. To force Monit HTTP to only listen on and accept
-connections over IP version 6, specify a IPv6 address:
+connections over IP version 6, specify an IPv6 address:
 
   set httpd
     port 2812
@@ -770,7 +771,7 @@ connections over IP version 6, specify a IPv6 address:
     allow ...
 
 Likewise, to force Monit HTTP to only listen on and accept connections
-over IP version 4, specify a IPv4 address:
+over IP version 4, specify an IPv4 address:
 
   set httpd
     port 2812
@@ -782,9 +783,10 @@ over IP version 4, specify a IPv4 address:
 B<SSL> enable SSL/TLS for Monit's web interface.  See L<options|"SSL OPTIONS">
 for full list of SSL options.
 
-I<PEMFILE> option sets path to the PEM formatted file, which contains the
-server's private key and certificate. This file should be stored in a safe
-place on the filesystem and should have strict permissions, no more than 0700.
+I<PEMFILE> set the path to the PEM formatted file, which contains the
+server's private key and certificate. This file should be stored in a
+safe place on the filesystem and should have strict permissions, no
+more than 0700.
 
 For example:
 
@@ -798,12 +800,12 @@ For example:
 You can now use L<https://localhost:2812/|https://localhost:2812/> to
 access the Monit web server over a TLS encrypted connection.
 
-B<CLIENTPEMFILE> option enables the client certificate based authentication.
-A connecting client has to provide a certificate known to Monit in order
-to connect.  This file also needs to have all necessary CA certificates.
-By default self-signed client certificates are B<not> allowed. If you want
-to use a self signed certificate from a client it has to be allowed explicitly
-with the B<SELFSIGNED: ALLOW> option.
+B<CLIENTPEMFILE> enables client certificate authentication. A
+connecting client has to provide a certificate known to Monit in order
+to connect. This file also needs to have all necessary CA certificates.
+By default self-signed client certificates are B<not> allowed. If you
+want to use a self signed certificate from a client it has to be
+allowed explicitly with the B<SELFSIGNED: ALLOW> option.
 
 For example:
 
@@ -835,43 +837,19 @@ cleartext password is necessary (see below), otherwise the Monit
 command line interface will not be able to connect to the Monit
 web interface.
 
-Clients trying to connect to Monit, but submit a wrong username and/or
-password are logged with their IP-address.
+Clients that try to connect to Monit, but submit a wrong username
+and/or password are logged with their IP-address.
 
 =head3 Client certificates
 
 This authentication method is a strong authentication mechanism and
 employ HTTPS client certificates to verify the authenticity of a
 connecting client. Clients must posses a Public Key Certificate known
-by Monit. The client must connect to Monit over SSL and Monit ask the
-client to send its certificate. Upon receiving the certificate Monit
-compares the certificate to certificates located in the I<CLIENTPEMFILE>
-SSL option. Access is granted if the client certificate is in this file.
-See L<SSL|"SSL settings"> settings for details.
-
-=head3 Host and network allow list
-
-Monit maintains an access-control list of hosts and networks allowed to
-connect. You can add as many hosts as you want to, but only hosts with
-a valid domain name or its IP address are allowed.
-
-Monit will query a name server to check any hosts trying to connect. If
-a host (client) is trying to connect, but cannot be found in the access
-list or cannot be resolved, Monit will shutdown the connection to the
-client promptly.
-
-Control file example:
-
-  set httpd port 2812
-      allow localhost
-      allow my.other.work.machine.com
-      allow 10.1.1.1
-      allow 192.168.1.0/255.255.255.0
-      allow 10.0.0.0/8
-
-Clients, not mentioned in the allow list, trying to connect to Monit
-will be denied access and are logged with their IP-address.
-
+by Monit. The client must connect to Monit over SSL and Monit will ask
+the client to send its certificate. Upon receiving the certificate
+Monit compares the certificate to certificates located in the
+I<CLIENTPEMFILE> file. Access is granted if the client certificate is
+in this file. See L<SSL|"SSL settings"> settings for details.
 
 =head3 Basic Authentication
 
@@ -900,6 +878,29 @@ Syntax:
 
  ALLOW <username>:<password>
 
+=head3 Host and network allow list
+
+Monit maintains an access-control list of hosts and networks allowed to
+connect. You can add as many hosts as you want to, but only hosts with
+a valid domain name or its IP address are allowed.
+
+Monit will query a name server to check any hosts trying to connect. If
+a host (client) is trying to connect, but cannot be found in the access
+list or cannot be resolved, Monit will shutdown the connection to the
+client promptly.
+
+Control file example:
+
+  set httpd port 2812
+      allow localhost
+      allow my.other.work.machine.com
+      allow 10.1.1.1
+      allow 192.168.1.0/255.255.255.0
+      allow 10.0.0.0/8
+
+Clients, not mentioned in the allow list and trying to connect to Monit
+will be denied access and are logged with their IP-address.
+
 =head4 PAM
 
 PAM is supported on platforms which provide PAM (such as Linux,
@@ -923,7 +924,7 @@ Sample PAM service for Monit on Mac OS X (store as
   auth       required       pam_deny.so
   account    required       pam_permit.so
 
-And monitrc config which only allows group C<admin> authenticated via
+A C<monitrc> config which only allows group C<admin> authenticated via
 PAM to access the web interface:
 
   set httpd
@@ -932,18 +933,17 @@ PAM to access the web interface:
 
 =head4 htpasswd file
 
-Alternatively you can use files in C<htpasswd> format (one
+Alternatively you store credentials in a C<htpasswd> formated file (one
 I<user:passwd> entry per line), like so: I<allow [cleartext|crypt|md5]
-/path [users]>. By default cleartext passwords are read. In case the
-passwords are digested it is necessary to specify the cryptographic
-method. If you do not want all users in the password file to have
-access to Monit you can specify only those users that should have
-access, in the allow statement. Otherwise all users are added.
+/path [users]>. The default is cleartext passwords. In case passwords
+are digested it is necessary to specify the cryptographic method. If
+you do not want all users in the password file to have access to Monit,
+you can specify only those users that should have access in the allow
+statement. Otherwise all users are added.
 
 Example1:
 
   set httpd port 2812
-      allow hauk:password
       allow md5 /etc/httpd/htpasswd john paul ringo george
 
 If you use this method together with a host list, then only
@@ -1852,49 +1852,57 @@ Example which sets multiple error levels and actions:
 Note: the maximum value for cycles is 64.
 
 
-=head2 EXISTENCE TESTING
+=head2 EXISTENCE TESTS
 
-This test allows to trigger an action based on the monitored object existence.
-It is supported for I<process>, I<file>, I<directory>, I<filesystem> and I<fifo>
-services.
+This test allows to trigger an action based on the monitored object
+existence. It is supported for I<process>, I<file>, I<directory>,
+I<filesystem> and I<fifo> services.
 
-If no existence test is defined, the implicit non-existence test with restart
-action is activated, so for example if the process stops, Monit will restart it.
+If no existence test is defined, the implicit non-existence test with
+restart action is activated, so for example if the process stops, Monit
+will restart it.
 
-There are two object existence tests:
+There are two types of existence tests:
 
-=head3 OBJECT NON-EXISTENCE
+=head3 NON-EXIST
 
-This test will trigger the action if the object doesn't exist. It can be used for
-example to make sure apache is running, data filesystem is mounted, etc.
+This test will trigger an action if the object does not exist. It can
+be used for example to make sure apache is running, data filesystem is
+mounted, etc.
 
  IF [DOES] NOT EXIST THEN <action>
 
-I<action> is a choice of "ALERT", "RESTART", "START", "STOP", "EXEC" or "UNMONITOR".
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP", "EXEC" or
+"UNMONITOR".
 
-Example: exec script if the filesystem does NOT exist:
+Example: Exec a script if a filesystem does NOT exist:
 
- check process apache with pidfile /var/run/apache2/apache2.pid
-       start program = "/etc/init.d/apache2 start"
-       stop program = "/etc/init.d/apache2 stop"
-       if does not exist then restart
+  check filesystem disk1 with path /dev/sda1
+       if does not exist then exec "/sbin/mount..."
 
-=head3 OBJECT EXISTENCE
+=head3 EXIST
 
-This test is opossite of the non-existence test: it will trigger the action if the object
-DOES exist. It can be used for example to kill the process which shouldn't be running.
+This test is the inverse of the non-existence test: it will trigger an
+action if the object DOES exist. It can be used for example to kill a
+process which shouldn't be running.
 
  IF [DOES] EXIST THEN <action>
 
-I<action> is a choice of "ALERT", "RESTART", "START", "STOP", "EXEC" or "UNMONITOR".
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP", "EXEC" or
+"UNMONITOR".
 
-Example: kill the process if it was started:
+Example: kill a process that should not run:
 
- check process matching "EvilProcess"
-       if does exist then exec "/usr/bin/pkill -9 EvilProcess"
+ check process vmware matching "vmware"
+       if exist then exec "/usr/bin/pkill -9 vmware"
+
+Example: Alert if a file exist which shouldn't
+
+ check file x with path /some/path/x
+       if exist then alert
 
 
-=head2 RESOURCE TESTING
+=head2 RESOURCE TESTS
 
 Monit can examine how much system resources a service is using.
 This test can only be used within a system or process service
@@ -1983,13 +1991,14 @@ does, Monit will restart the service:
  if cpu is greater than 50% for 5 cycles then restart
 
 
-=head2 PROCESS DISK I/O TESTING
+=head2 PROCESS DISK I/O TEST
 
 Monit can test process' filesystem read and write activity. This test
-may only be used in the context of a process service type.
+can only be used in the context of a process service type. Monit will
+normally need to run as the root user to access this metrics.
 
-The platform usually supports the per-process I/O activity statistics
-either by bytes or by operations.
+The OS usually supports the per-process I/O metrics by bytes or by
+operations.
 
 Per-process I/O activity statistics by platform:
 
@@ -2026,7 +2035,8 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 
 Example:
 
-        if disk read > 1 MB/s then alert
+ check process p...
+       if disk read > 1 MB/s then alert
 
 =head3 Read: operations per second
 
@@ -2044,7 +2054,8 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 
 Example:
 
-        if disk read rate > 500 operations/s then alert
+ check process p...
+       if disk read rate > 500 operations/s then alert
 
 =head3 Write: bytes per second
 
@@ -2066,7 +2077,8 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 
 Example:
 
-        if disk write rate > 1 MB/s then alert
+ check process p...
+       if disk write rate > 1 MB/s then alert
 
 =head3 Write: operations per second
 
@@ -2084,10 +2096,11 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 
 Example:
 
-        if disk write rate > 500 operations/s then alert
+ check process p...
+       if disk write rate > 500 operations/s then alert
 
 
-=head2 FILE CHECKSUM TESTING
+=head2 FILE CHECKSUM TEST
 
 The checksum statement may only be used in a file service
 entry and can be used to check the file's MD5 or SHA1 checksum.
@@ -2127,7 +2140,7 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 "EXEC" or "UNMONITOR".
 
 
-=head2 TIMESTAMP TESTING
+=head2 TIMESTAMP TEST
 
 The timestamp statement may only be used in a file, fifo or
 directory service entry.
@@ -2164,7 +2177,7 @@ For example testing directory for file addition or removal:
        if timestamp < 1 hour then alert
 
 
-=head2 FILE SIZE TESTING
+=head2 FILE SIZE TEST
 
 The size statement may only be used in a check file service
 entry. If specified in the control file, Monit will compute
@@ -2198,7 +2211,7 @@ For example to send an alert if the file is too large:
        if size > 1 GB then alert
 
 
-=head2 FILE CONTENT TESTING
+=head2 FILE CONTENT TEST
 
 The content statement can be used to incrementally test the content of a
 text file by using regular expressions.
@@ -2246,7 +2259,7 @@ For example:
         if content = "^mrcoffee" then alert
 
 
-=head2 FILESYSTEM MOUNT FLAGS TESTING
+=head2 FILESYSTEM MOUNT FLAGS TEST
 
 Monit can test the filesystem mount flags for changes. This test is
 implicit and Monit will send alert in case of failure by default.
@@ -2268,7 +2281,7 @@ Example:
        if changed fsflags then exec "/my/script"
 
 
-=head2 SPACE USAGE TESTING
+=head2 SPACE USAGE TEST
 
 Monit can test a filesystem or a disk for space usage. This test may
 only be used in the context of a filesystem service type.
@@ -2307,7 +2320,7 @@ Example:
        if space usage > 90% then alert
 
 
-=head2 INODE USAGE TESTING
+=head2 INODE USAGE TEST
 
 Monit can test filesystem inode usage. This test may only be used
 in the context of a filesystem service type.
@@ -2338,22 +2351,22 @@ Example:
        if inode usage > 90% then alert
 
 
-=head2 DISK I/O TESTING
+=head2 DISK I/O TEST
 
 Monit can test a filesystem read and write activity. This test may
 only be used in the context of a filesystem service type.
 
-The I/O granularity and supported filesystems depend on the platform
-API. Some platforms allow to get I/O activity for specific pertition,
-other just for the whole disk. Some allow to get statistics for
-network filesystems too, others just for block devices.
+The available I/O metrics depends on the platform and filesystem. Some
+platforms allows us to get I/O activity for specific partition, others
+just for the whole disk. Some allows us to get metrics for network
+filesystems, others just for block devices.
 
-Platforms I/O statistics granularity and filesystem support:
+Platforms I/O metrics granularity and filesystem support in Monit:
 
  ---------------------------------------------------------------------------------------
  | Platform     | Granularity    | Supported filesystems                      | TBD    |
  ---------------------------------------------------------------------------------------
- | AIX          | per-disk       | disk io monitoring not supported currently | JFSx   |
+ | AIX          | per-disk       | Disk io monitoring currently not supported | JFSx   |
  | DragonFlyBSD | per-disk       | UFS                                        | HAMMER |
  | FreeBSD      | per-disk       | UFS                                        | ZFS    |
  | Linux        | per-filesystem | EXTx, XFS, BTRFS, NFS, CIFS                |        |
@@ -2383,7 +2396,8 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 
 Example:
 
-        if read rate > 1 MB/s then alert
+ check filesystem disk1...
+       if read rate > 1 MB/s then alert
 
 =head3 Read: operations per second
 
@@ -2401,7 +2415,8 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 
 Example:
 
-        if read rate > 500 operations/s then alert
+ check filesystem disk1...
+       if read rate > 500 operations/s then alert
 
 =head3 Write: bytes per second
 
@@ -2423,7 +2438,8 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 
 Example:
 
-        if write rate > 1 MB/s then alert
+ check filesystem disk1...
+       if write rate > 1 MB/s then alert
 
 =head3 Write: operations per second
 
@@ -2441,9 +2457,15 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 
 Example:
 
-        if write rate > 500 operations/s then alert
+ check filesystem disk1...
+       if write rate > 500 operations/s then alert
 
 =head3 Service time per operation
+
+Service Time is the time taken to complete a read or a write operation.
+This is a fairly important metric. If it grows, it means that the disk
+is not able to handle the operations fast enough. Growth charts are
+available in M/Monit.
 
 Syntax:
 
@@ -2461,10 +2483,12 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 
 Example:
 
-        if service time > 10 milliseconds for 3 times within 5 cycles then alert
+        if service time > 10 milliseconds 
+                for 3 times within 5 cycles 
+        then alert
 
 
-=head2 PERMISSION TESTING
+=head2 PERMISSION TEST
 
 Monit can test the permissions of file objects. This test may
 only be used in the context of a file, fifo, directory or
@@ -2492,7 +2516,7 @@ Example:
        if failed permission 0640 then alert
 
 
-=head2 UID TESTING
+=head2 UID TEST
 
 Monit can monitor the owner user id (uid) of a file, fifo, directory
 or owner and effective user of a process.
@@ -2512,7 +2536,7 @@ Example:
        if failed uid root then alert
 
 
-=head2 GID TESTING
+=head2 GID TEST
 
 Monit can monitor the owner group id (gid) of a file, fifo, directory
 or process.
@@ -2532,7 +2556,7 @@ Example:
        if failed gid shadow then alert
 
 
-=head2 PID TESTING
+=head2 PID TEST
 
 Monit can test the process' PID. This test is implicit and Monit will
 send an alert in case the PID changed outside of Monit's control.
@@ -2555,7 +2579,7 @@ replaced by a new instance:
        if changed pid then alert
 
 
-=head2 PPID TESTING
+=head2 PPID TEST
 
 Monit can test the process' parent PID (PPID) for changes. This
 test is implicit and Monit will send alert in the case that the
@@ -2574,7 +2598,7 @@ Example:
        if changed ppid then exec "/my/script"
 
 
-=head2 UPTIME TESTING
+=head2 UPTIME TEST
 
 The uptime statement may only be used in a process and system service
 type context.
@@ -2604,7 +2628,7 @@ Example of restarting the process every three days:
     if uptime > 3 days then restart
 
 
-=head2 PROGRAM STATUS TESTING
+=head2 PROGRAM STATUS TEST
 
 You can check the exit status of a program or a script. This test
 may only be used within a check program service entry in the Monit
@@ -2941,7 +2965,7 @@ for up to 10 seconds for a reply
         if failed ping count 5 size 128 with timeout 10 seconds then alert
 
 
-=head2 CONNECTION TESTING
+=head2 CONNECTION TESTS
 
 Monit can perform connection testing via network ports or via
 Unix sockets. A connection test may only be used within a
@@ -3487,8 +3511,8 @@ For example:
 
 L<M/Monit|https://mmonit.com> expands on Monit's capabilities and
 provides monitoring and management of all your Monit enabled hosts.
-M/Monit uses Monit as an agent. With regular intervals, Monit can send
-a message to M/Monit with the status of the host it is running on.
+M/Monit uses Monit as an agent. With regular intervals, Monit sends a
+status message to M/Monit with a snapshot of the host it is running on.
 M/Monit presents the collected data in charts and event logs and give
 you the option to view key performance data of all your hosts in a
 modern, clean and well designed user interface which also works on
@@ -3511,19 +3535,20 @@ event messages to M/Monit. We recommend using I<https> as in the
 example above to ensure that the communication between Monit and
 M/Monit is secure.
 
-The default timeout is 5 seconds, you can customise the timeout
-using the I<TIMEOUT> option.
+The default timeout is 5 seconds, you can customise the timeout using
+the I<TIMEOUT> option.
 
-When Monit registers itself in M/Monit, it sends by default credentials that
-can be used to perform service actions from M/Monit. You can disable credentials
-sending by I<REGISTER WITHOUT CREDENTIALS> option.
+When Monit registers itself in M/Monit it sends credentials that can be
+used to perform service actions from M/Monit. You can disable sending
+credentials by using I<REGISTER WITHOUT CREDENTIALS> and instead
+manually add credentials in M/Monit.
 
 
 
 =head1 CONFIGURATION EXAMPLES
 
 The simplest form is just the check statement. In this example we
-check to see if our web server is running and log a message if not:
+check to see if our web server is running and raise an alert if not:
 
  check process nginx with pidfile /var/run/nginx.pid
 
