@@ -1395,7 +1395,7 @@ void Util_printService(Service_T s) {
 
                         case Resource_ReadOperations:
                         case Resource_WriteOperations:
-                                printf("%s", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %llu operations/s", operatornames[o->operator], o->limit)));
+                                printf("%s", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %.0f operations/s", operatornames[o->operator], o->limit)));
                                 break;
 
                         default:
