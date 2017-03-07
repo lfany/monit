@@ -2445,6 +2445,12 @@ Example:
 
 =head3 Service time per operation
 
+Service time is IO transaction completion time minus IO transaction
+start time. For example, if you read data, it is the time between
+requesting data and when you get the data. Service time is a fairly
+important metric. If it grows, it means that the disk is not able to
+handle the operations fast enough.
+
 Syntax:
 
  IF SERVICE TIME <operator> <number> <unit> THEN action
@@ -2461,7 +2467,9 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 
 Example:
 
-        if service time > 10 milliseconds for 3 times within 5 cycles then alert
+        if service time > 10 milliseconds 
+                for 3 times within 5 cycles 
+        then alert
 
 
 =head2 PERMISSION TESTING
