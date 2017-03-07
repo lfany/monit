@@ -549,19 +549,30 @@ typedef struct Auth_T {
 
 
 /** Defines data for systemwide statistic */
-//FIXME: structurize the data
 typedef struct SystemInfo_T {
-        int cpus;                                                                       /**< Number of CPUs */
-        float total_mem_percent;                                /**< Total real memory in use in the system */
-        float total_swap_percent;                                      /**< Total swap in use in the system */
-        float total_cpu_user_percent;                               /**< Total CPU in use in user space [%] */
-        float total_cpu_syst_percent;                             /**< Total CPU in use in kernel space [%] */
-        float total_cpu_wait_percent;                                  /**< Total CPU in use in waiting [%] */
+        struct {
+                int count;                                      /**< Number of CPUs */
+                struct {
+                        float user;         /**< Total CPU in use in user space [%] */
+                        float system;     /**< Total CPU in use in kernel space [%] */
+                        float wait;            /**< Total CPU in use in waiting [%] */
+                } usage;
+        } cpu;
+        struct {
+                uint64_t size;                      /**< Maximal system real memory */
+                struct {
+                        float percent;  /**< Total real memory in use in the system */
+                        uint64_t bytes; /**< Total real memory in use in the system */
+                } usage;
+        } memory;
+        struct {
+                uint64_t size;                                       /**< Swap size */
+                struct {
+                        float percent;         /**< Total swap in use in the system */
+                        uint64_t bytes;        /**< Total swap in use in the system */
+                } usage;
+        } swap;
         size_t argmax;                                                   /**< Program arguments maximum [B] */
-        uint64_t mem_max;                                                   /**< Maximal system real memory */
-        uint64_t swap_max;                                                                   /**< Swap size */
-        uint64_t total_mem;                                     /**< Total real memory in use in the system */
-        uint64_t total_swap;                                           /**< Total swap in use in the system */
         double loadavg[3];                                                         /**< Load average triple */
         struct utsname uname;                                 /**< Platform information provided by uname() */
         struct timeval collected;                                             /**< When were data collected */

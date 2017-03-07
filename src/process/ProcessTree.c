@@ -156,12 +156,12 @@ static void _fillProcessTree(ProcessTree_T *pt, int index) {
  * @return Process' CPU usage [%] since last cycle
  */
 static float _cpuUsage(ProcessTree_T *now, ProcessTree_T *prev, double delta) {
-        if (systeminfo.cpus > 0 && delta > 0 && prev->cpu.time > 0 && now->cpu.time > prev->cpu.time) {
+        if (systeminfo.cpu.count > 0 && delta > 0 && prev->cpu.time > 0 && now->cpu.time > prev->cpu.time) {
                 int divisor;
                 if (now->threads > 1) {
-                        if (now->threads >= systeminfo.cpus) {
+                        if (now->threads >= systeminfo.cpu.count) {
                                 // Multithreaded application with more threads then CPU cores
-                                divisor = systeminfo.cpus;
+                                divisor = systeminfo.cpu.count;
                         } else {
                                 // Multithreaded application with less threads then CPU cores
                                 divisor = now->threads;
@@ -294,9 +294,9 @@ boolean_t ProcessTree_updateProcess(Service_T s, pid_t pid) {
                 s->inf.process->total_cpu_percent = ptree[leaf].cpu.usage_total > 100. ? 100. : ptree[leaf].cpu.usage_total;
                 s->inf.process->mem               = ptree[leaf].memory.usage;
                 s->inf.process->total_mem         = ptree[leaf].memory.usage_total;
-                if (systeminfo.mem_max > 0) {
-                        s->inf.process->total_mem_percent = ptree[leaf].memory.usage_total >= systeminfo.mem_max ? 100. : (100. * (double)ptree[leaf].memory.usage_total / (double)systeminfo.mem_max);
-                        s->inf.process->mem_percent       = ptree[leaf].memory.usage >= systeminfo.mem_max ? 100. : (100. * (double)ptree[leaf].memory.usage / (double)systeminfo.mem_max);
+                if (systeminfo.memory.size > 0) {
+                        s->inf.process->total_mem_percent = ptree[leaf].memory.usage_total >= systeminfo.memory.size ? 100. : (100. * (double)ptree[leaf].memory.usage_total / (double)systeminfo.memory.size);
+                        s->inf.process->mem_percent       = ptree[leaf].memory.usage >= systeminfo.memory.size ? 100. : (100. * (double)ptree[leaf].memory.usage / (double)systeminfo.memory.size);
                 }
                 if (ptree[leaf].read.bytes)
                         Statistics_update(&(s->inf.process->read.bytes), ptree[leaf].read.time, ptree[leaf].read.bytes);
@@ -450,9 +450,9 @@ boolean_t init_system_info(void) {
                 CFRelease(url);
         }
 #endif
-        systeminfo.total_cpu_user_percent = -1.;
-        systeminfo.total_cpu_syst_percent = -1.;
-        systeminfo.total_cpu_wait_percent = -1.;
+        systeminfo.cpu.usage.user = -1.;
+        systeminfo.cpu.usage.system = -1.;
+        systeminfo.cpu.usage.wait = -1.;
         return (init_process_info_sysdep());
 }
 
@@ -469,8 +469,8 @@ boolean_t update_system_info() {
                         LogError("'%s' statistic error -- memory usage data collection failed\n", Run.system->name);
                         goto error2;
                 }
-                systeminfo.total_mem_percent  = systeminfo.mem_max > 0ULL ? (100. * (double)systeminfo.total_mem / (double)systeminfo.mem_max) : 0.;
-                systeminfo.total_swap_percent = systeminfo.swap_max > 0ULL ? (100. * (double)systeminfo.total_swap / (double)systeminfo.swap_max) : 0.;
+                systeminfo.memory.usage.percent  = systeminfo.memory.size > 0ULL ? (100. * (double)systeminfo.memory.usage.bytes / (double)systeminfo.memory.size) : 0.;
+                systeminfo.swap.usage.percent = systeminfo.swap.size > 0ULL ? (100. * (double)systeminfo.swap.usage.bytes / (double)systeminfo.swap.size) : 0.;
 
                 if (! used_system_cpu_sysdep(&systeminfo)) {
                         LogError("'%s' statistic error -- cpu usage data collection failed\n", Run.system->name);
@@ -485,14 +485,14 @@ error1:
         systeminfo.loadavg[1] = 0;
         systeminfo.loadavg[2] = 0;
 error2:
-        systeminfo.total_mem = 0ULL;
-        systeminfo.total_mem_percent = 0.;
-        systeminfo.total_swap = 0ULL;
-        systeminfo.total_swap_percent = 0.;
+        systeminfo.memory.usage.bytes = 0ULL;
+        systeminfo.memory.usage.percent = 0.;
+        systeminfo.swap.usage.bytes = 0ULL;
+        systeminfo.swap.usage.percent = 0.;
 error3:
-        systeminfo.total_cpu_user_percent = 0.;
-        systeminfo.total_cpu_syst_percent = 0.;
-        systeminfo.total_cpu_wait_percent = 0.;
+        systeminfo.cpu.usage.user = 0.;
+        systeminfo.cpu.usage.system = 0.;
+        systeminfo.cpu.usage.wait = 0.;
 
         return false;
 }

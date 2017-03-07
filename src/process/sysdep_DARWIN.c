@@ -80,14 +80,14 @@ static long cpu_syst_old = 0;
 
 
 boolean_t init_process_info_sysdep(void) {
-        size_t size = sizeof(systeminfo.cpus);
-        if (sysctlbyname("hw.logicalcpu", &systeminfo.cpus, &size, NULL, 0) == -1) {
+        size_t size = sizeof(systeminfo.cpu.count);
+        if (sysctlbyname("hw.logicalcpu", &systeminfo.cpu.count, &size, NULL, 0) == -1) {
                 DEBUG("system statistics error -- sysctl hw.logicalcpu failed: %s\n", STRERROR);
                 return false;
         }
 
-        size = sizeof(systeminfo.mem_max);
-        if (sysctlbyname("hw.memsize", &systeminfo.mem_max, &size, NULL, 0) == -1) {
+        size = sizeof(systeminfo.memory.size);
+        if (sysctlbyname("hw.memsize", &systeminfo.memory.size, &size, NULL, 0) == -1) {
                 DEBUG("system statistics error -- sysctl hw.memsize failed: %s\n", STRERROR);
                 return false;
         }
@@ -251,7 +251,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
                 DEBUG("system statistic error -- cannot get memory usage\n");
                 return false;
         }
-        si->total_mem = (uint64_t)(page_info.wire_count + page_info.active_count) * (uint64_t)pagesize;
+        si->memory.usage.bytes = (uint64_t)(page_info.wire_count + page_info.active_count) * (uint64_t)pagesize;
 
         /* Swap */
         int mib[2] = {CTL_VM, VM_SWAPUSAGE};
@@ -259,11 +259,11 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
         struct xsw_usage swap;
         if (sysctl(mib, 2, &swap, &len, NULL, 0) == -1) {
                 DEBUG("system statistic error -- cannot get swap usage: %s\n", STRERROR);
-                si->swap_max = 0ULL;
+                si->swap.size = 0ULL;
                 return false;
         }
-        si->swap_max = (uint64_t)swap.xsu_total;
-        si->total_swap = (uint64_t)swap.xsu_used;
+        si->swap.size = (uint64_t)swap.xsu_total;
+        si->swap.usage.bytes = (uint64_t)swap.xsu_used;
 
         return true;
 }
@@ -288,9 +288,9 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
                 total     = total_new - total_old;
                 total_old = total_new;
 
-                si->total_cpu_user_percent = (total > 0) ? (100. * (double)(cpu_info.cpu_ticks[CPU_STATE_USER] - cpu_user_old) / total) : -1.;
-                si->total_cpu_syst_percent = (total > 0) ? (100. * (double)(cpu_info.cpu_ticks[CPU_STATE_SYSTEM] - cpu_syst_old) / total) : -1.;
-                si->total_cpu_wait_percent = 0.; /* there is no wait statistic available */
+                si->cpu.usage.user = (total > 0) ? (100. * (double)(cpu_info.cpu_ticks[CPU_STATE_USER] - cpu_user_old) / total) : -1.;
+                si->cpu.usage.system = (total > 0) ? (100. * (double)(cpu_info.cpu_ticks[CPU_STATE_SYSTEM] - cpu_syst_old) / total) : -1.;
+                si->cpu.usage.wait = 0.; /* there is no wait statistic available */
 
                 cpu_user_old = cpu_info.cpu_ticks[CPU_STATE_USER];
                 cpu_syst_old = cpu_info.cpu_ticks[CPU_STATE_SYSTEM];

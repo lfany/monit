@@ -114,12 +114,12 @@ boolean_t init_process_info_sysdep(void) {
         struct pst_static pst;
 
         if (pstat_getdynamic(&psd, sizeof(psd), (size_t)1, 0) != -1)
-                systeminfo.cpus = psd.psd_proc_cnt;
+                systeminfo.cpu.count = psd.psd_proc_cnt;
         else
                 return false;
 
         if (pstat_getstatic(&pst, sizeof(pst), (size_t) 1, 0) != -1) {
-                systeminfo.mem_max = (uint64_t)pst.physical_memory * (uint64_t)pst.page_size;
+                systeminfo.memory.size = (uint64_t)pst.physical_memory * (uint64_t)pst.page_size;
                 page_size = pst.page_size;
         } else {
                 return false;
@@ -225,7 +225,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
                 LogError("system statistic error -- pstat_getdynamic failed: %s\n", STRERROR);
                 return false;
         }
-        si->total_mem = (uint64_t)(pst.physical_memory - psd.psd_free) * (uint64_t)pst.page_size;
+        si->memory.usage.bytes = (uint64_t)(pst.physical_memory - psd.psd_free) * (uint64_t)pst.page_size;
 
         /* Swap */
 again:
@@ -235,7 +235,7 @@ again:
         }
         if (num == 0) {
                 DEBUG("system statistic -- no swap configured\n");
-                si->swap_max = 0ULL;
+                si->swap.size = 0ULL;
                 return true;
         }
         s = (struct swaptable *)ALLOC(num * sizeof(struct swapent) + sizeof(struct swaptable));
@@ -245,7 +245,7 @@ again:
         s->swt_n = num + 1;
         if ((n = swapctl(SC_LIST, s)) < 0) {
                 LogError("system statistic error -- swap usage data collection failed: %s\n", STRERROR);
-                si->swap_max = 0ULL;
+                si->swap.size = 0ULL;
                 FREE(s);
                 FREE(strtab);
                 return false;
@@ -264,8 +264,8 @@ again:
         }
         FREE(s);
         FREE(strtab);
-        si->swap_max = (uint64_t)total * (uint64_t)page_size;
-        si->total_swap = (uint64_t)used * (uint64_t)page_size;
+        si->swap.size = (uint64_t)total * (uint64_t)page_size;
+        si->swap.usage.bytes = (uint64_t)used * (uint64_t)page_size;
 
         return true;
 }
@@ -293,9 +293,9 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
         cpu_syst      = psd.psd_cpu_time[CP_SYS];
         cpu_wait      = psd.psd_cpu_time[CP_WAIT];
 
-        si->total_cpu_user_percent = (cpu_total > 0) ? (100. * (double)(cpu_user - cpu_user_old) / cpu_total) : -1.;
-        si->total_cpu_syst_percent = (cpu_total > 0) ? (100. * (double)(cpu_syst - cpu_syst_old) / cpu_total) : -1.;
-        si->total_cpu_wait_percent = (cpu_total > 0) ? (100. * (double)(cpu_wait - cpu_wait_old) / cpu_total) : -1.;
+        si->cpu.usage.user = (cpu_total > 0) ? (100. * (double)(cpu_user - cpu_user_old) / cpu_total) : -1.;
+        si->cpu.usage.system = (cpu_total > 0) ? (100. * (double)(cpu_syst - cpu_syst_old) / cpu_total) : -1.;
+        si->cpu.usage.wait = (cpu_total > 0) ? (100. * (double)(cpu_wait - cpu_wait_old) / cpu_total) : -1.;
 
         cpu_user_old = cpu_user;
         cpu_syst_old = cpu_syst;
