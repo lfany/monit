@@ -1,4 +1,4 @@
-# The right margin in this file is 65 characters.
+# The right margin in this file is 72 characters.
 
 =head1 NAME
 
