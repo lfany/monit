@@ -123,8 +123,8 @@ B<-g> I<name>
    Set group name for start, stop, restart, monitor, unmonitor,
    status and summary action.
 
-B<-l> I<logfile>
-   Print log information to this file. Or use I<"set logfile">
+B<-l> I<file>
+   Print log information to this file. Or use I<"set log">
     in monitrc.
 
 B<-p> I<pidfile>
@@ -446,18 +446,21 @@ is also possible to use interface name, such as "eth0" on Linux.
 
 =head1 LOGGING
 
-Monit will log status and error messages to a log file. Use the
-I<set logfile> statement in the monitrc control file. To setup
-Monit to log to its own logfile, use e.g. I<set logfile
-/var/log/monit.log>. If B<syslog> is given as a value for the
-C<-l> command-line switch (or the keyword I<set logfile syslog>
-is found in the control file) Monit will use the B<syslog> system
-daemon to log messages with a priority assigned to each message
-based on the context. To turn off logging, simply do not set the
-logfile in the control file (and of course, do not use the -l
-switch)
+Monit will log status and error messages to a file or via syslog. Use
+the I<set log> statement in the monitrc control file.
 
-The format for logfile is:
+To setup Monit to log to its own file, use e.g. I<set log
+/var/log/monit.log>.
+
+If B<syslog> is given as a value for the C<-l> command-line switch
+or the keyword I<set log syslog> is found in the control file, Monit
+will use the B<syslog> system daemon to log messages with a priority
+assigned to each message based on the context.
+
+To turn off logging, simply do not set the log in the control file
+(and of course, do not use the -l switch)
+
+The format for log file is:
 
     [date] priority : message
 

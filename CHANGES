@@ -4,6 +4,9 @@
 
 Version 5.22.0
 
+New: Renamed the "set logfile <path|syslog>" statement to "set log <path|syslog>".
+The "logfile" form is deprecated, but kept for backward compatibility.
+
 
 Version 5.21.0
 
