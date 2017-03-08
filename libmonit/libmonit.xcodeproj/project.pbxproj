@@ -30,7 +30,6 @@
 		52D796A113A6CE560014CED2 /* Str.c in Sources */ = {isa = PBXBuildFile; fileRef = 52D7967813A6CE560014CED2 /* Str.c */; };
 		52D796A313A6CE560014CED2 /* StringBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 52D7967A13A6CE560014CED2 /* StringBuffer.c */; };
 		52FDD6B1189C205E008E3D5E /* CommandTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 52936F7713A5212700FC4089 /* CommandTest.c */; };
-		93B091831E4B321300E9D128 /* Atomic.h in Headers */ = {isa = PBXBuildFile; fileRef = 93B091821E4B321300E9D128 /* Atomic.h */; };
 		93EAFCB81E1BFAC800B31673 /* Statistics.c in Sources */ = {isa = PBXBuildFile; fileRef = 93EAFCB31E1BFAC800B31673 /* Statistics.c */; };
 		93EAFCB91E1BFAC800B31673 /* Statistics.h in Headers */ = {isa = PBXBuildFile; fileRef = 93EAFCB41E1BFAC800B31673 /* Statistics.h */; };
 /* End PBXBuildFile section */
@@ -164,7 +163,6 @@
 		52D7967913A6CE560014CED2 /* Str.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = Str.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		52D7967A13A6CE560014CED2 /* StringBuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = StringBuffer.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		52D7967B13A6CE560014CED2 /* StringBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = StringBuffer.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		93B091821E4B321300E9D128 /* Atomic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Atomic.h; sourceTree = "<group>"; };
 		93EAFCB31E1BFAC800B31673 /* Statistics.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Statistics.c; sourceTree = "<group>"; };
 		93EAFCB41E1BFAC800B31673 /* Statistics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Statistics.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -410,7 +408,6 @@
 		52D7966F13A6CE560014CED2 /* thread */ = {
 			isa = PBXGroup;
 			children = (
-				93B091821E4B321300E9D128 /* Atomic.h */,
 				52D7967213A6CE560014CED2 /* Thread.c */,
 				52D7967313A6CE560014CED2 /* Thread.h */,
 			);
@@ -447,7 +444,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				93EAFCB91E1BFAC800B31673 /* Statistics.h in Headers */,
-				93B091831E4B321300E9D128 /* Atomic.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
