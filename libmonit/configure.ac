@@ -86,6 +86,8 @@ AC_ARG_WITH([zlib],
                         zlib="false"
                         AC_MSG_ERROR([zlib not found in $withval])
                 fi
+        else
+                zlib="false"
         fi
      ],[
         AC_CHECK_LIB([z], [zlibVersion], [], [
