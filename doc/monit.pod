@@ -136,10 +136,12 @@ B<-s> I<statefile>
    statefile"> in monitrc.
 
 B<-B>
-   Batch command line mode (nontabular output with no colors)
+   Batch command line mode (no tabular output and no colors). Or
+   use I<"set terminal batch"> in monitrc.
 
 B<-I>
-   Do not run in background (needed for run from init)
+   Do not run in background mode (needed to run from init). Or use
+   I<"set init"> in monitrc.
 
 B<-i>
    Print Monit's unique ID
