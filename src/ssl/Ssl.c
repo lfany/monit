@@ -748,9 +748,9 @@ int Ssl_getCertificateValidDays(T C) {
                 }
                 END_TRY;
 #endif
-                return deltadays;
+                return deltadays > 0 ? deltadays : 0;
         }
-        return 0;
+        return -1;
 }
 
 
