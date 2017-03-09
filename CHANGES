@@ -14,8 +14,9 @@ Fixed: Issue #569: fix configure --without-zlib
 Fixed: Issue #570: if the connection test requires STARTTLS, the certificate valid
 days test was broken.
 
-Fixed: If the SSL connection failed and certificate validity test was active, monit
-returned confusing certificate validity error.
+Fixed: If the SSL test connection failed and certificate validity test was active,
+monit returned confusing certificate validity error. The test is now skipped in such
+case as it can be performed only if the certificate can be read.
 
 
 Version 5.21.0
