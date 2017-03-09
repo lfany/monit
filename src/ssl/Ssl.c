@@ -342,6 +342,16 @@ static int _checkChecksum(T C, X509_STORE_CTX *ctx, X509 *certificate) {
 }
 
 
+static int _saveAndCheckServerCertificates(T C, X509_STORE_CTX *ctx) {
+        if ((C->certificate = X509_STORE_CTX_get_current_cert(ctx))) {
+                return _checkChecksum(C, ctx, C->certificate);
+        }
+        X509_STORE_CTX_set_error(ctx, X509_V_ERR_APPLICATION_VERIFICATION);
+        snprintf(C->error, sizeof(C->error), "cannot get SSL server certificate");
+        return 0;
+}
+
+
 static int _verifyServerCertificates(int preverify_ok, X509_STORE_CTX *ctx) {
         T C = SSL_get_app_data(X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx()));
         if (! C) {
@@ -355,7 +365,7 @@ static int _verifyServerCertificates(int preverify_ok, X509_STORE_CTX *ctx) {
                         case X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT:
                                 if (_optionsAllowSelfSigned(C->options->allowSelfSigned)) {
                                         X509_STORE_CTX_set_error(ctx, X509_V_OK);
-                                        return 1;
+                                        return _saveAndCheckServerCertificates(C, ctx);
                                 }
                                 snprintf(C->error, sizeof(C->error), "self signed certificate is not allowed, please use a trusted certificate or use the 'selfsigned: allow' SSL option");
                                 break;
@@ -363,13 +373,7 @@ static int _verifyServerCertificates(int preverify_ok, X509_STORE_CTX *ctx) {
                                 break;
                 }
         } else {
-                if ((C->certificate = X509_STORE_CTX_get_current_cert(ctx))) {
-                        return _checkChecksum(C, ctx, C->certificate);
-                } else {
-                        X509_STORE_CTX_set_error(ctx, X509_V_ERR_APPLICATION_VERIFICATION);
-                        snprintf(C->error, sizeof(C->error), "cannot get SSL server certificate");
-                        return 0;
-                }
+                return _saveAndCheckServerCertificates(C, ctx);
         }
         return 0;
 }
