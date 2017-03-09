@@ -11,6 +11,9 @@ Fixed: Issue #568: fix cross-compilation
 
 Fixed: Issue #569: fix configure --without-zlib
 
+Fixed: Issue #570: if the connection test requires STARTTLS, the certificate valid
+days test was broken.
+
 
 Version 5.21.0
 
