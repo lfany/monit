@@ -54,6 +54,16 @@
  */
 
 
+/* ------------------------------------------------------------ Definitions */
+
+
+/**
+ * Maximum length of input for Str_compareConstantTime() method. We support
+ * currently up to 64 characters, which is enough for SHA256 digests.
+ */
+#define MAX_CONSTANT_TIME_STRING_LENGTH 64
+
+
 /* -------------------------------------------------------- Public Methods */
 
 
