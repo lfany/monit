@@ -212,7 +212,8 @@ const char *StringBuffer_toString(T S);
  * @param level compression level. A number between 0 and 9 where 1 gives
  * best speed, 9 gives best compression, 0 gives no compression. 6 is a good value.
  * @param length The number of bytes in the returned data is stored in length
- * @return The compressed data representing this string buffer 
+ * @return The compressed data representing this string buffer. If the buffer is
+ * empty, NULL is returned and length set to 0.
  * @exception AssertException if level is not in [0..9] or if compression failed
  */
 const void *StringBuffer_toCompressed(T S, int level, size_t *length);
