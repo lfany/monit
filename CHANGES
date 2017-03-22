@@ -4,8 +4,18 @@
 
 Version 5.22.0
 
+New: Added the "method" option for http protocol test, to allow overriding the
+HTTP method used for the test. Only HEAD and GET methods are supported currently.
+Example:
+    if failed port 443 protocol https method GET then alert
+
 New: Renamed the "set logfile <path|syslog>" statement to "set log <path|syslog>".
 The "logfile" form is deprecated, but kept for backward compatibility.
+
+Fixed: Issue #500: HTTP protocol test: Monit still prefers the HEAD method unless
+response content or checksum test is enabled, but from this version on if the server
+returned error, it will try to fallback to GET, as some servers may not support HEAD
+method.
 
 Fixed: Issue #568: fix cross-compilation
 

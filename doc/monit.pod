@@ -3203,6 +3203,7 @@ Syntax:
      [USERNAME "string"]
      [PASSWORD "string"]
      [REQUEST "string"]
+     [METHOD <GET|HEAD>]
      [STATUS operator number]
      [CHECKSUM checksum]
      [HTTP HEADERS list of headers]
@@ -3223,6 +3224,12 @@ For example:
     protocol http
     request "/data/show?a=b&c=d"
  then restart
+
+I<METHOD> set the HTTP request method. If not specified, Monit prefers
+the HTTP HEAD request method to save bandwidth, unless a response content
+or response checksum is tested. As some webservers may not support the
+HEAD method, Monit falls back to GET if the server returned error to the
+first HEAD request. You can override the method manually with this option.
 
 I<STATUS> option can be used to explicitly test the HTTP status code
 returned by the HTTP server. If not used, the HTTP protocol test will

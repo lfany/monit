@@ -230,6 +230,13 @@ typedef enum {
 
 
 typedef enum {
+        Http_Default = 0,
+        Http_Head,
+        Http_Get
+} __attribute__((__packed__)) Http_Method;
+
+
+typedef enum {
         Time_Second = 1,
         Time_Minute = 60,
         Time_Hour   = 3600,
@@ -665,6 +672,7 @@ typedef struct Port_T {
                 struct {
                         Hash_Type hashtype;           /**< Type of hash for a checksum (optional) */
                         Operator_Type operator;                         /**< HTTP status operator */
+                        Http_Method method;
                         int status;                                              /**< HTTP status */
                         char *username;
                         char *password;

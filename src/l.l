@@ -277,6 +277,9 @@ checksum          { return CHECKSUM; }
 mailserver        { return MAILSERVER; }
 host              { return HOST; }
 hostheader        { return HOSTHEADER; }
+method            { return METHOD; }
+get               { return GET; }
+head              { return HEAD; }
 status            { return STATUS; }
 default           { return DEFAULT; }
 http              { return HTTP; }

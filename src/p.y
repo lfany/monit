@@ -334,7 +334,7 @@ static void _setSSLOptions(SslOptions_T options);
 %token <number> CLEANUPLIMIT
 %token <real> REAL
 %token CHECKPROC CHECKFILESYS CHECKFILE CHECKDIR CHECKHOST CHECKSYSTEM CHECKFIFO CHECKPROGRAM CHECKNET
-%token THREADS CHILDREN STATUS ORIGIN VERSIONOPT READ WRITE OPERATION SERVICETIME DISK
+%token THREADS CHILDREN METHOD GET HEAD STATUS ORIGIN VERSIONOPT READ WRITE OPERATION SERVICETIME DISK
 %token RESOURCE MEMORY TOTALMEMORY LOADAVG1 LOADAVG5 LOADAVG15 SWAP
 %token MODE ACTIVE PASSIVE MANUAL ONREBOOT NOSTART LASTSTATE CPU TOTALCPU CPUUSER CPUSYSTEM CPUWAIT
 %token GROUP REQUEST DEPENDS BASEDIR SLOT EVENTQUEUE SECRET HOSTHEADER
@@ -1684,6 +1684,7 @@ http            : username {
                 | request
                 | responsesum
                 | status
+                | method
                 | hostheader
                 | '[' httpheaderlist ']'
                 ;
@@ -1691,6 +1692,14 @@ http            : username {
 status          : STATUS operator NUMBER {
                         portset.parameters.http.operator = $<number>2;
                         portset.parameters.http.status = $<number>3;
+                  }
+                ;
+
+method          : METHOD GET {
+                        portset.parameters.http.method = Http_Get;
+                  }
+                | METHOD HEAD {
+                        portset.parameters.http.method = Http_Head;
                   }
                 ;
 
@@ -3310,6 +3319,10 @@ static void addport(Port_T *list, Port_T port) {
                                 yyerror2("invalid checksum [%s]", p->parameters.http.checksum);
                 } else {
                         p->parameters.http.hashtype = Hash_Unknown;
+                }
+                // Sanity check: if content or checksum test is used, the method can be either Http_Default (auto) or Http_Get (manual), but not Http_Head (manual), as we need the content
+                if (((p->url_request && p->url_request->regex) || p->parameters.http.checksum) && p->parameters.http.method == Http_Head) {
+                        yyerror2("if response content or checksum test is invalid, the method option must not be HEAD");
                 }
         }
 

@@ -54,6 +54,15 @@
  */
 
 
+/* ------------------------------------------------------------- Definitions */
+
+
+Exception_T HttpStatusException = {"HttpStatusException"};
+Exception_T HttpContentException = {"HttpContentException"};
+Exception_T HttpChecksumException = {"HttpChecksumException"};
+Exception_T HttpResponseException = {"HttpResponseException"};
+
+
 /* ----------------------------------------------------------------- Private */
 
 
@@ -70,11 +79,11 @@ static boolean_t _hasHeader(List_T list, const char *name) {
 }
 
 
-static void do_regex(Socket_T socket, int content_length, Request_T R) {
+static void _checkResponseContent(Socket_T socket, int content_length, Request_T R) {
         boolean_t rv = false;
 
         if (content_length == 0)
-                THROW(IOException, "HTTP error: No content returned from server");
+                THROW(HttpContentException, "HTTP error: No content returned from server");
         else if (content_length < 0 || content_length > Run.limits.httpContentBuffer) /* content_length < 0 if no Content-Length header was found */
                 content_length = Run.limits.httpContentBuffer;
 
@@ -123,11 +132,11 @@ static void do_regex(Socket_T socket, int content_length, Request_T R) {
 
 error:
         if (! rv)
-                THROW(IOException, "HTTP error: %s", error);
+                THROW(HttpContentException, "HTTP error: %s", error);
 }
 
 
-static void check_request_checksum(Socket_T socket, int content_length, char *checksum, Hash_Type hashtype) {
+static void _checkResponseChecksum(Socket_T socket, int content_length, char *checksum, Hash_Type hashtype) {
         int n, keylength = 0;
         MD_T result, hash;
         md5_context_t ctx_md5;
@@ -163,10 +172,10 @@ static void check_request_checksum(Socket_T socket, int content_length, char *ch
                         keylength = 20; /* Raw key bytes not string chars! */
                         break;
                 default:
-                        THROW(IOException, "HTTP checksum error: Unknown hash type");
+                        THROW(HttpChecksumException, "HTTP checksum error: Unknown hash type");
         }
         if (strncasecmp(Util_digest2Bytes((unsigned char *)hash, keylength, result), checksum, keylength * 2) != 0)
-                THROW(IOException, "HTTP checksum error: Document checksum mismatch");
+                THROW(HttpChecksumException, "HTTP checksum error: Document checksum mismatch");
         DEBUG("HTTP: Succeeded testing document checksum\n");
 }
 
@@ -176,16 +185,16 @@ static void check_request_checksum(Socket_T socket, int content_length, char *ch
  * or content regex if required
  * @param s A socket
  */
-static void check_request(Socket_T socket, Port_T P) {
+static void _checkResponse(Socket_T socket, Port_T P) {
         int status, content_length = -1;
         char buf[512];
         if (! Socket_readLine(socket, buf, sizeof(buf)))
                 THROW(IOException, "HTTP: Error receiving data -- %s", STRERROR);
         Str_chomp(buf);
         if (! sscanf(buf, "%*s %d", &status))
-                THROW(IOException, "HTTP error: Cannot parse HTTP status in response: %s", buf);
+                THROW(HttpResponseException, "HTTP error: Cannot parse HTTP status in response: %s", buf);
         if (! Util_evalQExpression(P->parameters.http.operator, status, P->parameters.http.status ? P->parameters.http.status : 400))
-                THROW(IOException, "HTTP error: Server returned status %d", status);
+                THROW(HttpStatusException, "HTTP error: Server returned status %d", status);
         /* Get Content-Length header value */
         while (Socket_readLine(socket, buf, sizeof(buf))) {
                 if ((buf[0] == '\r' && buf[1] == '\n') || (buf[0] == '\n'))
@@ -193,14 +202,14 @@ static void check_request(Socket_T socket, Port_T P) {
                 Str_chomp(buf);
                 if (Str_startsWith(buf, "Content-Length")) {
                         if (! sscanf(buf, "%*s%*[: ]%d", &content_length))
-                                THROW(IOException, "HTTP error: Parsing Content-Length response header '%s'", buf);
+                                THROW(HttpResponseException, "HTTP error: Parsing Content-Length response header '%s'", buf);
                         if (content_length < 0)
-                                THROW(IOException, "HTTP error: Illegal Content-Length response header '%s'", buf);
+                                THROW(HttpResponseException, "HTTP error: Illegal Content-Length response header '%s'", buf);
                 }
         }
         /* FIXME:
-         * we read the data from the socket inside do_regex() and also check_request_checksum() independently => these two cannot be used together - only one wil read the data. Refactor the spaghetti code and consolidate the read
-         * function, so data are ready before we test the content (read once, allow to apply different tests / many times) */
+         * we read the data from the socket inside _checkResponseContent() and also _checkResponseChecksum() independently => these two cannot be used together - only one wil read the data. Refactor the spaghetti code and consolidate
+         * the read function, so data are ready before we test the content (read once, allow to apply different tests / many times) */
         /* FIXME:
          * We don't support chuncked transfer encoding and rely on Content-Length only ... this has two problems:
          * 1.) we read chunk headers to buffer as part of data and apply checksum test and regex test to it => technically wrong, as the pattern we're looking for may be split in different chunks and won't match, checksum completyly wrong
@@ -208,13 +217,13 @@ static void check_request(Socket_T socket, Port_T P) {
          * I.e. implement support for Chunked encoding (see above FIXME comment - we should have one read function, which can be used to read data and reuse it for all tests)
          */
         if (P->url_request && P->url_request->regex)
-                do_regex(socket, content_length, P->url_request);
+                _checkResponseContent(socket, content_length, P->url_request);
         if (P->parameters.http.checksum)
-                check_request_checksum(socket, content_length, P->parameters.http.checksum, P->parameters.http.hashtype);
+                _checkResponseChecksum(socket, content_length, P->parameters.http.checksum, P->parameters.http.hashtype);
 }
 
 
-static char *get_auth_header(Port_T P) {
+static char *_getAuthHeader(Port_T P) {
         if (P->url_request) {
                 URL_T U = P->url_request->url;
                 if (U)
@@ -224,24 +233,27 @@ static char *get_auth_header(Port_T P) {
 }
 
 
-/* ------------------------------------------------------------------ Public */
+static Http_Method _getMethod(Port_T P) {
+        if (P->parameters.http.method == Http_Default) {
+                if ((P->url_request && P->url_request->regex) || P->parameters.http.checksum) {
+                        return Http_Get;
+                } else {
+                        return Http_Head;
+                }
+        }
+        return P->parameters.http.method;
+}
 
 
-void check_http(Socket_T socket) {
-
-        ASSERT(socket);
-
-        Port_T P = Socket_getPort(socket);
-        ASSERT(P);
-
+static void _sendRequest(Socket_T socket, Port_T P, Http_Method method) {
+        char *auth = _getAuthHeader(P);
         StringBuffer_T sb = StringBuffer_create(168);
-        char *auth = get_auth_header(P);
         //FIXME: add decompression support to InputStream and switch here to it + set Accept-Encoding to gzip, so the server can send body compressed (if we test checksum/content)
         StringBuffer_append(sb,
                             "%s %s HTTP/1.1\r\n"
                             "Connection: close\r\n"
                             "%s",
-                            ((P->url_request && P->url_request->regex) || P->parameters.http.checksum) ? "GET" : "HEAD",
+                            (method == Http_Get) ? "GET" : "HEAD",
                             P->parameters.http.request ? P->parameters.http.request : "/",
                             auth ? auth : "");
         FREE(auth);
@@ -264,6 +276,38 @@ void check_http(Socket_T socket) {
         StringBuffer_free(&sb);
         if (send_status < 0)
                 THROW(IOException, "HTTP: error sending data -- %s", STRERROR);
-        check_request(socket, P);
+}
+
+
+/* ------------------------------------------------------------------ Public */
+
+
+void check_http(Socket_T socket) {
+        ASSERT(socket);
+
+        Port_T P = Socket_getPort(socket);
+        ASSERT(P);
+
+        Http_Method method = _getMethod(P);
+        _sendRequest(socket, P, method);
+        TRY
+        {
+                // Check response (will throw exception on error)
+                _checkResponse(socket, P);
+                // First cycle with Http_Default: If no HTTP request method is preferred and the automatically selected method succeeded, reuse that method for next cycles
+                if (P->parameters.http.method == Http_Default) {
+                        P->parameters.http.method = method;
+                }
+        }
+        CATCH(HttpStatusException)
+        {
+                if (P->parameters.http.method == Http_Default && method == Http_Head) {
+                        // First cycle with Http_Default: If the automatically selected method is HEAD, ignore the error in the first cycle and switch to GET for next cycles (HEAD may be prohibited/unsupported)
+                        P->parameters.http.method = Http_Get;
+                } else {
+                        RETHROW;
+                }
+        }
+        END_TRY;
 }
 
