@@ -245,7 +245,7 @@ static Http_Method _getMethod(Port_T P) {
 }
 
 
-static void _sendRequest(Socket_T socket, Port_T P, Http_Method method) {
+static void _sendRequest(Socket_T socket, Port_T P) {
         char *auth = _getAuthHeader(P);
         StringBuffer_T sb = StringBuffer_create(168);
         //FIXME: add decompression support to InputStream and switch here to it + set Accept-Encoding to gzip, so the server can send body compressed (if we test checksum/content)
@@ -253,7 +253,7 @@ static void _sendRequest(Socket_T socket, Port_T P, Http_Method method) {
                             "%s %s HTTP/1.1\r\n"
                             "Connection: close\r\n"
                             "%s",
-                            (method == Http_Get) ? "GET" : "HEAD",
+                            (_getMethod(P) == Http_Get) ? "GET" : "HEAD",
                             P->parameters.http.request ? P->parameters.http.request : "/",
                             auth ? auth : "");
         FREE(auth);
@@ -288,26 +288,7 @@ void check_http(Socket_T socket) {
         Port_T P = Socket_getPort(socket);
         ASSERT(P);
 
-        Http_Method method = _getMethod(P);
-        _sendRequest(socket, P, method);
-        TRY
-        {
-                // Check response (will throw exception on error)
-                _checkResponse(socket, P);
-                // First cycle with Http_Default: If no HTTP request method is preferred and the automatically selected method succeeded, reuse that method for next cycles
-                if (P->parameters.http.method == Http_Default) {
-                        P->parameters.http.method = method;
-                }
-        }
-        CATCH(HttpStatusException)
-        {
-                if (P->parameters.http.method == Http_Default && method == Http_Head) {
-                        // First cycle with Http_Default: If the automatically selected method is HEAD, ignore the error in the first cycle and switch to GET for next cycles (HEAD may be prohibited/unsupported)
-                        P->parameters.http.method = Http_Get;
-                } else {
-                        RETHROW;
-                }
-        }
-        END_TRY;
+        _sendRequest(socket, P);
+        _checkResponse(socket, P);
 }
 
