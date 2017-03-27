@@ -32,6 +32,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 #define MEMCACHELEN 24
 
@@ -84,35 +85,35 @@ void check_memcache(Socket_T socket) {
                 THROW(IOException, "MEMCACHE: Received %d bytes from server, expected %d bytes", length, MEMCACHELEN);
 
         if (response[0] != MAGIC_RESPONSE)
-                THROW(IOException, "MEMCACHELEN: Invalid response code -- error occurred");
+                THROW(ProtocolException, "MEMCACHELEN: Invalid response code -- error occurred");
 
         status = (response[6] << 8) | response[7];
-        switch (status ) {
+        switch (status) {
                 case NO_ERROR:
                         break;
                 case OUT_OF_MEMORY:
-                        THROW(IOException, "MEMCACHELEN: Invalid response code -- Out of memory");
+                        THROW(ProtocolException, "MEMCACHELEN: Invalid response code -- Out of memory");
                         break;
                 case UNKNOWN_COMMAND:
-                        THROW(IOException, "MEMCACHELEN: Invalid response code -- Unknown command");
+                        THROW(ProtocolException, "MEMCACHELEN: Invalid response code -- Unknown command");
                         break;
                 case INVALID_ARGUMENTS:
-                        THROW(IOException, "MEMCACHELEN: Invalid response code -- Invalid arguments");
+                        THROW(ProtocolException, "MEMCACHELEN: Invalid response code -- Invalid arguments");
                         break;
                 case VALUE_TOO_BIG:
-                        THROW(IOException, "MEMCACHELEN: Invalid response code -- Value too big");
+                        THROW(ProtocolException, "MEMCACHELEN: Invalid response code -- Value too big");
                         break;
                 case ITEM_NOT_STORED:
-                        THROW(IOException, "MEMCACHELEN: Invalid response code -- Item not stored");
+                        THROW(ProtocolException, "MEMCACHELEN: Invalid response code -- Item not stored");
                         break;
                 case KEY_NOT_FOUND:
-                        THROW(IOException, "MEMCACHELEN: Invalid response code -- Key not found");
+                        THROW(ProtocolException, "MEMCACHELEN: Invalid response code -- Key not found");
                         break;
                 case KEY_EXISTS:
-                        THROW(IOException, "MEMCACHELEN: Invalid response code -- Key exists");
+                        THROW(ProtocolException, "MEMCACHELEN: Invalid response code -- Key exists");
                         break;
                 default:
-                        THROW(IOException, "MEMCACHELEN: Unknow response code %u -- error occurred", status);
+                        THROW(ProtocolException, "MEMCACHELEN: Unknow response code %u -- error occurred", status);
                         break;
         }
 }

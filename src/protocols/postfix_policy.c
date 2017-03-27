@@ -32,6 +32,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 
 /**
@@ -74,6 +75,6 @@ void check_postfix_policy(Socket_T socket) {
         Str_chomp(buf);
 
         if ((strlen(buf) <= 7) || strncasecmp(buf, "action=", 7))
-                THROW(IOException, "POSTFIX-POLICY error: %s", *buf ? buf : "no action returned");
+                THROW(ProtocolException, "POSTFIX-POLICY error: %s", *buf ? buf : "no action returned");
 }
 

@@ -1,5 +1,6 @@
 /*
  * Copyright (C) Tildeslash Ltd. All rights reserved.
+ * Copyright (C) 1994,1995,1996,1997 by David R. Hanson.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License version 3.
@@ -7,7 +8,7 @@
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -19,39 +20,24 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.
+ * for all of the code used other than OpenSSL.  
  */
 
-#include "config.h"
 
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
+#ifndef PROTOCOLEXCEPTION_INCLUDED
+#define PROTOCOLEXCEPTION_INCLUDED
+#include "Exception.h"
 
-#include "protocol.h"
-
-// libmonit
-#include "exceptions/IOException.h"
-#include "exceptions/ProtocolException.h"
 
 /**
- *  Send PING and check for PONG.
+ * Thrown to indicate that a protocol error occurred.
+ * @see Exception.h
  *
- *  @file
+ * @author http://www.tildeslash.com/
+ * @see http://www.mmonit.com/
+ * @file
  */
-void check_clamav(Socket_T socket) {
-        ASSERT(socket);
+extern Exception_T ProtocolException;
 
-        // Send PING
-        if (Socket_print(socket, "PING\r\n") < 0)
-                THROW(IOException, "CLAMAV: PING command error -- %s", STRERROR);
 
-        // Read and check PONG
-        char buf[STRLEN];
-        if (! Socket_readLine(socket, buf, sizeof(buf)))
-                THROW(IOException, "CLAMAV: PONG read error -- %s", STRERROR);
-        Str_chomp(buf);
-        if (strncasecmp(buf, "PONG", 4) != 0)
-                THROW(ProtocolException, "CLAMAV: invalid PONG response -- %s", buf);
-}
-
+#endif

@@ -32,6 +32,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 
 /**
@@ -50,7 +51,7 @@ void check_pop(Socket_T socket) {
                 THROW(IOException, "POP: greeting read error -- %s", errno ? STRERROR : "no data");
         Str_chomp(buf);
         if (strncasecmp(buf, ok, strlen(ok)) != 0)
-                THROW(IOException, "POP: invalid greeting -- %s", buf);
+                THROW(ProtocolException, "POP: invalid greeting -- %s", buf);
 
         // QUIT and check response
         if (Socket_print(socket, "QUIT\r\n") < 0)
@@ -59,6 +60,6 @@ void check_pop(Socket_T socket) {
                 THROW(IOException, "POP: QUIT response read error -- %s", errno ? STRERROR : "no data");
         Str_chomp(buf);
         if (strncasecmp(buf, ok, strlen(ok)) != 0)
-                THROW(IOException, "POP: invalid QUIT response -- %s", buf);
+                THROW(ProtocolException, "POP: invalid QUIT response -- %s", buf);
 }
 

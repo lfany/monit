@@ -45,6 +45,7 @@
 // libmonit
 #include "system/Time.h"
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 
 /**
@@ -61,6 +62,6 @@ void check_rdate(Socket_T socket) {
                 THROW(IOException, "RDATE: error receiving data -- %s", STRERROR);
         // Compare system time with the RDATE server time (RDATE starts at 00:00:00 UTC, January 1, 1900 => add offset to 00:00:00 UTC, January 1, 1970)
         if (llabs((long long)Time_now() + 2208988800LL - (long long)ntohl(time)) > 3LL)
-                THROW(IOException, "RDATE error: time does not match system time");
+                THROW(ProtocolException, "RDATE error: time does not match system time");
 }
 

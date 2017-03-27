@@ -44,6 +44,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 
 /* ----------------------------------------------------------- Definitions */
@@ -110,11 +111,11 @@ static void _pong(Socket_T socket) {
         // check response ID: should be 1 (hardcoded in _ping request above)
         pong.responseToId = B4(buf + 8);
         if (pong.responseToId != 1)
-                THROW(IOException, "MONGODB: PING response error -- unexpected response id (%d)", pong.responseToId);
+                THROW(ProtocolException, "MONGODB: PING response error -- unexpected response id (%d)", pong.responseToId);
         // check operation type: should be OP_REPLY == 0x1
         pong.operation = B4(buf + 12);
         if (pong.operation != 1)
-                THROW(IOException, "MONGODB: PING response error -- unexpected operation type (0x%x)", pong.operation);
+                THROW(ProtocolException, "MONGODB: PING response error -- unexpected operation type (0x%x)", pong.operation);
         // read OP_REPLY
         pong.messageSize = B4(buf);
         int len = pong.messageSize - 16 > STRLEN ? STRLEN : pong.messageSize - 16; // Adjust message size for this buffer (minus 16 bytes of header - already read)
@@ -130,7 +131,7 @@ static void _pong(Socket_T socket) {
                 0x00                                            // BSON document terminal
         };
         if (memcmp(pong.response, ok, sizeof(ok)))
-                THROW(IOException, "MONGODB: PING response error -- invalid reply");
+                THROW(ProtocolException, "MONGODB: PING response error -- invalid reply");
 }
 
 

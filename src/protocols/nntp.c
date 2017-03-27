@@ -32,6 +32,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 
 /**
@@ -53,7 +54,7 @@ void check_nntp(Socket_T socket) {
 
         sscanf(buf, "%d %*s", &status);
         if (status != 200)
-                THROW(IOException, "NNTP error: %s", buf);
+                THROW(ProtocolException, "NNTP error: %s", buf);
 
         if (Socket_print(socket, "QUIT\r\n") < 0)
                 THROW(IOException, "NNTP: error sending data -- %s", STRERROR);
@@ -65,6 +66,6 @@ void check_nntp(Socket_T socket) {
 
         sscanf(buf, "%d %*s", &status);
         if (status != 205)
-                THROW(IOException, "NNTP error: %s", buf);
+                THROW(ProtocolException, "NNTP error: %s", buf);
 }
 

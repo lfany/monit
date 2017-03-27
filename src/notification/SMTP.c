@@ -65,6 +65,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 
 /**
@@ -152,7 +153,7 @@ static void _receive(T S, int code, void (*callback)(T S, const char *line)) {
                         THROW(IOException, "Error receiving data from the mailserver -- %s", STRERROR);
                 Str_chomp(line);
                 if (strlen(line) < 4 || sscanf(line, "%d", &status) != 1 || status != code)
-                        THROW(IOException, "Mailserver response error -- %s", line);
+                        THROW(ProtocolException, "Mailserver response error -- %s", line);
                 if (callback)
                         callback(S, line);
         } while (line[3] == '-'); // multi-line response
@@ -228,7 +229,7 @@ void SMTP_starttls(T S, SslOptions_T options) {
                 S->state = SMTP_Greeting;
                 SMTP_helo(S, S->name);
         } else {
-                THROW(IOException, "STARTTLS required but the mail server doesn't support it");
+                THROW(ProtocolException, "STARTTLS required but the mail server doesn't support it");
         }
         S->state = SMTP_StartTLS;
 }
@@ -281,7 +282,7 @@ void SMTP_auth(T S, const char *username, const char *password) {
                 }
                 END_TRY;
         } else {
-                THROW(IOException, "Authentication failed -- no supported authentication methods found");
+                THROW(ProtocolException, "Authentication failed -- no supported authentication methods found");
         }
         S->state = SMTP_Auth;
 }

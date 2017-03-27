@@ -32,6 +32,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 
 /* --------------------------------------------------------------- Public */
@@ -54,15 +55,15 @@ void check_sieve(Socket_T socket) {
                 Str_chomp(buf);
                 if (Str_startsWith(buf, "OK")) {
                         if (Socket_print(socket, "LOGOUT\r\n") < 0)
-                                THROW(IOException, "SIEVE: error sending LOGOUT command  -- %s", STRERROR);
+                                THROW(ProtocolException, "SIEVE: error sending LOGOUT command  -- %s", STRERROR);
                         if (! Socket_readLine(socket, buf, STRLEN))
                                 THROW(IOException, "SIEVE: error receiving LOGOUT response -- %s", STRERROR);
                         Str_chomp(buf);
                         if (! Str_startsWith(buf, "OK"))
-                                THROW(IOException, "SIEVE: invalid LOGOUT response -- %s", buf);
+                                THROW(ProtocolException, "SIEVE: invalid LOGOUT response -- %s", buf);
                         return;
                 }
         } while (true); // Discard all server capabilities until we receive "OK"
-        THROW(IOException, "SIEVE: data error");
+        THROW(ProtocolException, "SIEVE: data error");
 }
 

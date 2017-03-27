@@ -33,6 +33,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 /**
  * Check an Apache server status using the server-status report from mod_status
@@ -87,25 +88,25 @@ static void parse_scoreboard(char *scoreboard, Port_T p) {
         if (! total)
                 return; // Idle server
         if (p->parameters.apachestatus.loglimit > 0 && Util_evalQExpression(p->parameters.apachestatus.loglimitOP, (100 * logging / total), p->parameters.apachestatus.loglimit))
-                THROW(IOException, "APACHE-STATUS: error -- %d percent of processes are logging", 100 * logging / total);
+                THROW(ProtocolException, "APACHE-STATUS: error -- %d percent of processes are logging", 100 * logging / total);
         if (p->parameters.apachestatus.startlimit > 0 && Util_evalQExpression(p->parameters.apachestatus.startlimitOP, (100 * start / total), p->parameters.apachestatus.startlimit))
-                THROW(IOException, "APACHE-STATUS: error -- %d percent of processes are starting", 100 * start / total);
+                THROW(ProtocolException, "APACHE-STATUS: error -- %d percent of processes are starting", 100 * start / total);
         if (p->parameters.apachestatus.requestlimit > 0 && Util_evalQExpression(p->parameters.apachestatus.requestlimitOP, (100 * request / total), p->parameters.apachestatus.requestlimit))
-                THROW(IOException, "APACHE-STATUS: error -- %d percent of processes are reading requests", 100 * request / total);
+                THROW(ProtocolException, "APACHE-STATUS: error -- %d percent of processes are reading requests", 100 * request / total);
         if (p->parameters.apachestatus.replylimit > 0 && Util_evalQExpression(p->parameters.apachestatus.replylimitOP, (100 * reply / total), p->parameters.apachestatus.replylimit))
-                THROW(IOException, "APACHE-STATUS: error -- %d percent of processes are sending a reply", 100 * reply / total);
+                THROW(ProtocolException, "APACHE-STATUS: error -- %d percent of processes are sending a reply", 100 * reply / total);
         if (p->parameters.apachestatus.keepalivelimit > 0 && Util_evalQExpression(p->parameters.apachestatus.keepalivelimitOP, (100 * keepalive / total), p->parameters.apachestatus.keepalivelimit))
-                THROW(IOException, "APACHE-STATUS: error -- %d percent of processes are in keepalive", 100 * keepalive / total);
+                THROW(ProtocolException, "APACHE-STATUS: error -- %d percent of processes are in keepalive", 100 * keepalive / total);
         if (p->parameters.apachestatus.dnslimit > 0 && Util_evalQExpression(p->parameters.apachestatus.dnslimitOP, (100 * dns / total), p->parameters.apachestatus.dnslimit))
-                THROW(IOException, "APACHE-STATUS: error -- %d percent of processes are waiting for DNS", 100 * dns / total);
+                THROW(ProtocolException, "APACHE-STATUS: error -- %d percent of processes are waiting for DNS", 100 * dns / total);
         if (p->parameters.apachestatus.closelimit > 0 && Util_evalQExpression(p->parameters.apachestatus.closelimitOP, (100 * close / total), p->parameters.apachestatus.closelimit))
-                THROW(IOException, "APACHE-STATUS: error -- %d percent of processes are closing connections", 100 * close / total);
+                THROW(ProtocolException, "APACHE-STATUS: error -- %d percent of processes are closing connections", 100 * close / total);
         if (p->parameters.apachestatus.gracefullimit > 0 && Util_evalQExpression(p->parameters.apachestatus.gracefullimitOP, (100 * graceful / total), p->parameters.apachestatus.gracefullimit))
-                THROW(IOException, "APACHE-STATUS: error -- %d percent of processes are finishing gracefully", 100 * graceful / total);
+                THROW(ProtocolException, "APACHE-STATUS: error -- %d percent of processes are finishing gracefully", 100 * graceful / total);
         if (p->parameters.apachestatus.cleanuplimit > 0 && Util_evalQExpression(p->parameters.apachestatus.cleanuplimitOP, (100 * cleanup / total), p->parameters.apachestatus.cleanuplimit))
-                THROW(IOException, "APACHE-STATUS: error -- %d percent of processes are in idle cleanup", 100 * cleanup / total);
+                THROW(ProtocolException, "APACHE-STATUS: error -- %d percent of processes are in idle cleanup", 100 * cleanup / total);
         if (p->parameters.apachestatus.waitlimit > 0 && Util_evalQExpression(p->parameters.apachestatus.waitlimitOP, (100 * wait / total), p->parameters.apachestatus.waitlimit))
-                THROW(IOException, "APACHE-STATUS: error -- %d percent of processes are waiting for a connection", 100 * wait / total);
+                THROW(ProtocolException, "APACHE-STATUS: error -- %d percent of processes are waiting for a connection", 100 * wait / total);
 }
 
 
@@ -116,9 +117,9 @@ static void _parseResponseHeaders(Socket_T socket) {
                 THROW(IOException, "APACHE-STATUS: error receiving data -- %s", STRERROR);
         Str_chomp(buf);
         if (! sscanf(buf, "%*s %d", &status))
-                THROW(IOException, "APACHE-STATUS: error -- cannot parse HTTP status in response: %s", buf);
+                THROW(ProtocolException, "APACHE-STATUS: error -- cannot parse HTTP status in response: %s", buf);
         if (status != 200)
-                THROW(IOException, "APACHE-STATUS: error -- server returned status %d", status);
+                THROW(ProtocolException, "APACHE-STATUS: error -- server returned status %d", status);
         while (Socket_readLine(socket, buf, sizeof(buf))) {
                 if (! strncmp(buf, "\r\n", sizeof(buf)))
                         break;
@@ -158,6 +159,6 @@ void check_apache_status(Socket_T socket) {
                         return;
                 }
         }
-        THROW(IOException, "APACHE-STATUS: error -- no scoreboard found");
+        THROW(ProtocolException, "APACHE-STATUS: error -- no scoreboard found");
 }
 

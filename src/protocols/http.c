@@ -37,6 +37,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 /**
  *  A HTTP test.
@@ -52,15 +53,6 @@
  *
  *  @file
  */
-
-
-/* ------------------------------------------------------------- Definitions */
-
-
-Exception_T HttpStatusException = {"HttpStatusException"};
-Exception_T HttpContentException = {"HttpContentException"};
-Exception_T HttpChecksumException = {"HttpChecksumException"};
-Exception_T HttpResponseException = {"HttpResponseException"};
 
 
 /* ----------------------------------------------------------------- Private */
@@ -83,7 +75,7 @@ static void _checkResponseContent(Socket_T socket, int content_length, Request_T
         boolean_t rv = false;
 
         if (content_length == 0)
-                THROW(HttpContentException, "HTTP error: No content returned from server");
+                THROW(ProtocolException, "HTTP error: No content returned from server");
         else if (content_length < 0 || content_length > Run.limits.httpContentBuffer) /* content_length < 0 if no Content-Length header was found */
                 content_length = Run.limits.httpContentBuffer;
 
@@ -132,7 +124,7 @@ static void _checkResponseContent(Socket_T socket, int content_length, Request_T
 
 error:
         if (! rv)
-                THROW(HttpContentException, "HTTP error: %s", error);
+                THROW(ProtocolException, "HTTP error: %s", error);
 }
 
 
@@ -172,10 +164,10 @@ static void _checkResponseChecksum(Socket_T socket, int content_length, char *ch
                         keylength = 20; /* Raw key bytes not string chars! */
                         break;
                 default:
-                        THROW(HttpChecksumException, "HTTP checksum error: Unknown hash type");
+                        THROW(ProtocolException, "HTTP checksum error: Unknown hash type");
         }
         if (strncasecmp(Util_digest2Bytes((unsigned char *)hash, keylength, result), checksum, keylength * 2) != 0)
-                THROW(HttpChecksumException, "HTTP checksum error: Document checksum mismatch");
+                THROW(ProtocolException, "HTTP checksum error: Document checksum mismatch");
         DEBUG("HTTP: Succeeded testing document checksum\n");
 }
 
@@ -192,9 +184,9 @@ static void _checkResponse(Socket_T socket, Port_T P) {
                 THROW(IOException, "HTTP: Error receiving data -- %s", STRERROR);
         Str_chomp(buf);
         if (! sscanf(buf, "%*s %d", &status))
-                THROW(HttpResponseException, "HTTP error: Cannot parse HTTP status in response: %s", buf);
+                THROW(ProtocolException, "HTTP error: Cannot parse HTTP status in response: %s", buf);
         if (! Util_evalQExpression(P->parameters.http.operator, status, P->parameters.http.status ? P->parameters.http.status : 400))
-                THROW(HttpStatusException, "HTTP error: Server returned status %d", status);
+                THROW(ProtocolException, "HTTP error: Server returned status %d", status);
         /* Get Content-Length header value */
         while (Socket_readLine(socket, buf, sizeof(buf))) {
                 if ((buf[0] == '\r' && buf[1] == '\n') || (buf[0] == '\n'))
@@ -202,9 +194,9 @@ static void _checkResponse(Socket_T socket, Port_T P) {
                 Str_chomp(buf);
                 if (Str_startsWith(buf, "Content-Length")) {
                         if (! sscanf(buf, "%*s%*[: ]%d", &content_length))
-                                THROW(HttpResponseException, "HTTP error: Parsing Content-Length response header '%s'", buf);
+                                THROW(ProtocolException, "HTTP error: Parsing Content-Length response header '%s'", buf);
                         if (content_length < 0)
-                                THROW(HttpResponseException, "HTTP error: Illegal Content-Length response header '%s'", buf);
+                                THROW(ProtocolException, "HTTP error: Illegal Content-Length response header '%s'", buf);
                 }
         }
         /* FIXME:

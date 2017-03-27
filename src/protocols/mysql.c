@@ -45,6 +45,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 
 /* ----------------------------------------------------------- Definitions */
@@ -173,7 +174,7 @@ typedef struct mysql_t {
 
 static uint8_t _getUInt1(mysql_response_t *response) {
         if (response->cursor + 1 > response->limit)
-                THROW(IOException, "Data not available -- EOF");
+                THROW(ProtocolException, "Data not available -- EOF");
         uint8_t value = response->cursor[0];
         response->cursor += 1;
         return value;
@@ -182,7 +183,7 @@ static uint8_t _getUInt1(mysql_response_t *response) {
 
 static uint16_t _getUInt2(mysql_response_t *response) {
         if (response->cursor + 2 > response->limit)
-                THROW(IOException, "Data not available -- EOF");
+                THROW(ProtocolException, "Data not available -- EOF");
         uint16_t value;
         *(((char *)&value) + 0) = response->cursor[1];
         *(((char *)&value) + 1) = response->cursor[0];
@@ -193,7 +194,7 @@ static uint16_t _getUInt2(mysql_response_t *response) {
 
 static uint32_t _getUInt3(mysql_response_t *response) {
         if (response->cursor + 3 > response->limit)
-                THROW(IOException, "Data not available -- EOF");
+                THROW(ProtocolException, "Data not available -- EOF");
         uint32_t value;
         *(((char *)&value) + 0) = 0;
         *(((char *)&value) + 1) = response->cursor[2];
@@ -206,7 +207,7 @@ static uint32_t _getUInt3(mysql_response_t *response) {
 
 static uint32_t _getUInt4(mysql_response_t *response) {
         if (response->cursor + 4 > response->limit)
-                THROW(IOException, "Data not available -- EOF");
+                THROW(ProtocolException, "Data not available -- EOF");
         uint32_t value;
         *(((char *)&value) + 0) = response->cursor[3];
         *(((char *)&value) + 1) = response->cursor[2];
@@ -222,7 +223,7 @@ static char *_getString(mysql_response_t *response) {
         char *value;
         for (i = 0; response->cursor[i]; i++) // Check limits (cannot use strlen here as no terminating '\0' is guaranteed in the buffer)
                 if (response->cursor + i >= response->limit) // If we reached the limit and didn't found '\0', throw error
-                        THROW(IOException, "Data not available -- EOF");
+                        THROW(ProtocolException, "Data not available -- EOF");
         value = response->cursor;
         response->cursor += i + 1;
         return value;
@@ -231,7 +232,7 @@ static char *_getString(mysql_response_t *response) {
 
 static void _getPadding(mysql_response_t *response, int count) {
         if (response->cursor + count > response->limit)
-                THROW(IOException, "Data not available -- EOF");
+                THROW(ProtocolException, "Data not available -- EOF");
         response->cursor += count;
 }
 
@@ -241,7 +242,7 @@ static void _getPadding(mysql_response_t *response, int count) {
 
 static void _setUInt1(mysql_request_t *request, uint8_t value) {
         if (request->cursor + 1 > request->limit)
-                THROW(IOException, "Maximum packet size exceeded");
+                THROW(ProtocolException, "Maximum packet size exceeded");
         request->cursor[0] = value;
         request->cursor += 1;
 }
@@ -249,7 +250,7 @@ static void _setUInt1(mysql_request_t *request, uint8_t value) {
 
 static void _setUInt4(mysql_request_t *request, uint32_t value) {
         if (request->cursor + 4 > request->limit)
-                THROW(IOException, "Maximum packet size exceeded");
+                THROW(ProtocolException, "Maximum packet size exceeded");
         uint32_t v = htonl(value);
         request->cursor[0] = *(((char *)&v) + 3);
         request->cursor[1] = *(((char *)&v) + 2);
@@ -261,7 +262,7 @@ static void _setUInt4(mysql_request_t *request, uint32_t value) {
 
 static void _setData(mysql_request_t *request, const char *data, unsigned long length) {
         if (request->cursor + length > request->limit)
-                THROW(IOException, "Maximum packet size exceeded");
+                THROW(ProtocolException, "Maximum packet size exceeded");
         memcpy(request->cursor, data, length);
         request->cursor += length;
 }
@@ -269,7 +270,7 @@ static void _setData(mysql_request_t *request, const char *data, unsigned long l
 
 static void _setPadding(mysql_request_t *request, int count) {
         if (request->cursor + count > request->limit)
-                THROW(IOException, "Maximum packet size exceeded");
+                THROW(ProtocolException, "Maximum packet size exceeded");
         request->cursor += count;
 }
 
@@ -296,7 +297,7 @@ static void _responseError(mysql_t *mysql) {
         if (mysql->capabilities & CLIENT_PROTOCOL_41)
                 _getPadding(&mysql->response, 6); // skip sql_state_marker and sql_state which we don't use
         mysql->response.data.error.message = _getString(&mysql->response);
-        THROW(IOException, "Server returned error code %d -- %s", mysql->response.data.error.code, mysql->response.data.error.message);
+        THROW(ProtocolException, "Server returned error code %d -- %s", mysql->response.data.error.code, mysql->response.data.error.message);
 }
 
 
@@ -305,7 +306,7 @@ static void _responseHandshake(mysql_t *mysql) {
         mysql->state = MySQL_Handshake;
         // Protocol is 10 for MySQL 5.x
         if (mysql->response.header != 10)
-                THROW(IOException, "Invalid protocol version %d", mysql->response.header);
+                THROW(ProtocolException, "Invalid protocol version %d", mysql->response.header);
         mysql->response.data.handshake.version = _getString(&mysql->response);
         mysql->response.data.handshake.connectionid = _getUInt4(&mysql->response);
         snprintf(mysql->response.data.handshake.authdata, 9, "%s", _getString(&mysql->response)); // auth_plugin_data_part_1
@@ -334,9 +335,9 @@ static void _response(mysql_t *mysql) {
         mysql->response.seq = _getUInt1(&mysql->response);
         if (mysql->state == MySQL_Init) {
                 if (! mysql->response.len || mysql->response.len > STRLEN)
-                        THROW(IOException, "Invalid handshake packet length -- not MySQL protocol");
+                        THROW(ProtocolException, "Invalid handshake packet length -- not MySQL protocol");
                 if (mysql->response.seq != 0)
-                        THROW(IOException, "Invalid handshake packet sequence id -- not MySQL protocol");
+                        THROW(ProtocolException, "Invalid handshake packet sequence id -- not MySQL protocol");
         }
         mysql->response.len = mysql->response.len > STRLEN ? STRLEN : mysql->response.len; // Adjust packet length for this buffer
         // Read payload
@@ -478,7 +479,7 @@ void check_mysql(Socket_T socket) {
         mysql_t mysql = {.state = MySQL_Init, .socket = socket, .port = Socket_getPort(socket)};
         _response(&mysql);
         if (mysql.state != MySQL_Handshake)
-                THROW(IOException, "Invalid server greeting, the server didn't sent a handshake packet -- not MySQL protocol\n");
+                THROW(ProtocolException, "Invalid server greeting, the server didn't sent a handshake packet -- not MySQL protocol\n");
         _requestHandshake(&mysql);
         // Check handshake response: if no credentials are set, we allow both Ok/Error as we've sent an anonymous login which may fail, but if credentials are set, we expect Ok only
         TRY

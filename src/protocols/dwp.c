@@ -32,6 +32,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 /**
  *  A simple DWP (database wire protocol) test.
@@ -65,6 +66,6 @@ void check_dwp(Socket_T socket) {
 
         n = sscanf(buf, "%255s %d", proto, &status);
         if (n != 2 || (status >= 400))
-                THROW(IOException, "DWP error: %s", buf);
+                THROW(ProtocolException, "DWP error: %s", buf);
 }
 

@@ -42,6 +42,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 
 /**
@@ -138,32 +139,32 @@ void check_radius(Socket_T socket) {
 
         /* compare the response code (should be Access-Accept or Accounting-Response) */
         if ((response[0] != 2) && (response[0] != 5))
-                THROW(IOException, "RADIUS: Invalid reply code -- error occurred");
+                THROW(ProtocolException, "RADIUS: Invalid reply code -- error occurred");
 
         /* compare the packet ID (it should be the same as in our request) */
         if (response[1] != 0x00)
-                THROW(IOException, "RADIUS: ID mismatch");
+                THROW(ProtocolException, "RADIUS: ID mismatch");
 
         /* check the length */
         if (response[2] != 0)
-                THROW(IOException, "RADIUS: message is too long");
+                THROW(ProtocolException, "RADIUS: message is too long");
 
         /* check length against packet data */
         if (response[3] != length)
-                THROW(IOException, "RADIUS: message has invalid length");
+                THROW(ProtocolException, "RADIUS: message has invalid length");
 
         /* validate that it is a well-formed packet */
         attr = response + 20;
         left = length - 20;
         while (left > 0) {
                 if (left < 2)
-                        THROW(IOException, "RADIUS: message is malformed");
+                        THROW(ProtocolException, "RADIUS: message is malformed");
 
                 if (attr[1] < 2)
-                        THROW(IOException, "RADIUS: message has invalid attribute length");
+                        THROW(ProtocolException, "RADIUS: message has invalid attribute length");
 
                 if (attr[1] > left)
-                        THROW(IOException, "RADIUS: message has attribute that is too long");
+                        THROW(ProtocolException, "RADIUS: message has attribute that is too long");
 
                 /* validate Message-Authenticator, if found */
                 if (attr[0] == 0x50) {

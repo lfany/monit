@@ -43,6 +43,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 
 /**
@@ -139,14 +140,14 @@ void check_sip(Socket_T socket) {
 
         int status;
         if (! sscanf(buf, "%*s %d", &status))
-                THROW(IOException, "SIP error: cannot parse SIP status in response: %s", buf);
+                THROW(ProtocolException, "SIP error: cannot parse SIP status in response: %s", buf);
 
         if (status >= 400)
-                THROW(IOException, "SIP error: Server returned status %d", status);
+                THROW(ProtocolException, "SIP error: Server returned status %d", status);
 
         if (status >= 300 && status < 400)
-                THROW(IOException, "SIP info: Server redirection. Returned status %d", status);
+                THROW(ProtocolException, "SIP info: Server redirection. Returned status %d", status);
 
         if (status > 100 && status < 200)
-                THROW(IOException, "SIP error: Provisional response . Returned status %d", status);
+                THROW(ProtocolException, "SIP error: Provisional response . Returned status %d", status);
 }

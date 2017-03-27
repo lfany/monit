@@ -32,6 +32,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 
 /**
@@ -49,7 +50,7 @@ void check_ssh(Socket_T socket) {
                 THROW(IOException, "SSH: error receiving identification string -- %s", STRERROR);
 
         if (! Str_startsWith(buf, "SSH-"))
-                THROW(IOException, "SSH: protocol error %s", buf);
+                THROW(ProtocolException, "SSH: protocol error %s", buf);
 
         /* send identification string back to server */
         if (Socket_write(socket, buf, strlen(buf)) <= 0)

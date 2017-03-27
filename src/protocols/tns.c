@@ -32,6 +32,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 
 /**
@@ -92,6 +93,6 @@ void check_tns(Socket_T socket) {
 
         /* compare packet type */
         if (buf[4] != TNS_TYPE_REFUSED)
-                THROW(IOException, "TNS: invalid ping response");
+                THROW(ProtocolException, "TNS: invalid ping response");
 }
 

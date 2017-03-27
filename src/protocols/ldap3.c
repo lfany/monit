@@ -32,6 +32,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 /**
  *  Simple LDAPv3 protocol test.
@@ -124,7 +125,7 @@ void check_ldap3(Socket_T socket) {
                 THROW(IOException, "LDAP: error receiving data -- %s", STRERROR);
 
         if (memcmp((unsigned char *)buf, (unsigned char *)response, sizeof(response)))
-                THROW(IOException, "LDAP: anonymous bind failed");
+                THROW(ProtocolException, "LDAP: anonymous bind failed");
 
         if (Socket_write(socket, (unsigned char *)unbind, sizeof(unbind)) < 0)
                 THROW(IOException, "LDAP: error sending data -- %s", STRERROR);

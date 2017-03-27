@@ -32,6 +32,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 
 /**
@@ -54,9 +55,9 @@ void check_rsync(Socket_T socket) {
         Str_chomp(buf);
         rc = sscanf(buf, "%10s %d.%d", header, &version_major, &version_minor);
         if ((rc == EOF) || (rc != 3))
-                THROW(IOException, "RSYNC: server greeting parse error %s", buf);
+                THROW(ProtocolException, "RSYNC: server greeting parse error %s", buf);
         if (strncasecmp(header, rsyncd, strlen(rsyncd)) != 0)
-                THROW(IOException, "RSYNC: server sent unexpected greeting -- %s", buf);
+                THROW(ProtocolException, "RSYNC: server sent unexpected greeting -- %s", buf);
 
         /* Send back the greeting */
         if (Socket_print(socket, "%s\n", buf) <= 0)
@@ -73,6 +74,6 @@ void check_rsync(Socket_T socket) {
                 Str_chomp(buf);
         } while (strncasecmp(buf, rsyncd, strlen(rsyncd)));
         if (strncasecmp(buf, rsyncd_exit, strlen(rsyncd_exit)) != 0)
-                THROW(IOException, "RSYNC: server sent unexpected response -- %s", buf);
+                THROW(ProtocolException, "RSYNC: server sent unexpected response -- %s", buf);
 }
 

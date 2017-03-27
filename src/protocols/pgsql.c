@@ -32,6 +32,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 
 /**
@@ -128,6 +129,6 @@ void check_pgsql(Socket_T socket) {
         if (*buf == 'R')
                 return;
 
-        THROW(IOException, "PGSQL: unknown error");
+        THROW(ProtocolException, "PGSQL: unknown error");
 }
 

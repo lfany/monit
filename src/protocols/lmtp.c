@@ -32,6 +32,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 /* --------------------------------------------------------------- Private */
 
@@ -51,7 +52,7 @@ static void expect(Socket_T socket, int expect) {
                 Str_chomp(buf);
         } while (buf[3] == '-'); // Discard multi-line response
         if (sscanf(buf, "%d", &status) != 1 || status != expect)
-                THROW(IOException, "LMTP error: %s", buf);
+                THROW(ProtocolException, "LMTP error: %s", buf);
 }
 
 

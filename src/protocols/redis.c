@@ -28,6 +28,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 
 /* --------------------------------------------------------------- Public */
@@ -54,7 +55,7 @@ void check_redis(Socket_T socket) {
                 THROW(IOException, "REDIS: PING response error -- %s", STRERROR);
         Str_chomp(buf);
         if (! Str_isEqual(buf, "+PONG") && ! Str_startsWith(buf, "-NOAUTH")) // We accept authentication error (-NOAUTH Authentication required): redis responded to request, but requires authentication => we assume it works
-                THROW(IOException, "REDIS: PING error -- %s", buf);
+                THROW(ProtocolException, "REDIS: PING error -- %s", buf);
         if (Socket_print(socket, "*1\r\n$4\r\nQUIT\r\n") < 0)
                 THROW(IOException, "REDIS: QUIT command error -- %s", STRERROR);
 }

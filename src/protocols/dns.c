@@ -40,6 +40,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 /**
  *  Simple DNS test.
@@ -114,25 +115,25 @@ void check_dns(Socket_T socket) {
 
         /* Compare transaction ID (it should be the same as in our request): */
         if (response[0] != 0x00 && response[1] != 0x01)
-                THROW(IOException, "DNS: response transaction ID mismatch -- received 0x%x%x, expected 0x1", response[0], response[1]);
+                THROW(ProtocolException, "DNS: response transaction ID mismatch -- received 0x%x%x, expected 0x1", response[0], response[1]);
 
         /* Compare flags: */
 
         /* Response type */
         if ((response[2] & 0x80) != 0x80)
-                THROW(IOException, "DNS: invalid response type: 0x%x", response[2] & 0x80);
+                THROW(ProtocolException, "DNS: invalid response type: 0x%x", response[2] & 0x80);
 
         /* Response code: accept request refusal as correct response as the server may disallow NS root query but the negative response means, it reacts to requests */
         rc = response[3] & 0x0F;
         if (rc != 0x0 && rc != 0x5)
-                THROW(IOException, "DNS: invalid response code: 0x%x", rc);
+                THROW(ProtocolException, "DNS: invalid response code: 0x%x", rc);
 
         /* Compare queries count (it should be one as in our request): */
         if (response[4] != 0x00 && response[5] != 0x01)
-                THROW(IOException, "DNS: invalid query count in response -- received 0x%x%x, expected 1", response[4], response[5]);
+                THROW(ProtocolException, "DNS: invalid query count in response -- received 0x%x%x, expected 1", response[4], response[5]);
 
         /* Compare answer and authority resource record counts (they shouldn't be both zero) */
         if (rc == 0 && response[6] == 0x00 && response[7] == 0x00 && response[8] == 0x00 && response[9] == 0x00)
-                THROW(IOException, "DNS: no answer or authority records returned");
+                THROW(ProtocolException, "DNS: no answer or authority records returned");
 }
 

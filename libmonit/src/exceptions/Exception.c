@@ -63,6 +63,7 @@ Exception_T IOException = {"IOException"};
 Exception_T AssertException = {"AssertException"};
 Exception_T MemoryException = {"MemoryException"};
 Exception_T NumberFormatException = {"NumberFormatException"};
+Exception_T ProtocolException = {"ProtocolException"};
 
 static pthread_once_t once_control = PTHREAD_ONCE_INIT;
 

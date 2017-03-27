@@ -32,6 +32,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 /**
  *  Check the server for greeting code '* OK' and then send LOGOUT and check for code '* BYE'
@@ -50,7 +51,7 @@ void check_imap(Socket_T socket) {
                 THROW(IOException, "IMAP: greeting read error -- %s", errno ? STRERROR : "no data");
         Str_chomp(buf);
         if (! Str_startsWith(buf, ok))
-                THROW(IOException, "IMAP: invalid greeting -- %s", buf);
+                THROW(ProtocolException, "IMAP: invalid greeting -- %s", buf);
 
         // Logout and check response
         if (Socket_print(socket, "001 LOGOUT\r\n") < 0)
@@ -59,6 +60,6 @@ void check_imap(Socket_T socket) {
                 THROW(IOException, "IMAP: logout response read error -- %s", errno ? STRERROR : "no data");
         Str_chomp(buf);
         if (strncasecmp(buf, bye, strlen(bye)) != 0)
-                THROW(IOException, "IMAP: invalid logout response: %s", buf);
+                THROW(ProtocolException, "IMAP: invalid logout response: %s", buf);
 }
 

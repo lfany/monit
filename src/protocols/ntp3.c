@@ -32,6 +32,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 
 /**
@@ -81,7 +82,7 @@ void check_ntp3(Socket_T socket) {
                 THROW(IOException, "NTP: did not receive answer from server -- %s", STRERROR);
 
         if (br != NTPLEN)
-                THROW(IOException, "NTP: Received %d bytes from server, expected %d bytes", br, NTPLEN);
+                THROW(ProtocolException, "NTP: Received %d bytes from server, expected %d bytes", br, NTPLEN);
 
         /*
          Compare NTP response. The first octet consists of:
@@ -90,10 +91,10 @@ void check_ntp3(Socket_T socket) {
          bits 5-7 ... Mode
          */
         if ((ntpResponse[0] & 0x07) != NTP_MODE_SERVER)
-                THROW(IOException, "NTP: Server mode error");
+                THROW(ProtocolException, "NTP: Server mode error");
         if ((ntpResponse[0] & 0x38) != NTP_VERSION << 3)
-                THROW(IOException, "NTP: Server protocol version error");
+                THROW(ProtocolException, "NTP: Server protocol version error");
         if ((ntpResponse[0] & 0xc0) == NTP_LEAP_NOTSYNC << 6)
-                THROW(IOException, "NTP: Server not synchronized");
+                THROW(ProtocolException, "NTP: Server not synchronized");
 }
 

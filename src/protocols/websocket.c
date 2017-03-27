@@ -32,6 +32,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 
 /**
@@ -71,7 +72,7 @@ static void read_response(Socket_T socket, int opcode) {
                                 /* STRLEN buffer should be sufficient for any frame spuriously sent by
                                  * the server. Guard against too large frames. If in real life such
                                  * situation will be valid (payload > STRLEN), then fix */
-                                THROW(IOException, "WEBSOCKET: response data read error -- unexpected payload size: %d", payload_size);
+                                THROW(ProtocolException, "WEBSOCKET: response data read error -- unexpected payload size: %d", payload_size);
                         }
                 } else {
                         break; // Found frame with matching opcode
@@ -113,7 +114,7 @@ void check_websocket(Socket_T socket) {
                 THROW(IOException, "WEBSOCKET: error receiving data -- %s", STRERROR);
         int status;
         if (! sscanf(buf, "%*s %d", &status) || (status != 101))
-                THROW(IOException, "WEBSOCKET: error -- %s", buf);
+                THROW(ProtocolException, "WEBSOCKET: error -- %s", buf);
         while (Socket_readLine(socket, buf, sizeof(buf)) && ! Str_isEqual(buf, "\r\n"))
                 ; // drop remaining HTTP response headers from the pipeline
 

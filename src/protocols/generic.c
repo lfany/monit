@@ -36,6 +36,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/ProtocolException.h"
 
 /* Escape zero i.e. '\0' in expect buffer with "\0" so zero can be tested in expect strings as "\0". If there are no '\0' in the buffer it is returned as it is */
 static char *_escapeZeroInExpectBuffer(char *buf, int buflen, int n) {
@@ -108,14 +109,14 @@ void check_generic(Socket_T socket) {
                                 char error[STRLEN];
                                 snprintf(error, sizeof(error), "GENERIC: received unexpected data [%s] -- %s", Str_trunc(Str_trim(buf), sizeof(error) - 128), e);
                                 FREE(buf);
-                                THROW(IOException, "%s", error);
+                                THROW(ProtocolException, "%s", error);
                         } else {
                                 DEBUG("GENERIC: successfully received: '%s'\n", Str_trunc(buf, STRLEN));
                         }
                 } else {
                         /* This should not happen */
                         FREE(buf);
-                        THROW(IOException, "GENERIC: unexpected strangeness");
+                        THROW(ProtocolException, "GENERIC: unexpected strangeness");
                 }
                 g = g->next;
         }
