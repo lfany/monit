@@ -212,7 +212,6 @@ static boolean_t _getZfsDiskActivity(void *_inf) {
                 uint64_t writeOperations = 0ULL, writeBytes = 0ULL;
                 while (fgets(line, sizeof(line), f)) {
                         if (sscanf(line, "%"PRIu64" %"PRIu64" %"PRIu64" %"PRIu64" %"PRIu64" %*u %*u %"PRIu64"", &readBytes, &writeBytes, &readOperations, &writeOperations, &waitTime, &runTime) == 6) {
-DEBUG("BUBU: %s -> %s\n", inf->filesystem->object.device, path);
                                 Statistics_update(&(inf->filesystem->read.bytes), now, readBytes);
                                 Statistics_update(&(inf->filesystem->read.operations), now, readOperations);
                                 Statistics_update(&(inf->filesystem->write.bytes), now, writeBytes);
