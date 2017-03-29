@@ -386,6 +386,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
         unsigned long  slabreclaimable = 0UL;
         unsigned long  swap_total = 0UL;
         unsigned long  swap_free = 0UL;
+        uint64_t       zfsarcsize = 0ULL;
 
         if (! file_readProc(buf, sizeof(buf), "meminfo", -1, NULL)) {
                 LogError("system statistic error -- cannot get real memory free amount\n");
@@ -403,7 +404,17 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
                 DEBUG("system statistic error -- cannot get real memory cache amount\n");
         if (! (ptr = strstr(buf, "SReclaimable:")) || sscanf(ptr + 13, "%ld", &slabreclaimable) != 1)
                 DEBUG("system statistic error -- cannot get slab reclaimable memory amount\n");
-        si->memory.usage.bytes = systeminfo.memory.size - (uint64_t)(mem_free + buffers + cached + slabreclaimable) * 1024;
+        FILE *f = fopen("/proc/spl/kstat/zfs/arcstats", "r");
+        if (f) {
+                char line[STRLEN];
+                while (fgets(line, sizeof(line), f)) {
+                        if (sscanf(line, "size %*d %"PRIu64, &zfsarcsize) == 1) {
+                                break;
+                        }
+                }
+                fclose(f);
+        }
+        si->memory.usage.bytes = systeminfo.memory.size - zfsarcsize - (uint64_t)(mem_free + buffers + cached + slabreclaimable) * 1024;
 
         /* Swap */
         if (! (ptr = strstr(buf, "SwapTotal:")) || sscanf(ptr + 10, "%ld", &swap_total) != 1) {

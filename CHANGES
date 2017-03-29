@@ -21,6 +21,8 @@ days test was broken.
 
 Fixed: Issue #584: fix compilation for MacOSX 10.6.x - 10.9.x.
 
+Fixed: Linux: Subtract ZFS ARC size from the system memory usage.
+
 Fixed: If the SSL test connection failed and certificate validity test was active,
 monit returned confusing certificate validity error. The test is now skipped in such
 case as it can be performed only if the certificate can be read.
