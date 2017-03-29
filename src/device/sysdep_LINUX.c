@@ -199,6 +199,37 @@ static boolean_t _getNfsDiskActivity(void *_inf) {
 }
 
 
+static boolean_t _getZfsDiskActivity(void *_inf) {
+        Info_T inf = _inf;
+        char path[PATH_MAX];
+        snprintf(path, sizeof(path), "/proc/spl/kstat/zfs/%s/io", inf->filesystem->object.key);
+        FILE *f = fopen(path, "r");
+        if (f) {
+                char line[STRLEN];
+                uint64_t now = Time_milli();
+                uint64_t waitTime = 0ULL, runTime = 0ULL;
+                uint64_t readOperations = 0ULL, readBytes = 0ULL;
+                uint64_t writeOperations = 0ULL, writeBytes = 0ULL;
+                while (fgets(line, sizeof(line), f)) {
+                        if (sscanf(line, "%"PRIu64" %"PRIu64" %"PRIu64" %"PRIu64" %"PRIu64" %*u %*u %"PRIu64"", &readBytes, &writeBytes, &readOperations, &writeOperations, &waitTime, &runTime) == 6) {
+DEBUG("BUBU: %s -> %s\n", inf->filesystem->object.device, path);
+                                Statistics_update(&(inf->filesystem->read.bytes), now, readBytes);
+                                Statistics_update(&(inf->filesystem->read.operations), now, readOperations);
+                                Statistics_update(&(inf->filesystem->write.bytes), now, writeBytes);
+                                Statistics_update(&(inf->filesystem->write.operations), now, writeOperations);
+                                Statistics_update(&(inf->filesystem->time.wait), now, (double)waitTime / 1000000.); // ns -> ms
+                                Statistics_update(&(inf->filesystem->time.run), now, (double)runTime / 1000000.); // ns -> ms
+                                break;
+                        }
+                }
+                fclose(f);
+                return true;
+        }
+        LogError("filesystem statistic error: cannot read %s -- %s\n", path, STRERROR);
+        return false;
+}
+
+
 static boolean_t _getSysfsBlockDiskActivity(void *_inf) {
         Info_T inf = _inf;
         char path[PATH_MAX];
@@ -279,9 +310,9 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
         struct mntent *mnt;
         while ((mnt = getmntent(f))) {
                 if (compare(path, mnt)) {
-                        strncpy(inf->filesystem->object.device, mnt->mnt_fsname, sizeof(inf->filesystem->object.device) - 1);
-                        strncpy(inf->filesystem->object.mountpoint, mnt->mnt_dir, sizeof(inf->filesystem->object.mountpoint) - 1);
-                        strncpy(inf->filesystem->object.type, mnt->mnt_type, sizeof(inf->filesystem->object.type) - 1);
+                        snprintf(inf->filesystem->object.device, sizeof(inf->filesystem->object.device), "%s", mnt->mnt_fsname);
+                        snprintf(inf->filesystem->object.mountpoint, sizeof(inf->filesystem->object.mountpoint), "%s", mnt->mnt_dir);
+                        snprintf(inf->filesystem->object.type, sizeof(inf->filesystem->object.type), "%s", mnt->mnt_type);
                         if (! IS(mnt->mnt_opts, inf->filesystem->flags)) {
                                 if (*(inf->filesystem->flags)) {
                                         inf->filesystem->flagsChanged = true;
@@ -297,8 +328,14 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                                 // CIFS
                                 inf->filesystem->object.getDiskActivity = _statistics.getCifsDiskActivity;
                                 // Need Windows style name - replace '/' with '\' so we can lookup the filesystem activity in /proc/fs/cifs/Stats
-                                strncpy(inf->filesystem->object.key, inf->filesystem->object.device, sizeof(inf->filesystem->object.key) - 1);
+                                snprintf(inf->filesystem->object.key, sizeof(inf->filesystem->object.key), "%s", inf->filesystem->object.device);
                                 Str_replaceChar(inf->filesystem->object.key, '/', '\\');
+                        } else if (IS(mnt->mnt_type, "zfs")) {
+                                // ZFS
+                                inf->filesystem->object.getDiskActivity = _getZfsDiskActivity;
+                                // Need base zpool name for /proc/spl/kstat/zfs/<NAME>/io lookup:
+                                snprintf(inf->filesystem->object.key, sizeof(inf->filesystem->object.key), "%s", inf->filesystem->object.device);
+                                Str_replaceChar(inf->filesystem->object.key, '/', 0);
                         } else {
                                 if (realpath(mnt->mnt_fsname, inf->filesystem->object.key)) {
                                         // Need base name for /sys/class/block/<NAME>/stat or /proc/diskstats lookup:

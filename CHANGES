@@ -4,6 +4,8 @@
 
 Version 5.22.0
 
+New: Linux: Added support for monitoring ZFS disk activity.
+
 New: Issue #500: Added the "method" option for http protocol test, to allow overriding
 the HTTP method used for the test. Only HEAD and GET methods are supported currently.
 Example:
