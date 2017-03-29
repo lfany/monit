@@ -2374,7 +2374,7 @@ Platforms I/O metrics granularity and filesystem support in Monit:
  | AIX          | per-disk       | Disk io monitoring currently not supported | JFSx   |
  | DragonFlyBSD | per-disk       | UFS                                        | HAMMER |
  | FreeBSD      | per-disk       | UFS                                        | ZFS    |
- | Linux        | per-filesystem | EXTx, XFS, BTRFS, NFS, CIFS                |        |
+ | Linux        | per-filesystem | EXTx, XFS, BTRFS, ZFS, NFS, CIFS           |        |
  | MacOS        | per-disk       | HFS                                        |        |
  | NetBSD       | per-disk       | FFS                                        | NFS    |
  | OpenBSD      | per-disk       | FFS                                        |        |
