@@ -31,9 +31,9 @@
 typedef enum {
         Event_Null       = 0x0,
         Event_Checksum   = 0x1,
-        Event_Resource   = 0x2,
+        Event_Resource   = 0x2, //FIXME: split to more specific events (cpu, totalcpu, mem, totalmem, loadaverage, space, inode, ...)
         Event_Timeout    = 0x4,
-        Event_Timestamp  = 0x8,
+        Event_Timestamp  = 0x8, //FIXME: split to more specific events (atime, mtime, ctime)
         Event_Size       = 0x10,
         Event_Connection = 0x20,
         Event_Permission = 0x40,
@@ -53,7 +53,7 @@ typedef enum {
         Event_Heartbeat  = 0x100000,
         Event_Status     = 0x200000,
         Event_Uptime     = 0x400000,
-        Event_Link       = 0x800000,
+        Event_Link       = 0x800000, //FIXME: split to more specific events (link status, link errors)
         Event_Speed      = 0x1000000,
         Event_Saturation = 0x2000000,
         Event_ByteIn     = 0x4000000,
