@@ -459,7 +459,8 @@ char *Str_milliToTime(double milli, char s[23]) {
         } conversion[]= {
                 {1000., "ms"}, // millisecond
                 {60.,   "s"},  // second
-                {60.,   "m"}   // minute
+                {60.,   "m"},  // minute
+                {60.,   "h"}   // hour
         };
         int index = 0;
         while (fabs(milli) >= conversion[index].base && index < sizeof(conversion) / sizeof(conversion[0]) - 1)

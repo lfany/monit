@@ -453,7 +453,7 @@ char *Str_bytesToSize(double bytes, char s[10]);
 
 
 /**
- * Convert the value in milliseconds to human friendlier unit (ms/s/m).
+ * Convert the value in milliseconds to human friendlier unit (ms/s/m/h).
  * @param milli The time value in milliseconds to present
  * @param s A result buffer, must be large enough to hold 23 chars
  * @return A pointer to s
