@@ -339,7 +339,7 @@ static void _setSSLOptions(SslOptions_T options);
 %token MODE ACTIVE PASSIVE MANUAL ONREBOOT NOSTART LASTSTATE CPU TOTALCPU CPUUSER CPUSYSTEM CPUWAIT
 %token GROUP REQUEST DEPENDS BASEDIR SLOT EVENTQUEUE SECRET HOSTHEADER
 %token UID EUID GID MMONIT INSTANCE USERNAME PASSWORD
-%token TIMESTAMP CHANGED MILLISECOND SECOND MINUTE HOUR DAY MONTH
+%token TIMESTAMP ACCESS MODIFY CHANGE CHANGED MILLISECOND SECOND MINUTE HOUR DAY MONTH
 %token SSLAUTO SSLV2 SSLV3 TLSV1 TLSV11 TLSV12 CERTMD5 AUTO
 %token BYTE KILOBYTE MEGABYTE GIGABYTE
 %token INODE SPACE TFREE PERMISSION SIZE MATCH NOT IGNORE ACTION UPTIME
@@ -2210,15 +2210,23 @@ value           : REAL { $<real>$ = $1; }
                 | NUMBER { $<real>$ = (float) $1; }
                 ;
 
-timestamp       : IF TIMESTAMP operator NUMBER time rate1 THEN action1 recovery {
-                        timestampset.operator = $<number>3;
-                        timestampset.time = ($4 * $<number>5);
-                        addeventaction(&(timestampset).action, $<number>8, $<number>9);
+timestamptype   : /* EMPTY */ { $<number>$ = Timestamp_Default; }
+                | ACCESS      { $<number>$ = Timestamp_Access; }
+                | CHANGE      { $<number>$ = Timestamp_Change; }
+                | MODIFY      { $<number>$ = Timestamp_Modification; }
+                ;
+
+timestamp       : IF timestamptype TIMESTAMP operator NUMBER time rate1 THEN action1 recovery {
+                        timestampset.type = $<number>2;
+                        timestampset.operator = $<number>4;
+                        timestampset.time = ($5 * $<number>6);
+                        addeventaction(&(timestampset).action, $<number>9, $<number>10);
                         addtimestamp(&timestampset);
                   }
-                | IF CHANGED TIMESTAMP rate1 THEN action1 {
+                | IF CHANGED timestamptype TIMESTAMP rate1 THEN action1 {
+                        timestampset.type = $<number>3;
                         timestampset.test_changes = true;
-                        addeventaction(&(timestampset).action, $<number>6, Action_Ignored);
+                        addeventaction(&(timestampset).action, $<number>7, Action_Ignored);
                         addtimestamp(&timestampset);
                   }
                 ;
@@ -3371,19 +3379,11 @@ static void addtimestamp(Timestamp_T ts) {
 
         Timestamp_T t;
         NEW(t);
+        t->type         = ts->type;
         t->operator     = ts->operator;
         t->time         = ts->time;
         t->action       = ts->action;
         t->test_changes = ts->test_changes;
-
-        if (t->test_changes) {
-                if (! File_exist(current->path))
-                        DEBUG("The path '%s' used in the TIMESTAMP statement refer to a non-existing object\n", current->path);
-                else if (! (t->timestamp = file_getTimestamp(current->path, S_IFDIR|S_IFREG)))
-                        yyerror2("Cannot get the timestamp for '%s'", current->path);
-                else
-                        t->initialized = true;
-        }
 
         t->next = current->timestamplist;
         current->timestamplist = t;
@@ -4490,6 +4490,7 @@ static void reset_resourceset() {
  * Reset the Timestamp set to default values
  */
 static void reset_timestampset() {
+        timestampset.type = Timestamp_Default;
         timestampset.operator = Operator_Equal;
         timestampset.time = 0;
         timestampset.test_changes = false;

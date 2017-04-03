@@ -47,16 +47,6 @@ void file_finalize();
 
 
 /**
- * Get a object's last modified timestamp.
- * @param object A object to stat
- * @param type Requested object's type
- * @return Max of either st_mtime or st_ctime or
- * 0 if not found or different type of object
- */
-time_t file_getTimestamp(char *object, mode_t type);
-
-
-/**
  * Search the system for the monit control file. Try first ~/.monitrc,
  * if that fails try /etc/monitrc, then /usr/local/etc/monitrc and
  * finally ./monitrc.  Exit the application if the control file was

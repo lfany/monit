@@ -321,7 +321,9 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                 _formatStatus("uid", Event_Uid, type, res, s, s->inf.file->uid >= 0, "%d", s->inf.file->uid);
                                 _formatStatus("gid", Event_Gid, type, res, s, s->inf.file->gid >= 0, "%d", s->inf.file->gid);
                                 _formatStatus("size", Event_Size, type, res, s, s->inf.file->size >= 0, "%s", Str_bytesToSize(s->inf.file->size, (char[10]){}));
-                                _formatStatus("timestamp", Event_Timestamp, type, res, s, s->inf.file->timestamp > 0, "%s", Time_string(s->inf.file->timestamp, (char[32]){}));
+                                _formatStatus("access timestamp", Event_Timestamp, type, res, s, s->inf.file->timestamp.access > 0, "%s", Time_string(s->inf.file->timestamp.access, (char[32]){}));
+                                _formatStatus("change timestamp", Event_Timestamp, type, res, s, s->inf.file->timestamp.change > 0, "%s", Time_string(s->inf.file->timestamp.change, (char[32]){}));
+                                _formatStatus("modify timestamp", Event_Timestamp, type, res, s, s->inf.file->timestamp.modify > 0, "%s", Time_string(s->inf.file->timestamp.modify, (char[32]){}));
                                 if (s->matchlist)
                                         _formatStatus("content match", Event_Content, type, res, s, true, "%s", (s->error & Event_Content) ? "yes" : "no");
                                 if (s->checksum)
@@ -332,14 +334,18 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                 _formatStatus("permission", Event_Permission, type, res, s, s->inf.directory->mode >= 0, "%o", s->inf.directory->mode & 07777);
                                 _formatStatus("uid", Event_Uid, type, res, s, s->inf.directory->uid >= 0, "%d", s->inf.directory->uid);
                                 _formatStatus("gid", Event_Gid, type, res, s, s->inf.directory->gid >= 0, "%d", s->inf.directory->gid);
-                                _formatStatus("timestamp", Event_Timestamp, type, res, s, s->inf.directory->timestamp > 0, "%s", Time_string(s->inf.directory->timestamp, (char[32]){}));
+                                _formatStatus("access timestamp", Event_Timestamp, type, res, s, s->inf.directory->timestamp.access > 0, "%s", Time_string(s->inf.directory->timestamp.access, (char[32]){}));
+                                _formatStatus("change timestamp", Event_Timestamp, type, res, s, s->inf.directory->timestamp.change > 0, "%s", Time_string(s->inf.directory->timestamp.change, (char[32]){}));
+                                _formatStatus("modify timestamp", Event_Timestamp, type, res, s, s->inf.directory->timestamp.modify > 0, "%s", Time_string(s->inf.directory->timestamp.modify, (char[32]){}));
                                 break;
 
                         case Service_Fifo:
                                 _formatStatus("permission", Event_Permission, type, res, s, s->inf.fifo->mode >= 0, "%o", s->inf.fifo->mode & 07777);
                                 _formatStatus("uid", Event_Uid, type, res, s, s->inf.fifo->uid >= 0, "%d", s->inf.fifo->uid);
                                 _formatStatus("gid", Event_Gid, type, res, s, s->inf.fifo->gid >= 0, "%d", s->inf.fifo->gid);
-                                _formatStatus("timestamp", Event_Timestamp, type, res, s, s->inf.fifo->timestamp > 0, "%s", Time_string(s->inf.fifo->timestamp, (char[32]){}));
+                                _formatStatus("access timestamp", Event_Timestamp, type, res, s, s->inf.fifo->timestamp.access > 0, "%s", Time_string(s->inf.fifo->timestamp.access, (char[32]){}));
+                                _formatStatus("change timestamp", Event_Timestamp, type, res, s, s->inf.fifo->timestamp.change > 0, "%s", Time_string(s->inf.fifo->timestamp.change, (char[32]){}));
+                                _formatStatus("modify timestamp", Event_Timestamp, type, res, s, s->inf.fifo->timestamp.modify > 0, "%s", Time_string(s->inf.fifo->timestamp.modify, (char[32]){}));
                                 break;
 
                         case Service_Net:
@@ -1942,11 +1948,11 @@ static void print_service_rules_gid(HttpResponse res, Service_T s) {
 
 static void print_service_rules_timestamp(HttpResponse res, Service_T s) {
         for (Timestamp_T t = s->timestamplist; t; t = t->next) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Timestamp</td><td>");
+                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>%c%s</td><td>", toupper(timestampnames[t->type][0]), timestampnames[t->type] + 1);
                 if (t->test_changes)
                         Util_printRule(res->outputbuffer, t->action, "If changed");
                 else
-                        Util_printRule(res->outputbuffer, t->action, "If %s %d second(s)", operatornames[t->operator], t->time);
+                        Util_printRule(res->outputbuffer, t->action, "If %s %s", operatornames[t->operator], Str_milliToTime(t->time * 1000., (char[23]){}));
                 StringBuffer_append(res->outputbuffer, "</td></tr>");
         }
 }

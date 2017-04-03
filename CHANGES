@@ -11,6 +11,14 @@ the HTTP method used for the test. Only HEAD and GET methods are supported curre
 Example:
     if failed port 443 protocol https method GET then alert
 
+New: Issue #582: Added support for explicit access, change and modification timestamp
+type tests. If the type is not specified, the original timestamp test is performed, which
+checks the latest of change and modification timestamps. It is also possible to use "newer"
+and "later" operators in the test now. Syntax:
+    IF [ACCESS|CHANGE|MODIFY] TIMESTAMP <operator> <time> THEN <action>
+Example for sending alert if the file was not updated within last hour:
+    if timestamp is older than 1 hour then alert
+
 New: Renamed the "set logfile <path|syslog>" statement to "set log <path|syslog>".
 The "logfile" form is deprecated, but kept for backward compatibility.
 

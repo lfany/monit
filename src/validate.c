@@ -670,44 +670,66 @@ static State_Type _checkGid(Service_T s, int gid) {
 }
 
 
+static State_Type _checkTimestamp(Service_T s, Timestamp_T t, time_t timestamp) {
+        State_Type rv = State_Succeeded;
+        if (t->test_changes) {
+                if (! t->initialized) {
+                        t->initialized = true;
+                        t->lastTimestamp = timestamp;
+                } else {
+                        if (t->lastTimestamp != timestamp) {
+                                rv = State_Changed;
+                                Event_post(s, Event_Timestamp, State_Changed, t->action, "%s for %s changed from %s to %s", timestampnames[t->type], s->path, t->lastTimestamp ? Time_string(t->lastTimestamp, (char[26]){}) : "N/A", Time_string(timestamp, (char[26]){}));
+                                t->lastTimestamp = timestamp; // reset expected value for next cycle
+                        } else {
+                                Event_post(s, Event_Timestamp, State_ChangedNot, t->action, "%s was not changed for %s", timestampnames[t->type], s->path);
+                        }
+                }
+        } else {
+                /* we are testing constant value for failed or succeeded state */
+                if (Util_evalQExpression(t->operator, Time_now() - timestamp, t->time)) {
+                        rv = State_Failed;
+                        Event_post(s, Event_Timestamp, State_Failed, t->action, "%s for %s failed -- current %s is %s", timestampnames[t->type], s->path, timestampnames[t->type], Time_string(timestamp, (char[26]){}));
+                } else {
+                        Event_post(s, Event_Timestamp, State_Succeeded, t->action, "%s test succeeded for %s [current %s is %s]", timestampnames[t->type], s->path, timestampnames[t->type], Time_string(timestamp, (char[26]){}));
+                }
+        }
+        return rv;
+}
+
+
 /**
  * Validate timestamps of a service s
  */
-static State_Type _checkTimestamp(Service_T s, time_t timestamp) {
+static State_Type _checkTimestamps(Service_T s, time_t atime, time_t ctime, time_t mtime) {
         ASSERT(s);
-        if (timestamp > 0) {
-                State_Type rv = State_Succeeded;
-                if (s->timestamplist) {
-                        time_t now = Time_now();
-                        for (Timestamp_T t = s->timestamplist; t; t = t->next) {
-                                if (t->test_changes) {
-                                        if (! t->initialized) {
-                                                t->initialized = true;
-                                                t->timestamp = timestamp;
-                                        } else {
-                                                if (t->timestamp != timestamp) {
-                                                        rv = State_Changed;
-                                                        Event_post(s, Event_Timestamp, State_Changed, t->action, "timestamp for %s changed from %s to %s", s->path, t->timestamp ? Time_string(t->timestamp, (char[26]){}) : "N/A", Time_string(timestamp, (char[26]){}));
-                                                        t->timestamp = timestamp; // reset expected value for next cycle
-                                                } else {
-                                                        Event_post(s, Event_Timestamp, State_ChangedNot, t->action, "timestamp was not changed for %s", s->path);
-                                                }
-                                        }
-                                } else {
-                                        /* we are testing constant value for failed or succeeded state */
-                                        if (Util_evalQExpression(t->operator, now - timestamp, t->time)) {
-                                                rv = State_Failed;
-                                                Event_post(s, Event_Timestamp, State_Failed, t->action, "timestamp for %s failed -- current timestamp is %s", s->path, Time_string(timestamp, (char[26]){}));
-                                        } else {
-                                                Event_post(s, Event_Timestamp, State_Succeeded, t->action, "timestamp test succeeded for %s [current timestamp is %s]", s->path, Time_string(timestamp, (char[26]){}));
-                                        }
-                                }
+        if (atime > 0 && ctime > 0 && mtime > 0) {
+                State_Type rv;
+                int failed = 0, changed = 0;
+                for (Timestamp_T t = s->timestamplist; t; t = t->next) {
+                        switch (t->type) {
+                                case Timestamp_Access:
+                                        rv = _checkTimestamp(s, t, atime);
+                                        break;
+                                case Timestamp_Change:
+                                        rv = _checkTimestamp(s, t, ctime);
+                                        break;
+                                case Timestamp_Modification:
+                                        rv = _checkTimestamp(s, t, mtime);
+                                        break;
+                                default:
+                                        rv = _checkTimestamp(s, t, MAX(mtime, ctime));
+                                        break;
+                        }
+                        if (rv == State_Failed) {
+                                failed++;
+                        } else if (rv == State_Changed) {
+                                changed++;
                         }
                 }
-                return rv;
-        } else {
-                return State_Init;
+                return failed ? State_Failed : (changed ? State_Changed : State_Succeeded);
         }
+        return State_Init;
 }
 
 
@@ -1400,7 +1422,9 @@ State_Type check_file(Service_T s) {
                 s->inf.file->uid = stat_buf.st_uid;
                 s->inf.file->gid = stat_buf.st_gid;
                 s->inf.file->size = stat_buf.st_size;
-                s->inf.file->timestamp = MAX(stat_buf.st_mtime, stat_buf.st_ctime);
+                s->inf.file->timestamp.access = stat_buf.st_atime;
+                s->inf.file->timestamp.change = stat_buf.st_ctime;
+                s->inf.file->timestamp.modify = stat_buf.st_mtime;
                 for (NonExist_T l = s->nonexistlist; l; l = l->next) {
                         Event_post(s, Event_NonExist, State_Succeeded, l->action, "file exists");
                 }
@@ -1425,7 +1449,7 @@ State_Type check_file(Service_T s) {
                 rv = State_Failed;
         if (_checkSize(s, s->inf.file->size) == State_Failed)
                 rv = State_Failed;
-        if (_checkTimestamp(s, s->inf.file->timestamp) == State_Failed)
+        if (_checkTimestamps(s, s->inf.file->timestamp.access, s->inf.file->timestamp.change, s->inf.file->timestamp.modify) == State_Failed)
                 rv = State_Failed;
         if (_checkMatch(s) == State_Failed)
                 rv = State_Failed;
@@ -1454,7 +1478,9 @@ State_Type check_directory(Service_T s) {
                 s->inf.directory->mode = stat_buf.st_mode;
                 s->inf.directory->uid = stat_buf.st_uid;
                 s->inf.directory->gid = stat_buf.st_gid;
-                s->inf.directory->timestamp = MAX(stat_buf.st_mtime, stat_buf.st_ctime);
+                s->inf.directory->timestamp.access = stat_buf.st_atime;
+                s->inf.directory->timestamp.change = stat_buf.st_ctime;
+                s->inf.directory->timestamp.modify = stat_buf.st_mtime;
                 for (NonExist_T l = s->nonexistlist; l; l = l->next) {
                         Event_post(s, Event_NonExist, State_Succeeded, l->action, "directory exists");
                 }
@@ -1475,7 +1501,7 @@ State_Type check_directory(Service_T s) {
                 rv = State_Failed;
         if (_checkGid(s, s->inf.directory->gid) == State_Failed)
                 rv = State_Failed;
-        if (_checkTimestamp(s, s->inf.directory->timestamp) == State_Failed)
+        if (_checkTimestamps(s, s->inf.directory->timestamp.access, s->inf.directory->timestamp.change, s->inf.directory->timestamp.modify) == State_Failed)
                 rv = State_Failed;
         return rv;
 }
@@ -1502,7 +1528,9 @@ State_Type check_fifo(Service_T s) {
                 s->inf.fifo->mode = stat_buf.st_mode;
                 s->inf.fifo->uid = stat_buf.st_uid;
                 s->inf.fifo->gid = stat_buf.st_gid;
-                s->inf.fifo->timestamp = MAX(stat_buf.st_mtime, stat_buf.st_ctime);
+                s->inf.fifo->timestamp.access = stat_buf.st_atime;
+                s->inf.fifo->timestamp.change = stat_buf.st_ctime;
+                s->inf.fifo->timestamp.modify = stat_buf.st_mtime;
                 for (NonExist_T l = s->nonexistlist; l; l = l->next) {
                         Event_post(s, Event_NonExist, State_Succeeded, l->action, "fifo exists");
                 }
@@ -1523,7 +1551,7 @@ State_Type check_fifo(Service_T s) {
                 rv = State_Failed;
         if (_checkGid(s, s->inf.fifo->gid) == State_Failed)
                 rv = State_Failed;
-        if (_checkTimestamp(s, s->inf.fifo->timestamp) == State_Failed)
+        if (_checkTimestamps(s, s->inf.fifo->timestamp.access, s->inf.fifo->timestamp.change, s->inf.fifo->timestamp.modify) == State_Failed)
                 rv = State_Failed;
         return rv;
 }

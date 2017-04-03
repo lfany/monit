@@ -117,9 +117,9 @@ h16            [0-9A-Fa-f]{1,4}
 ipv4           {dec-octet}\.{dec-octet}\.{dec-octet}\.{dec-octet}
 ls32           {h16}:{h16}|{ipv4}
 ipv6           ({h16}:){6}{ls32}|::({h16}:){5}{ls32}|({h16})?::({h16}:){4}{ls32}|(({h16}:){0,1}{h16})?::({h16}:){3}{ls32}|(({h16}:){0,2}{h16})?::({h16}:){2}{ls32}|(({h16}:){0,3}{h16})?::{h16}:{ls32}|(({h16}:){0,4}{h16})?::{ls32}|(({h16}:){0,5}{h16})?::{h16}|(({h16}:){0,6}{h16})?::
-greater        ("more"|"greater"|"gt"|">")
+greater        ("more"|"greater"|"gt"|">"|"older")
 greaterorequal ("ge"|">=")
-less           ("less"|"lt"|"<")
+less           ("less"|"lt"|"<"|"newer")
 lessorequal    ("le"|"<=")
 equal          ("equal"|"eq"|"=="|"=")
 notequal       ("notequal"|"ne"|"!=")
@@ -349,6 +349,9 @@ total[ ]?cpu      { return TOTALCPU; }
 child(ren)?       { return CHILDREN; }
 thread(s)?        { return THREADS; }
 timestamp         { return TIMESTAMP; }
+access            { return ACCESS; }
+modif(y|ication)? { return MODIFY; }
+change            { return CHANGE; }
 changed           { return CHANGED; }
 sslv2             { return SSLV2; }
 sslv3             { return SSLV3; }

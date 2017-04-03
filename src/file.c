@@ -113,24 +113,6 @@ void file_finalize() {
 }
 
 
-time_t file_getTimestamp(char *object, mode_t type) {
-        ASSERT(object);
-        struct stat buf;
-        if (! stat(object, &buf)) {
-                if (((type == S_IFREG) && S_ISREG(buf.st_mode)) ||
-                    ((type == S_IFDIR) && S_ISDIR(buf.st_mode)) ||
-                    ((type == S_IFSOCK) && S_ISSOCK(buf.st_mode)) ||
-                    ((type == (S_IFREG|S_IFDIR)) && (S_ISREG(buf.st_mode) || S_ISDIR(buf.st_mode)))
-                    ) {
-                        return MAX(buf.st_mtime, buf.st_ctime);
-                } else {
-                        LogError("Invalid file object type - %s\n", object);
-                }
-        }
-        return 0;
-}
-
-
 char *file_findControlFile() {
         char *rcfile = CALLOC(sizeof(char), STRLEN + 1);
         snprintf(rcfile, STRLEN, "%s/.%s", Run.Env.home, MONITRC);

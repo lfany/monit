@@ -222,6 +222,14 @@ typedef enum {
 
 
 typedef enum {
+        Timestamp_Default = 0,
+        Timestamp_Access,
+        Timestamp_Change,
+        Timestamp_Modification
+} __attribute__((__packed__)) Timestamp_Type;
+
+
+typedef enum {
         Httpd_Disabled                    = 0x0,
         Httpd_Net                         = 0x1,  // IP
         Httpd_Unix                        = 0x2,  // Unix socket
@@ -751,9 +759,10 @@ typedef struct Resource_T {
 typedef struct Timestamp_T {
         boolean_t initialized;              /**< true if timestamp was initialized */
         boolean_t test_changes;       /**< true if we only should test for changes */
+        Timestamp_Type type;
         Operator_Type operator;                           /**< Comparison operator */
-        int  time;                                        /**< Timestamp watermark */
-        time_t timestamp; /**< The original last modified timestamp for this object*/
+        uint64_t time;                                    /**< Timestamp watermark */
+        time_t lastTimestamp;        /**< Last timestamp (context depends on type) */
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
@@ -1018,7 +1027,11 @@ typedef struct FileSystemInfo_T {
 
 
 typedef struct FileInfo_T {
-        time_t timestamp;                                       /**< Timestamp */
+        struct {
+                time_t access;
+                time_t change;
+                time_t modify;
+        } timestamp;
         int mode;                                              /**< Permission */
         int uid;                                              /**< Owner's uid */
         int gid;                                              /**< Owner's gid */
@@ -1031,7 +1044,11 @@ typedef struct FileInfo_T {
 
 
 typedef struct DirectoryInfo_T {
-        time_t timestamp;                                       /**< Timestamp */
+        struct {
+                time_t access;
+                time_t change;
+                time_t modify;
+        } timestamp;
         int mode;                                              /**< Permission */
         int uid;                                              /**< Owner's uid */
         int gid;                                              /**< Owner's gid */
@@ -1039,7 +1056,11 @@ typedef struct DirectoryInfo_T {
 
 
 typedef struct FifoInfo_T {
-        time_t timestamp;                                       /**< Timestamp */
+        struct {
+                time_t access;
+                time_t change;
+                time_t modify;
+        } timestamp;
         int mode;                                              /**< Permission */
         int uid;                                              /**< Owner's uid */
         int gid;                                              /**< Owner's gid */
@@ -1288,6 +1309,7 @@ extern char *pathnames[];
 extern char *icmpnames[];
 extern char *sslnames[];
 extern char *socketnames[];
+extern char *timestampnames[];
 
 
 /* ------------------------------------------------------- Public prototypes */
