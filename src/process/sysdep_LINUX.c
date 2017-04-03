@@ -308,8 +308,6 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                                         DEBUG("system statistic error -- cannot get process write bytes\n");
                                         continue;
                                 }
-                        } else {
-                                DEBUG("system statistic error -- cannot read /proc/%d/io\n", stat_pid);
                         }
                 }
 
