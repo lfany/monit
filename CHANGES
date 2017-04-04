@@ -7,7 +7,8 @@ Version 5.22.0
 New: Linux: Added support for monitoring ZFS disk activity.
 
 New: Issue #500: Added the "method" option for http protocol test, to allow overriding
-the HTTP method used for the test. Only HEAD and GET methods are supported currently.
+the HTTP method used for the test (by default HEAD unless content or checksum test is set,
+in which case GET is used automatically). Only HEAD and GET methods are supported currently.
 Example:
     if failed port 443 protocol https method GET then alert
 
