@@ -2152,28 +2152,29 @@ directory service entry.
 
 Relative timestamp syntax:
 
- IF [ACCESS|MODIFICATION|CHANGE] TIMESTAMP [[operator] value [unit]] THEN action
+ IF <ACCESS TIME | ATIME | MODIFICATION TIME | MTIME | CHANGE TIME | CTIME | TIME[STAMP]> <operator> <value> [unit] THEN <action>
 
 Timestamp change syntax:
 
- IF CHANGED [ACCESS|MODIFICATION|CHANGE] TIMESTAMP THEN action
+ IF CHANGED <ACCESS TIME | ATIME | MODIFICATION TIME | MTIME | CHANGE TIME | CTIME | TIME[STAMP]> THEN action
 
 There are four timestamp test types:
 
 =over 12
 
-=item I<ACCESS>
+=item ACCESS (ATIME)
 
-Test the timestamp which is updated whenever the object is accessed.
-Filesystem allow to disable I<atime> updates using mount options, so
-this test will work if the filesystem performs atime updates.
+Test the timestamp which is updated whenever the object is accessed, for
+example the file is read. Filesystem usually allows to disable I<atime>
+updates using mount options, so this test will work only if the filesystem
+performs atime updates.
 
-=item I<CHANGE>
+=item CHANGE (CTIME)
 
 Test the timestamp which is updated whenever the object metadata such
 as owner, group, permissions or hard link count are changed.
 
-=item I<MODIFICATION>
+=item MODIFICATION (MTIME)
 
 Test the timestamp which is updated whenever the object content is modified.
 The file modification timestamp is updated whenever the file is truncated
@@ -2181,7 +2182,7 @@ or written to. The directory modification timestamp is updated whenever
 some files/subdirectories were added to the directory or removed from that
 directory.
 
-=item DEFAULT (LATEST OF CHANGE AND MODIFICATION TIMESTAMPS)
+=item DEFAULT (LATEST OF CHANGE AND MODIFICATION TIMES)
 
 If no specific timestamp type is set, the latest of change and modification
 timestamps is checked. This test allows for simple testing of any object
@@ -2209,9 +2210,9 @@ For example to reload apache if the configuration file changed:
 For example to test directory for file addition or removal:
 
  check directory bar path /foo/bar
-   if changed timestamp then exec "/usr/bin/apachectl graceful"
+   if changed timestamp then alert
 
-Example for sending alert if log file is not updated for more than 1 hour:
+Example for sending alert if a log file is not updated for more than 1 hour:
 
    if timestamp is older than 1 hour then alert
 

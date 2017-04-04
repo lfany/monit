@@ -145,6 +145,9 @@ minute         ("minute"|"minutes"|"m")
 hour           ("hour"|"hours"|"h")
 day            ("day"|"days")
 month          ("month"|"months")
+atime          ("atime"|"access time"|"access timestamp")
+ctime          ("ctime"|"change time"|"change timestamp")
+mtime          ("mtime"|"modification time"|"modification timestamp"|"modify time"|"modify timestamp")
 
 %x ARGUMENT_COND DEPEND_COND SERVICE_COND URL_COND ADDRESS_COND STRING_COND EVERY_COND HTTP_HEADER_COND INCLUDE
 
@@ -348,10 +351,7 @@ cpu               { return CPU; }
 total[ ]?cpu      { return TOTALCPU; }
 child(ren)?       { return CHILDREN; }
 thread(s)?        { return THREADS; }
-timestamp         { return TIMESTAMP; }
-access            { return ACCESS; }
-modif(y|ication)? { return MODIFY; }
-change            { return CHANGE; }
+time(stamp)?      { return TIME; }
 changed           { return CHANGED; }
 sslv2             { return SSLV2; }
 sslv3             { return SSLV3; }
@@ -446,6 +446,9 @@ fips              { return FIPS; }
 {hour}            { return HOUR; }
 {day}             { return DAY; }
 {month}           { return MONTH; }
+{atime}           { return ATIME; }
+{ctime}           { return CTIME; }
+{mtime}           { return MTIME; }
 
 include           { BEGIN(INCLUDE); }
 

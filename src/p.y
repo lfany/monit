@@ -339,7 +339,7 @@ static void _setSSLOptions(SslOptions_T options);
 %token MODE ACTIVE PASSIVE MANUAL ONREBOOT NOSTART LASTSTATE CPU TOTALCPU CPUUSER CPUSYSTEM CPUWAIT
 %token GROUP REQUEST DEPENDS BASEDIR SLOT EVENTQUEUE SECRET HOSTHEADER
 %token UID EUID GID MMONIT INSTANCE USERNAME PASSWORD
-%token TIMESTAMP ACCESS MODIFY CHANGE CHANGED MILLISECOND SECOND MINUTE HOUR DAY MONTH
+%token TIME ATIME CTIME MTIME CHANGED MILLISECOND SECOND MINUTE HOUR DAY MONTH
 %token SSLAUTO SSLV2 SSLV3 TLSV1 TLSV11 TLSV12 CERTMD5 AUTO
 %token BYTE KILOBYTE MEGABYTE GIGABYTE
 %token INODE SPACE TFREE PERMISSION SIZE MATCH NOT IGNORE ACTION UPTIME
@@ -1972,7 +1972,7 @@ eventoption     : ACTION          { mailset.events |= Event_Action; }
                 | SPEED           { mailset.events |= Event_Speed; }
                 | STATUS          { mailset.events |= Event_Status; }
                 | TIMEOUT         { mailset.events |= Event_Timeout; }
-                | TIMESTAMP       { mailset.events |= Event_Timestamp; }
+                | TIME            { mailset.events |= Event_Timestamp; }
                 | UID             { mailset.events |= Event_Uid; }
                 | UPTIME          { mailset.events |= Event_Uptime; }
                 ;
@@ -2210,23 +2210,23 @@ value           : REAL { $<real>$ = $1; }
                 | NUMBER { $<real>$ = (float) $1; }
                 ;
 
-timestamptype   : /* EMPTY */ { $<number>$ = Timestamp_Default; }
-                | ACCESS      { $<number>$ = Timestamp_Access; }
-                | CHANGE      { $<number>$ = Timestamp_Change; }
-                | MODIFY      { $<number>$ = Timestamp_Modification; }
+timestamptype   : TIME  { $<number>$ = Timestamp_Default; }
+                | ATIME { $<number>$ = Timestamp_Access; }
+                | CTIME { $<number>$ = Timestamp_Change; }
+                | MTIME { $<number>$ = Timestamp_Modification; }
                 ;
 
-timestamp       : IF timestamptype TIMESTAMP operator NUMBER time rate1 THEN action1 recovery {
+timestamp       : IF timestamptype operator NUMBER time rate1 THEN action1 recovery {
                         timestampset.type = $<number>2;
-                        timestampset.operator = $<number>4;
-                        timestampset.time = ($5 * $<number>6);
-                        addeventaction(&(timestampset).action, $<number>9, $<number>10);
+                        timestampset.operator = $<number>3;
+                        timestampset.time = ($4 * $<number>5);
+                        addeventaction(&(timestampset).action, $<number>8, $<number>9);
                         addtimestamp(&timestampset);
                   }
-                | IF CHANGED timestamptype TIMESTAMP rate1 THEN action1 {
+                | IF CHANGED timestamptype rate1 THEN action1 {
                         timestampset.type = $<number>3;
                         timestampset.test_changes = true;
-                        addeventaction(&(timestampset).action, $<number>7, Action_Ignored);
+                        addeventaction(&(timestampset).action, $<number>6, Action_Ignored);
                         addtimestamp(&timestampset);
                   }
                 ;
