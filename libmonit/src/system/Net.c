@@ -110,8 +110,10 @@ ssize_t Net_read(int socket, void *buffer, size_t size, time_t timeout) {
                         n = read(socket, buffer, size);
                 } while (n == -1 && errno == EINTR);
                 if (n == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
-                        if ((timeout == 0) || (Net_canRead(socket, timeout) == false))
+                        if ((timeout == 0) || (Net_canRead(socket, timeout) == false)) {
+                                errno = ETIMEDOUT;
                                 return 0;
+                        }
                         do {
                                 n = read(socket, buffer, size);
                         } while (n == -1 && errno == EINTR);
@@ -128,8 +130,10 @@ ssize_t Net_write(int socket, const void *buffer, size_t size, time_t timeout) {
                         n = write(socket, buffer, size);
                 } while (n == -1 && errno == EINTR);
                 if (n == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
-                        if ((timeout == 0) || (Net_canWrite(socket, timeout) == false))
+                        if ((timeout == 0) || (Net_canWrite(socket, timeout) == false)) {
+                                errno = ETIMEDOUT;
                                 return 0;
+                        }
                         do {
                                 n = write(socket, buffer, size);
                         } while (n == -1 && errno == EINTR);

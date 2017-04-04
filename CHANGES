@@ -29,6 +29,9 @@ Fixed: Issue #569: fix configure --without-zlib
 Fixed: Issue #570: if the connection test requires STARTTLS, the certificate valid
 days test was broken.
 
+Fixed: Issue #577: Non-SSL connections may return confusing message "Resource temporarily unavailable"
+on timeout.
+
 Fixed: Issue #584: fix compilation for MacOSX 10.6.x - 10.9.x.
 
 Fixed: Linux: Subtract ZFS ARC size from the system memory usage.
