@@ -456,7 +456,7 @@ int main(void) {
                 Str_milliToTime(90000, str);
                 assert(Str_isEqual(str, "1.500 m"));
                 Str_milliToTime(3600000, str);
-                assert(Str_isEqual(str, "60 m"));
+                assert(Str_isEqual(str, "1 h"));
         }
         printf("=> Test26: OK\n\n");
 
