@@ -243,7 +243,6 @@ static void _sendRequest(Socket_T socket, Port_T P) {
         //FIXME: add decompression support to InputStream and switch here to it + set Accept-Encoding to gzip, so the server can send body compressed (if we test checksum/content)
         StringBuffer_append(sb,
                             "%s %s HTTP/1.1\r\n"
-                            "Connection: close\r\n"
                             "%s",
                             (_getMethod(P) == Http_Get) ? "GET" : "HEAD",
                             P->parameters.http.request ? P->parameters.http.request : "/",
@@ -256,6 +255,8 @@ static void _sendRequest(Socket_T socket, Port_T P) {
                 StringBuffer_append(sb, "User-Agent: Monit/%s\r\n", VERSION);
         if (! _hasHeader(P->parameters.http.headers, "Accept"))
                 StringBuffer_append(sb, "Accept: */*\r\n");
+        if (! _hasHeader(P->parameters.http.headers, "Connection"))
+                StringBuffer_append(sb, "Connection: close\r\n");
         // Add headers if we have them
         if (P->parameters.http.headers) {
                 for (list_t p = P->parameters.http.headers->head; p; p = p->next) {
