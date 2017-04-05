@@ -42,6 +42,9 @@ HTTP proxy. Example for testing Squid:
 Fixed: Issue #588: If the connection or ping test repetition is set, log partial failures
 with warning priority instead of error.
 
+Fixed: The connection test retry option was broken and performed always one test with no retry on
+error.
+
 Fixed: HTTP protocol test: The "Connection: close" HTTP header was always included even if
 it was part of the custom HTTP headers list.
 

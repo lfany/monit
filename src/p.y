@@ -1891,7 +1891,7 @@ connectiontimeout : TIMEOUT NUMBER SECOND {
                   ;
 
 retry           : RETRY NUMBER {
-                        $<number>$ = $2;
+                        portset.retry = $2;
                   }
                 ;
 
