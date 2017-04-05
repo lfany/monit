@@ -407,7 +407,7 @@ static int _verifyClientCertificates(int preverify_ok, X509_STORE_CTX *ctx) {
         if (X509_STORE_CTX_get_error_depth(ctx) == 0 && X509_STORE_get_by_subject(ctx, X509_LU_X509, X509_get_subject_name(X509_STORE_CTX_get_current_cert(ctx)), &found_cert) != 1) {
 #else
         X509_OBJECT *found_cert = X509_OBJECT_new();
-        if (X509_STORE_CTX_get_error_depth(ctx) == 0 && X509_STORE_get_by_subject(ctx, X509_LU_X509, X509_get_subject_name(X509_STORE_CTX_get_current_cert(ctx)), found_cert) != 1) {
+        if (X509_STORE_CTX_get_error_depth(ctx) == 0 && X509_STORE_CTX_get_by_subject(ctx, X509_LU_X509, X509_get_subject_name(X509_STORE_CTX_get_current_cert(ctx)), found_cert) != 1) {
 #endif
                 LogError("SSL: no matching certificate found -- %s\n", SSLERROR);
                 X509_STORE_CTX_set_error(ctx, X509_V_ERR_CERT_REJECTED);
@@ -730,7 +730,11 @@ int Ssl_getCertificateValidDays(T C) {
                 int deltadays = 0;
 #ifdef HAVE_ASN1_TIME_DIFF
                 int deltaseconds;
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
                 if (! ASN1_TIME_diff(&deltadays, &deltaseconds, NULL, X509_get_notAfter(C->certificate))) {
+#else
+                if (! ASN1_TIME_diff(&deltadays, &deltaseconds, NULL, X509_get0_notAfter(C->certificate))) {
+#endif
                         THROW(IOException, "invalid time format in certificate's notAfter field");
                 }
 #else
