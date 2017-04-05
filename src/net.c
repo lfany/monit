@@ -177,6 +177,17 @@ static unsigned short _checksum(unsigned char *_addr, int count) {
 }
 
 
+static void __attribute__((format (printf, 3, 4))) _LogWarningOrError(int attempt, int maxAttempts, const char *s, ...) {
+        ASSERT(s);
+        va_list ap;
+        va_start(ap, s);
+        if (attempt < maxAttempts) {
+                vLogWarning(s, ap);
+        } else {
+                vLogError(s, ap);
+        }
+        va_end(ap);
+}
 
 
 /* ------------------------------------------------------------------ Public */
@@ -350,7 +361,7 @@ static boolean_t _sendPing(const char *hostname, int socket, struct addrinfo *ad
                         break;
         }
         if (out_len > sizeof(buf)) {
-                LogError("Ping request for %s %d/%d failed -- too large (%d vs. maximum %lu bytes)\n", hostname, retry, maxretries, size, (unsigned long)(sizeof(buf) - header_len));
+                _LogWarningOrError(retry, maxretries, "Ping request for %s %d/%d failed -- too large (%d vs. maximum %lu bytes)\n", hostname, retry, maxretries, size, (unsigned long)(sizeof(buf) - header_len));
                 return false;
         }
         ssize_t n;
@@ -358,7 +369,7 @@ static boolean_t _sendPing(const char *hostname, int socket, struct addrinfo *ad
                 n = sendto(socket, out_icmp, out_len, 0, addr->ai_addr, addr->ai_addrlen);
         } while (n == -1 && errno == EINTR);
         if (n < 0) {
-                LogError("Ping request for %s %d/%d failed -- %s\n", hostname, retry, maxretries, STRERROR);
+                _LogWarningOrError(retry, maxretries, "Ping request for %s %d/%d failed -- %s\n", hostname, retry, maxretries, STRERROR);
                 return false;
         }
         return true;
@@ -397,7 +408,7 @@ static double _receivePing(const char *hostname, int socket, struct addrinfo *ad
                         n = recvfrom(socket, buf, sizeof(buf), 0, (struct sockaddr *)&in_addr, &addrlen);
                 } while (n == -1 && errno == EINTR);
                 if (n < 0) {
-                        LogError("Ping response from %s %d/%d failed -- %s\n", hostname, retry, maxretries, STRERROR);
+                        _LogWarningOrError(retry, maxretries, "Ping response from %s %d/%d failed -- %s\n", hostname, retry, maxretries, STRERROR);
                         return -1.;
                 } else if (n >= in_len) {
                         /* read from raw socket via recvfrom() provides messages regardless of origin, we have to check the IP and skip responses belonging to other conversations or different ICMP types (n < in_len) */
@@ -441,7 +452,7 @@ static double _receivePing(const char *hostname, int socket, struct addrinfo *ad
                         return response; // Wait for one response only
                 }
         }
-        LogError("Ping response for %s %d/%d timed out -- no response within %s\n", hostname, retry, maxretries, Str_milliToTime(timeout, (char[23]){}));
+        _LogWarningOrError(retry, maxretries, "Ping response for %s %d/%d timed out -- no response within %s\n", hostname, retry, maxretries, Str_milliToTime(timeout, (char[23]){}));
         return -1.;
 }
 

@@ -150,6 +150,21 @@ void LogEmergency(const char *s, ...) {
 /**
  * Logging interface with priority support
  * @param s A formated (printf-style) string to log
+ * @param ap A variable argument list
+ */
+void vLogEmergency(const char *s, va_list ap) {
+        ASSERT(s);
+        va_list ap_copy;
+        va_copy(ap_copy, ap);
+        log_log(LOG_EMERG, s, ap);
+        va_end(ap_copy);
+        log_backtrace();
+}
+
+
+/**
+ * Logging interface with priority support
+ * @param s A formated (printf-style) string to log
  */
 void LogAlert(const char *s, ...) {
         ASSERT(s);
@@ -157,6 +172,21 @@ void LogAlert(const char *s, ...) {
         va_start(ap, s);
         log_log(LOG_ALERT, s, ap);
         va_end(ap);
+        log_backtrace();
+}
+
+
+/**
+ * Logging interface with priority support
+ * @param s A formated (printf-style) string to log
+ * @param ap A variable argument list
+ */
+void vLogAlert(const char *s, va_list ap) {
+        ASSERT(s);
+        va_list ap_copy;
+        va_copy(ap_copy, ap);
+        log_log(LOG_ALERT, s, ap);
+        va_end(ap_copy);
         log_backtrace();
 }
 
@@ -173,6 +203,22 @@ void LogCritical(const char *s, ...) {
         va_end(ap);
         log_backtrace();
 }
+
+
+/**
+ * Logging interface with priority support
+ * @param s A formated (printf-style) string to log
+ * @param ap A variable argument list
+ */
+void vLogCritical(const char *s, va_list ap) {
+        ASSERT(s);
+        va_list ap_copy;
+        va_copy(ap_copy, ap);
+        log_log(LOG_CRIT, s, ap);
+        va_end(ap_copy);
+        log_backtrace();
+}
+
 
 /*
  * Called by libmonit on Exception. Log
@@ -207,6 +253,7 @@ void LogError(const char *s, ...) {
 /**
  * Logging interface with priority support
  * @param s A formated (printf-style) string to log
+ * @param ap A variable argument list
  */
 void vLogError(const char *s, va_list ap) {
         ASSERT(s);
@@ -234,6 +281,20 @@ void LogWarning(const char *s, ...) {
 /**
  * Logging interface with priority support
  * @param s A formated (printf-style) string to log
+ * @param ap A variable argument list
+ */
+void vLogWarning(const char *s, va_list ap) {
+        ASSERT(s);
+        va_list ap_copy;
+        va_copy(ap_copy, ap);
+        log_log(LOG_WARNING, s, ap);
+        va_end(ap_copy);
+}
+
+
+/**
+ * Logging interface with priority support
+ * @param s A formated (printf-style) string to log
  */
 void LogNotice(const char *s, ...) {
         ASSERT(s);
@@ -241,6 +302,20 @@ void LogNotice(const char *s, ...) {
         va_start(ap, s);
         log_log(LOG_NOTICE, s, ap);
         va_end(ap);
+}
+
+
+/**
+ * Logging interface with priority support
+ * @param s A formated (printf-style) string to log
+ * @param ap A variable argument list
+ */
+void vLogNotice(const char *s, va_list ap) {
+        ASSERT(s);
+        va_list ap_copy;
+        va_copy(ap_copy, ap);
+        log_log(LOG_NOTICE, s, ap);
+        va_end(ap_copy);
 }
 
 
@@ -260,6 +335,20 @@ void LogInfo(const char *s, ...) {
 /**
  * Logging interface with priority support
  * @param s A formated (printf-style) string to log
+ * @param ap A variable argument list
+ */
+void vLogInfo(const char *s, va_list ap) {
+        ASSERT(s);
+        va_list ap_copy;
+        va_copy(ap_copy, ap);
+        log_log(LOG_INFO, s, ap);
+        va_end(ap_copy);
+}
+
+
+/**
+ * Logging interface with priority support
+ * @param s A formated (printf-style) string to log
  */
 void LogDebug(const char *s, ...) {
         ASSERT(s);
@@ -268,6 +357,22 @@ void LogDebug(const char *s, ...) {
                 va_start(ap, s);
                 log_log(LOG_DEBUG, s, ap);
                 va_end(ap);
+        }
+}
+
+
+/**
+ * Logging interface with priority support
+ * @param s A formated (printf-style) string to log
+ * @param ap A variable argument list
+ */
+void vLogDebug(const char *s, va_list ap) {
+        ASSERT(s);
+        if (Run.debug) {
+                va_list ap_copy;
+                va_copy(ap_copy, ap);
+                log_log(LOG_NOTICE, s, ap);
+                va_end(ap_copy);
         }
 }
 

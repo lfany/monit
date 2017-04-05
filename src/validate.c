@@ -160,7 +160,7 @@ retry:
         END_TRY;
         if (rv == State_Failed) {
                 if (retry_count-- > 1) {
-                        DEBUG("'%s' %s (attempt %d/%d)\n", s->name, report, p->retry - retry_count, p->retry);
+                        LogWarning("'%s' %s (attempt %d/%d)\n", s->name, report, p->retry - retry_count, p->retry);
                         goto retry;
                 }
                 Event_post(s, Event_Connection, State_Failed, p->action, "%s", report);

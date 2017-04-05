@@ -1336,7 +1336,14 @@ void  LogWarning(const char *, ...) __attribute__((format (printf, 1, 2)));
 void  LogNotice(const char *, ...) __attribute__((format (printf, 1, 2)));
 void  LogInfo(const char *, ...) __attribute__((format (printf, 1, 2)));
 void  LogDebug(const char *, ...) __attribute__((format (printf, 1, 2)));
-void  vLogError(const char *s, va_list ap);
+void  vLogEmergency(const char *, va_list ap);
+void  vLogAlert(const char *, va_list ap);
+void  vLogCritical(const char *, va_list ap);
+void  vLogError(const char *, va_list ap);
+void  vLogWarning(const char *,va_list ap);
+void  vLogNotice(const char *, va_list ap);
+void  vLogInfo(const char *, va_list ap);
+void  vLogDebug(const char *, va_list ap);
 void  vLogAbortHandler(const char *s, va_list ap);
 void  log_close();
 #ifndef HAVE_VSYSLOG

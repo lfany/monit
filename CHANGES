@@ -39,6 +39,9 @@ Fixed: Issue #586: HTTP protocol test: Support URL string as custom request to a
 HTTP proxy. Example for testing Squid:
   if failed port 3128 protocol http request "cache_object://localhost/utilization" then alert
 
+Fixed: Issue #588: If the connection or ping test repetition is set, log partial failures
+with warning priority instead of error.
+
 Fixed: HTTP protocol test: The "Connection: close" HTTP header was always included even if
 it was part of the custom HTTP headers list.
 
