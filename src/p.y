@@ -3344,8 +3344,12 @@ static void addport(Port_T *list, Port_T port) {
 
 
 static void addhttpheader(Port_T port, const char *header) {
-        if (! port->parameters.http.headers)
+        if (! port->parameters.http.headers) {
                 port->parameters.http.headers = List_new();
+        }
+        if (Str_startsWith(header, "Connection:") && ! Str_sub(header, "close")) {
+                yywarning("We don't recommend customizing the Connection header. The 'Connection: close' is set by default and Monit will always close the connection even if 'keep-alive' is set\n");
+        }
         List_append(port->parameters.http.headers, (char *)header);
 }
 
