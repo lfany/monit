@@ -35,10 +35,14 @@ on timeout.
 
 Fixed: Issue #584: fix compilation for MacOSX 10.6.x - 10.9.x.
 
-Fixed: Linux: Subtract ZFS ARC size from the system memory usage.
+Fixed: Issue #586: HTTP protocol test: Support URL string as custom request to allow monitoring
+HTTP proxy. Example for testing Squid:
+  if failed port 3128 protocol http request "cache_object://localhost/utilization" then alert
 
 Fixed: HTTP protocol test: The "Connection: close" HTTP header was always included even if
 it was part of the custom HTTP headers list.
+
+Fixed: Linux: Subtract ZFS ARC size from the system memory usage.
 
 Fixed: If the SSL test connection failed and certificate validity test was active,
 monit returned confusing certificate validity error. The test is now skipped in such
