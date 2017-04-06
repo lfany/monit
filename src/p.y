@@ -1703,7 +1703,11 @@ method          : METHOD GET {
                   }
                 ;
 
-request         : REQUEST STRING {
+request         : REQUEST PATH {
+                        portset.parameters.http.request = Util_urlEncode($2, false);
+                        FREE($2);
+                  }
+                | REQUEST STRING {
                         portset.parameters.http.request = Util_urlEncode($2, false);
                         FREE($2);
                   }
