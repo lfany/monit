@@ -23,6 +23,11 @@ Example for sending alert if the file was not updated within last hour:
 New: Renamed the "set logfile <path|syslog>" statement to "set log <path|syslog>".
 The "logfile" form is deprecated, but kept for backward compatibility.
 
+Fixed: Linux: If the filesystem is not found in /proc/diskstat, Monit may leak filedescriptors.
+
+Fixed: Issue #566: Systemd template for Monit: Added StandardOutput=null option to prevent
+systemd to duplicate Monit log output.
+
 Fixed: Issue #568: fix cross-compilation
 
 Fixed: Issue #569: fix configure --without-zlib
