@@ -275,15 +275,14 @@ static boolean_t _getProcfsBlockDiskActivity(void *_inf) {
                                 Statistics_update(&(inf->filesystem->read.operations), now, readOperations);
                                 Statistics_update(&(inf->filesystem->write.bytes), now, writeSectors * 512);
                                 Statistics_update(&(inf->filesystem->write.operations), now, writeOperations);
-                                fclose(f);
-                                return true;
+                                break;
                         }
                 }
-        } else {
-                LogError("filesystem statistic error: cannot read %s -- %s\n", DISKSTAT, STRERROR);
-                return false;
+                fclose(f);
+                return true;
         }
-        return true;
+        LogError("filesystem statistic error: cannot read %s -- %s\n", DISKSTAT, STRERROR);
+        return false;
 }
 
 
