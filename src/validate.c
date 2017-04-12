@@ -1668,7 +1668,7 @@ State_Type check_remote_host(Service_T s) {
                 }
         }
         /* If we could not ping the host we assume it's down and do not continue to check any port connections  */
-        if (last_ping && last_ping->is_available == Connection_Failed) {
+        if (last_ping && last_ping->is_available == Connection_Failed && s->portlist) {
                 DEBUG("'%s' icmp ping failed, skipping any port connection tests\n", s->name);
                 return State_Failed;
         }
