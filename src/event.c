@@ -330,18 +330,26 @@ static void _handleEvent(Service_T S, Event_T E) {
         }
 
         if (E->message) {
-                /* In the case that the service state is initializing yet and error
-                 * occurred, log it and exit. Succeeded events in init state are not
-                 * logged. Instance and action events are logged always with priority
-                 * info. */
-                if (E->state != State_Init || E->state_map & 0x1) {
-                        if (E->state == State_Succeeded || E->state == State_ChangedNot || E->id == Event_Instance || E->id == Event_Action)
+                if (E->id == Event_Instance || E->id == Event_Action) {
+                        // Instance and action events are logged always with priority info
+                        LogInfo("'%s' %s\n", S->name, E->message);
+                } else if (E->state == State_Succeeded || E->state == State_ChangedNot) {
+                        if (E->state_map & 0x1) {
+                                // Failure, but didn't reach the error threshold yet
+                                LogWarning("'%s' %s\n", S->name, E->message);
+                        } else {
+                                // Success
                                 LogInfo("'%s' %s\n", S->name, E->message);
-                        else
-                                LogError("'%s' %s\n", S->name, E->message);
-                }
-                if (E->state == State_Init)
+                        }
+                } else if (E->state == State_Init) {
+                        if (E->state_map & 0x1) {
+                                // Log error which occur while the service is initializing as warnings, success is not logged in the initializing state
+                                LogWarning("'%s' %s\n", S->name, E->message);
+                        }
                         return;
+                } else {
+                        LogError("'%s' %s\n", S->name, E->message);
+                }
         }
 
         if (E->state == State_Failed || E->state == State_Changed) {
