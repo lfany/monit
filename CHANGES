@@ -25,6 +25,8 @@ The "logfile" form is deprecated, but kept for backward compatibility.
 
 Fixed: Linux: If the filesystem is not found in /proc/diskstat, Monit may leak filedescriptors.
 
+Fixed: Issue #487: Solaris on SPARC: Monit doesn't trigger an event if protocol test failed.
+
 Fixed: Issue #566: Systemd template for Monit: Added StandardOutput=null option to prevent
 systemd to duplicate Monit log output.
 
