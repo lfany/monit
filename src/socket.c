@@ -574,7 +574,7 @@ static void _testUnix(Port_T p) {
 
 static void _testIp(Port_T p) {
         char error[STRLEN];
-        Connection_State is_available = Connection_Failed;
+        volatile Connection_State is_available = Connection_Failed;
         struct addrinfo *result = _resolve(p->hostname, p->target.net.port, p->type, p->family);
         if (result) {
                 // The host may resolve to multiple IPs and if at least one succeeded, we have no problem and don't have to flood the log with partial errors => log only the last error
