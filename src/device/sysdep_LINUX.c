@@ -134,7 +134,7 @@ static boolean_t _getCifsDiskActivity(void *_inf) {
                 if (! found) {
                         int index;
                         char name[PATH_MAX];
-                        if (sscanf(line, "%d) %1023s", &index, name) == 2 && IS(name, inf->filesystem->object.key)) {
+                        if (sscanf(line, "%d) %1023s", &index, name) == 2 && Str_isEqual(name, inf->filesystem->object.key)) {
                                 found = true;
                         }
                 } else if (found) {
@@ -143,10 +143,10 @@ static boolean_t _getCifsDiskActivity(void *_inf) {
                         uint64_t operations;
                         uint64_t bytes;
                         if (sscanf(line, "%255[^:]: %"PRIu64" %255[^:]: %"PRIu64, label1, &operations, label2, &bytes) == 4) {
-                                if (IS(label1, "Reads") && IS(label2, "Bytes")) {
+                                if (Str_isEqual(label1, "Reads") && Str_isEqual(label2, "Bytes")) {
                                         Statistics_update(&(inf->filesystem->read.bytes), now, bytes);
                                         Statistics_update(&(inf->filesystem->read.operations), now, operations);
-                                } else if (IS(label1, "Writes") && IS(label2, "Bytes")) {
+                                } else if (Str_isEqual(label1, "Writes") && Str_isEqual(label2, "Bytes")) {
                                         Statistics_update(&(inf->filesystem->write.bytes), now, bytes);
                                         Statistics_update(&(inf->filesystem->write.operations), now, operations);
                                         break;
@@ -181,11 +181,11 @@ static boolean_t _getNfsDiskActivity(void *_inf) {
                         uint64_t bytesReceived;
                         uint64_t time;
                         if (sscanf(line, " %255[^:]: %"PRIu64" %*u %*u %"PRIu64 " %"PRIu64" %*u %*u %"PRIu64, name, &operations, &bytesSent, &bytesReceived, &time) == 5) {
-                                if (IS(name, "READ")) {
+                                if (Str_isEqual(name, "READ")) {
                                         Statistics_update(&(inf->filesystem->time.read), now, time / 1000.); // us -> ms
                                         Statistics_update(&(inf->filesystem->read.bytes), now, bytesReceived);
                                         Statistics_update(&(inf->filesystem->read.operations), now, operations);
-                                } else if (IS(name, "WRITE")) {
+                                } else if (Str_isEqual(name, "WRITE")) {
                                         Statistics_update(&(inf->filesystem->time.write), now, time / 1000.); // us -> ms
                                         Statistics_update(&(inf->filesystem->write.bytes), now, bytesSent);
                                         Statistics_update(&(inf->filesystem->write.operations), now, operations);
@@ -270,7 +270,7 @@ static boolean_t _getProcfsBlockDiskActivity(void *_inf) {
                         // Fallback for kernels < 2.6.25: the /proc/diskstats used to have just 4 statistics, the file is present on >= 2.6.25 too and has 11 fields (same format as /sys/class/block/<NAME>/stat), but we use sysfs for it
                         // as we read the given partition directly instead of traversing the whole filesystems list. In this function we expect the old 4-statistics format - if it should be ever used as main data collector, it needs to
                         // be modified to support >= 2.6.25 format too.
-                        if (fscanf(f, " %*d %*d %255s %"PRIu64" %"PRIu64" %"PRIu64" %"PRIu64, name, &readOperations, &readSectors, &writeOperations, &writeSectors) == 5 && IS(name, inf->filesystem->object.key)) {
+                        if (fscanf(f, " %*d %*d %255s %"PRIu64" %"PRIu64" %"PRIu64" %"PRIu64, name, &readOperations, &readSectors, &writeOperations, &writeSectors) == 5 && Str_isEqual(name, inf->filesystem->object.key)) {
                                 Statistics_update(&(inf->filesystem->read.bytes), now, readSectors * 512);
                                 Statistics_update(&(inf->filesystem->read.operations), now, readOperations);
                                 Statistics_update(&(inf->filesystem->write.bytes), now, writeSectors * 512);
@@ -294,7 +294,7 @@ static boolean_t _compareMountpoint(const char *mountpoint, struct mntent *mnt) 
 static boolean_t _compareDevice(const char *device, struct mntent *mnt) {
         char target[PATH_MAX] = {};
         // The device listed in /etc/mtab can be a device mapper symlink (e.g. /dev/mapper/centos-root -> /dev/dm-1) ... lookup the device as is first (support for NFS/CIFS/SSHFS/etc.) and fallback to realpath if it didn't match
-        return (IS(device, mnt->mnt_fsname) || (realpath(mnt->mnt_fsname, target) && IS(device, target)));
+        return (Str_isEqual(device, mnt->mnt_fsname) || (realpath(mnt->mnt_fsname, target) && Str_isEqual(device, target)));
 }
 
 
