@@ -1,6 +1,10 @@
-                     CHANGES version 5.22.0
+                     CHANGES version 5.23.0
 
            This file summarizes changes made since 5.0
+
+Version 5.23.0
+
+
 
 Version 5.22.0
 
@@ -36,9 +40,6 @@ Fixed: Issue #569: fix configure --without-zlib
 
 Fixed: Issue #570: if the connection test requires STARTTLS, the certificate valid
 days test was broken.
-
-Fixed: Issue #577: Non-SSL connections may return confusing message "Resource temporarily unavailable"
-on timeout.
 
 Fixed: Issue #584: fix compilation for MacOSX 10.6.x - 10.9.x.
 
