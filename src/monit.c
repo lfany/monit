@@ -145,7 +145,7 @@ char *icmpnames[] = {"Reply", "", "", "Destination Unreachable", "Source Quench"
 char *sslnames[] = {"auto", "v2", "v3", "tlsv1", "tlsv1.1", "tlsv1.2"};
 char *socketnames[] = {"unix", "IP", "IPv4", "IPv6"};
 char *timestampnames[] = {"modify/change time", "access time", "change time", "modify time"};
-char *httpmethod[] = {"AUTO", "HEAD", "GET"};
+char *httpmethod[] = {"", "HEAD", "GET"};
 
 
 /* ------------------------------------------------------------------ Public */
