@@ -3332,7 +3332,7 @@ static void addport(Port_T *list, Port_T port) {
                 } else {
                         p->parameters.http.hashtype = Hash_Unknown;
                 }
-                if (p->parameters.http.method == Http_Auto) {
+                if (! p->parameters.http.method) {
                         if ((p->url_request && p->url_request->regex) || p->parameters.http.checksum) {
                                 p->parameters.http.method = Http_Get;
                         } else {

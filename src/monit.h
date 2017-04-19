@@ -238,8 +238,7 @@ typedef enum {
 
 
 typedef enum {
-        Http_Auto = 0, // Indicates the user didn't set an explicit method
-        Http_Head,
+        Http_Head = 1,
         Http_Get
 } __attribute__((__packed__)) Http_Method;
 
