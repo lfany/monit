@@ -3569,7 +3569,7 @@ static void addchecksum(Checksum_T cs) {
 
         cs->initialized = true;
 
-        if (! *cs->hash) {
+        if (STR_UNDEF(cs->hash)) {
                 if (cs->type == Hash_Unknown)
                         cs->type = Hash_Default;
                 if (! (Util_getChecksum(current->path, cs->type, cs->hash, sizeof(cs->hash)))) {

@@ -73,7 +73,7 @@
 // If the host is not set already (cached), translate system hostname to FQDN or fallback to plain system hostname if failed
 static char *_getFQDNhostname(char host[256]) {
         assert(host);
-        if (! *host) {
+        if (STR_UNDEF(host)) {
                 struct addrinfo *result = NULL, hints = {
                         .ai_family = AF_UNSPEC,
                         .ai_flags = AI_CANONNAME,
@@ -91,7 +91,7 @@ static char *_getFQDNhostname(char host[256]) {
                 } else {
                         LogWarning("Cannot translate '%s' to FQDN name, please set a sender address using 'set mail-format' -- %s\n", Run.system->name, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
                 }
-                if (! *host) {
+                if (STR_UNDEF(host)) {
                         // Fallback
                         strncpy(host, Run.system->name, 255);
                 }

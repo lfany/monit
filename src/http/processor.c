@@ -807,12 +807,12 @@ static boolean_t basic_authenticate(HttpRequest req) {
                 LogDebug("HttpRequest: access denied -- client [%s]: invalid Authorization header\n", NVLSTR(Socket_getRemoteHost(req->S)));
                 return false;
         }
-        if (! *uname) {
+        if (STR_UNDEF(uname)) {
                 LogDebug("HttpRequest: access denied -- client [%s]: empty username\n", NVLSTR(Socket_getRemoteHost(req->S)));
                 return false;
         }
-        char *password = password = strchr(uname, ':');
-        if (! password || ! *password) {
+        char *password = strchr(uname, ':');
+        if (STR_UNDEF(password)) {
                 LogDebug("HttpRequest: access denied -- client [%s]: empty password\n", NVLSTR(Socket_getRemoteHost(req->S)));
                 return false;
         }
