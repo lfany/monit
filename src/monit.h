@@ -238,7 +238,7 @@ typedef enum {
 
 
 typedef enum {
-        Http_Default = 0,
+        Http_Auto = 0, // Indicates the user didn't set an explicit method
         Http_Head,
         Http_Get
 } __attribute__((__packed__)) Http_Method;
@@ -998,6 +998,13 @@ typedef struct Device_T {
 } *Device_T;
 
 
+typedef struct TimestampInfo_T {
+        uint64_t access;
+        uint64_t change;
+        uint64_t modify;
+} *TimestampInfo_T;
+
+
 typedef struct FileSystemInfo_T {
         long long  f_blocks;              /**< Total data blocks in filesystem */
         long long  f_blocksfree;   /**< Free blocks available to non-superuser */
@@ -1027,11 +1034,7 @@ typedef struct FileSystemInfo_T {
 
 
 typedef struct FileInfo_T {
-        struct {
-                time_t access;
-                time_t change;
-                time_t modify;
-        } timestamp;
+        struct TimestampInfo_T timestamp;
         int mode;                                              /**< Permission */
         int uid;                                              /**< Owner's uid */
         int gid;                                              /**< Owner's gid */
@@ -1044,11 +1047,7 @@ typedef struct FileInfo_T {
 
 
 typedef struct DirectoryInfo_T {
-        struct {
-                time_t access;
-                time_t change;
-                time_t modify;
-        } timestamp;
+        struct TimestampInfo_T timestamp;
         int mode;                                              /**< Permission */
         int uid;                                              /**< Owner's uid */
         int gid;                                              /**< Owner's gid */
@@ -1056,11 +1055,7 @@ typedef struct DirectoryInfo_T {
 
 
 typedef struct FifoInfo_T {
-        struct {
-                time_t access;
-                time_t change;
-                time_t modify;
-        } timestamp;
+        struct TimestampInfo_T timestamp;
         int mode;                                              /**< Permission */
         int uid;                                              /**< Owner's uid */
         int gid;                                              /**< Owner's gid */
@@ -1310,6 +1305,7 @@ extern char *icmpnames[];
 extern char *sslnames[];
 extern char *socketnames[];
 extern char *timestampnames[];
+extern char *httpmethod[];
 
 
 /* ------------------------------------------------------- Public prototypes */

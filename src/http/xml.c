@@ -231,9 +231,9 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         S->inf.file->mode & 07777,
                                         (int)S->inf.file->uid,
                                         (int)S->inf.file->gid,
-                                        (uint64_t)S->inf.file->timestamp.access,
-                                        (uint64_t)S->inf.file->timestamp.change,
-                                        (uint64_t)S->inf.file->timestamp.modify,
+                                        S->inf.file->timestamp.access,
+                                        S->inf.file->timestamp.change,
+                                        S->inf.file->timestamp.modify,
                                         (unsigned long long)S->inf.file->size);
                                 if (S->checksum)
                                         StringBuffer_append(B, "<checksum type=\"%s\">%s</checksum>", checksumnames[S->checksum->type], S->inf.file->cs_sum);
@@ -252,9 +252,9 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         S->inf.directory->mode & 07777,
                                         (int)S->inf.directory->uid,
                                         (int)S->inf.directory->gid,
-                                        (uint64_t)S->inf.directory->timestamp.access,
-                                        (uint64_t)S->inf.directory->timestamp.change,
-                                        (uint64_t)S->inf.directory->timestamp.modify);
+                                        S->inf.directory->timestamp.access,
+                                        S->inf.directory->timestamp.change,
+                                        S->inf.directory->timestamp.modify);
                                 break;
 
                         case Service_Fifo:
@@ -270,9 +270,9 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         S->inf.fifo->mode & 07777,
                                         (int)S->inf.fifo->uid,
                                         (int)S->inf.fifo->gid,
-                                        (uint64_t)S->inf.fifo->timestamp.access,
-                                        (uint64_t)S->inf.fifo->timestamp.change,
-                                        (uint64_t)S->inf.fifo->timestamp.modify);
+                                        S->inf.fifo->timestamp.access,
+                                        S->inf.fifo->timestamp.change,
+                                        S->inf.fifo->timestamp.modify);
                                 break;
 
                         case Service_Filesystem:

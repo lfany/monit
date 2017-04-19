@@ -287,7 +287,7 @@ static boolean_t _getProcfsBlockDiskActivity(void *_inf) {
 
 
 static boolean_t _compareMountpoint(const char *mountpoint, struct mntent *mnt) {
-        return IS(mountpoint, mnt->mnt_dir) && ! IS(mnt->mnt_fsname, "rootfs");
+        return IS(mountpoint, mnt->mnt_dir);
 }
 
 
@@ -305,9 +305,12 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                 return false;
         }
         inf->filesystem->object.generation = _statistics.generation;
+        boolean_t mounted = false;
         struct mntent *mnt;
         while ((mnt = getmntent(f))) {
+                // Scan all entries for overlay mounts (common for rootfs)
                 if (compare(path, mnt)) {
+                        mounted = true;
                         snprintf(inf->filesystem->object.device, sizeof(inf->filesystem->object.device), "%s", mnt->mnt_fsname);
                         snprintf(inf->filesystem->object.mountpoint, sizeof(inf->filesystem->object.mountpoint), "%s", mnt->mnt_dir);
                         snprintf(inf->filesystem->object.type, sizeof(inf->filesystem->object.type), "%s", mnt->mnt_type);
@@ -345,15 +348,13 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                                         }
                                 }
                         }
-                        endmntent(f);
-                        inf->filesystem->object.mounted = true;
-                        return true;
                 }
         }
-        LogError("Lookup for '%s' filesystem failed  -- not found in %s\n", path, MOUNTS);
-error:
         endmntent(f);
-        inf->filesystem->object.mounted = false;
+        inf->filesystem->object.mounted = mounted;
+        if (! mounted) {
+                LogError("Lookup for '%s' filesystem failed  -- not found in %s\n", path, MOUNTS);
+        }
         return false;
 }
 
