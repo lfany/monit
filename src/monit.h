@@ -238,7 +238,7 @@ typedef enum {
 
 
 typedef enum {
-        Http_Default = 0,
+        Http_Auto = 0, // Indicates the user didn't set an explicit method
         Http_Head,
         Http_Get
 } __attribute__((__packed__)) Http_Method;
@@ -1305,6 +1305,7 @@ extern char *icmpnames[];
 extern char *sslnames[];
 extern char *socketnames[];
 extern char *timestampnames[];
+extern char *httpmethod[];
 
 
 /* ------------------------------------------------------- Public prototypes */

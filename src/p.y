@@ -3332,9 +3332,17 @@ static void addport(Port_T *list, Port_T port) {
                 } else {
                         p->parameters.http.hashtype = Hash_Unknown;
                 }
-                // Sanity check: if content or checksum test is used, the method can be either Http_Default (auto) or Http_Get (manual), but not Http_Head (manual), as we need the content
-                if (((p->url_request && p->url_request->regex) || p->parameters.http.checksum) && p->parameters.http.method == Http_Head) {
-                        yyerror2("if response content or checksum test is enabled, the method option must not be HEAD");
+                if (p->parameters.http.method == Http_Auto) {
+                        if ((p->url_request && p->url_request->regex) || p->parameters.http.checksum) {
+                                p->parameters.http.method = Http_Get;
+                        } else {
+                                p->parameters.http.method = Http_Head;
+                        }
+                } else if (p->parameters.http.method == Http_Head) {
+                        // Sanity check: if content or checksum test is used, the method Http_Head is not allowed, as we need the content
+                        if ((p->url_request && p->url_request->regex) || p->parameters.http.checksum) {
+                                yyerror2("if response content or checksum test is enabled, the HEAD method is not allowed");
+                        }
                 }
         }
 

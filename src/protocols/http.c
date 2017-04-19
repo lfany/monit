@@ -225,18 +225,6 @@ static char *_getAuthHeader(Port_T P) {
 }
 
 
-static Http_Method _getMethod(Port_T P) {
-        if (P->parameters.http.method == Http_Default) {
-                if ((P->url_request && P->url_request->regex) || P->parameters.http.checksum) {
-                        return Http_Get;
-                } else {
-                        return Http_Head;
-                }
-        }
-        return P->parameters.http.method;
-}
-
-
 static void _sendRequest(Socket_T socket, Port_T P) {
         char *auth = _getAuthHeader(P);
         StringBuffer_T sb = StringBuffer_create(168);
@@ -244,7 +232,7 @@ static void _sendRequest(Socket_T socket, Port_T P) {
         StringBuffer_append(sb,
                             "%s %s HTTP/1.1\r\n"
                             "%s",
-                            (_getMethod(P) == Http_Get) ? "GET" : "HEAD",
+                            httpmethod[P->parameters.http.method],
                             P->parameters.http.request ? P->parameters.http.request : "/",
                             auth ? auth : "");
         FREE(auth);
