@@ -307,19 +307,14 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
         inf->filesystem->object.generation = _statistics.generation;
         boolean_t mounted = false;
         struct mntent *mnt;
+        char flags[STRLEN];
         while ((mnt = getmntent(f))) {
                 // Scan all entries for overlay mounts (common for rootfs)
                 if (compare(path, mnt)) {
-                        mounted = true;
                         snprintf(inf->filesystem->object.device, sizeof(inf->filesystem->object.device), "%s", mnt->mnt_fsname);
                         snprintf(inf->filesystem->object.mountpoint, sizeof(inf->filesystem->object.mountpoint), "%s", mnt->mnt_dir);
                         snprintf(inf->filesystem->object.type, sizeof(inf->filesystem->object.type), "%s", mnt->mnt_type);
-                        if (! IS(mnt->mnt_opts, inf->filesystem->flags)) {
-                                if (*(inf->filesystem->flags)) {
-                                        inf->filesystem->flagsChanged = true;
-                                }
-                                snprintf(inf->filesystem->flags, sizeof(inf->filesystem->flags), "%s", mnt->mnt_opts);
-                        }
+                        snprintf(flags, sizeof(flags), "%s", mnt->mnt_opts);
                         inf->filesystem->object.getDiskUsage = _getDiskUsage; // The disk usage method is common for all filesystem types
                         inf->filesystem->object.getDiskActivity = _getDummyDiskActivity; // Set to dummy IO statistics method by default (can be overriden bellow if statistics method is available for this filesystem)
                         if (Str_startsWith(mnt->mnt_type, "nfs")) {
@@ -348,14 +343,23 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                                         }
                                 }
                         }
+                        mounted = true;
                 }
         }
         endmntent(f);
         inf->filesystem->object.mounted = mounted;
         if (! mounted) {
                 LogError("Lookup for '%s' filesystem failed  -- not found in %s\n", path, MOUNTS);
+        } else {
+                // Evaluate filesystem flags for the last matching mount (overlay mounts for the same filesystem may have different mount flags)
+                if (! IS(flags, inf->filesystem->flags)) {
+                        if (*(inf->filesystem->flags)) {
+                                inf->filesystem->flagsChanged = true;
+                        }
+                        snprintf(inf->filesystem->flags, sizeof(inf->filesystem->flags), "%s", flags);
+                }
         }
-        return false;
+        return mounted;
 }
 
 
