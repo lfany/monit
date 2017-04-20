@@ -10,6 +10,8 @@ Fixed: Linux: When checking root filesystem via a mountpoint "/", Monit may
 alert that the filesystem flags changed if the system has "rootfs" overlay
 mount.
 
+Fixed: compilation for MacOSX 10.5.x
+
 
 Version 5.22.0
 
