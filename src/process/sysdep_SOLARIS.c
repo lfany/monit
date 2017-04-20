@@ -168,7 +168,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         pt[i].memory.usage = (uint64_t)psinfo->pr_rssize * 1024;
                         if (pflags & ProcessEngine_CollectCommandLine) {
                                 pt[i].cmdline = Str_dup(psinfo->pr_psargs);
-                                if (! pt[i].cmdline || ! *pt[i].cmdline) {
+                                if (STR_UNDEF(pt[i].cmdline)) {
                                         FREE(pt[i].cmdline);
                                         pt[i].cmdline = Str_dup(psinfo->pr_fname);
                                 }

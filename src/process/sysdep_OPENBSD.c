@@ -209,7 +209,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                                         if (StringBuffer_length(cmdline))
                                                 pt[index].cmdline = Str_dup(StringBuffer_toString(StringBuffer_trim(cmdline)));
                                 }
-                                if (! pt[index].cmdline || ! *pt[index].cmdline) {
+                                if (STR_UNDEF(pt[index].cmdline)) {
                                         FREE(pt[index].cmdline);
                                         pt[index].cmdline = Str_dup(pinfo[i].p_comm);
                                 }

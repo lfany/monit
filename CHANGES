@@ -4,6 +4,11 @@
 
 Version 5.23.0
 
+New: Issue #594: Systemd template for Monit: Added documentation reference.
+
+Fixed: Linux: When checking root filesystem via a mountpoint "/", Monit may
+alert that the filesystem flags changed if the system has "rootfs" overlay
+mount.
 
 
 Version 5.22.0
