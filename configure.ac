@@ -589,6 +589,7 @@ then
    LDFLAGS="$LDFLAGS -Wl,-search_paths_first"
    AC_CHECK_LIB([kvm], [kvm_open])
    LIBS="$LIBS -framework System -framework CoreFoundation -framework DiskArbitration -framework IOKit -multiply_defined suppress"
+   AC_CHECK_FUNCS(CFPropertyListCreateWithStream)
 elif test "$architecture" = "AIX"
 then
    ARCH="AIX"
