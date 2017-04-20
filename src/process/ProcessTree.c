@@ -425,7 +425,7 @@ boolean_t init_system_info(void) {
                 LogError("'%s' resource monitoring initialization error -- uname failed: %s\n", Run.system->name, STRERROR);
                 return false;
         }
-#if defined HAVE_COREFOUNDATION_COREFOUNDATION_H && defined HAVE_CFPROPERTYLISTCREATEWITHSTREAM
+#ifdef HAVE_COREFOUNDATION_COREFOUNDATION_H
         CFURLRef url = CFURLCreateWithFileSystemPath(NULL, CFSTR("/System/Library/CoreServices/SystemVersion.plist"), kCFURLPOSIXPathStyle, false);
         if (url) {
                 CFReadStreamRef stream = CFReadStreamCreateWithFile(NULL, url);
