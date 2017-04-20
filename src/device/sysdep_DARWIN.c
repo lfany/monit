@@ -184,7 +184,9 @@ static void _filesystemFlagsToString(Info_T inf, uint64_t flags) {
                 {MNT_NODEV, "nodev"},
                 {MNT_UNION, "union"},
                 {MNT_ASYNC, "async"},
+#ifdef MNT_CPROTECT
                 {MNT_CPROTECT, "content protection"},
+#endif
                 {MNT_EXPORTED, "exported"},
                 {MNT_QUARANTINE, "quarantined"},
                 {MNT_LOCAL, "local"},
