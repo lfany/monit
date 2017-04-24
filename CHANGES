@@ -6,6 +6,9 @@ Version 5.23.0
 
 New: Issue #594: Systemd template for Monit: Added documentation reference.
 
+Fixed: Issue #601: The Monit web interface highlighted non-SSL TCP port tests
+with red, even though there was no error.
+
 Fixed: Linux: When checking root filesystem via a mountpoint "/", Monit may
 alert that the filesystem flags changed if the system has "rootfs" overlay
 mount.
