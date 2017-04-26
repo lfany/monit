@@ -244,7 +244,7 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                                                 inf->filesystem->object.getDiskActivity = _getBlockDiskActivity;
                                                 if (! _parseDevice(mntItem->f_mntfromname, &(inf->filesystem->object))) {
                                                         inf->filesystem->object.getDiskActivity = _getDummyDiskActivity;
-                                                        LogWarning("not monitoring i/o for filesystem '%s'", path);
+                                                        DEBUG("I/O monitoring for filesystem '%s' skipped - unable to parse the device %s", path, mntItem->f_mntfromname);
                                                 }
                                         } else {
                                                 //FIXME: add HAMMER support
