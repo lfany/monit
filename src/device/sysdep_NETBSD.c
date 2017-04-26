@@ -241,9 +241,11 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                                 struct statvfs *mntItem = mnt + i;
                                 if (compare(path, mntItem)) {
                                         if (IS(mntItem->f_fstypename, "ffs")) {
-                                                inf->filesystem->object.getDiskActivity = _getBlockDiskActivity;
-                                                if (! _parseDevice(mntItem->f_mntfromname, &(inf->filesystem->object))) {
-                                                        goto error;
+                                                if (_parseDevice(mntItem->f_mntfromname, &(inf->filesystem->object))) {
+                                                        inf->filesystem->object.getDiskActivity = _getBlockDiskActivity;
+                                                } else {
+                                                        inf->filesystem->object.getDiskActivity = _getDummyDiskActivity;
+                                                        DEBUG("I/O monitoring for filesystem '%s' skipped - unable to parse the device %s", path, mntItem->f_mntfromname);
                                                 }
                                         } else {
                                                 //FIXME: NetBSD kernel has NFS statistics as well, but there is no clear mapping between the kernel label ("nfsX" style) and the NFS mount => we don't support NFS currently
