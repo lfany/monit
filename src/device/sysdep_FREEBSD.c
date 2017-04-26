@@ -253,7 +253,8 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                                         if (IS(mntItem->f_fstypename, "ufs")) {
                                                 inf->filesystem->object.getDiskActivity = _getBlockDiskActivity;
                                                 if (! _parseDevice(mntItem->f_mntfromname, &(inf->filesystem->object))) {
-                                                        goto error;
+                                                        inf->filesystem->object.getDiskActivity = _getDummyDiskActivity;
+                                                        LogWarning("not monitoring i/o for filesystem '%s'", path);
                                                 }
                                         } else {
                                                 //FIXME: can add ZFS support (see sysdep_SOLARIS.c), but libzfs headers are not installed on FreeBSD by default (part of "cddl" set)
