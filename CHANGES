@@ -13,6 +13,8 @@ Fixed: Issue #602: Linux: When checking root filesystem via a mountpoint "/",
 Monit may alert that the filesystem flags changed if the system has "rootfs"
 overlay mount.
 
+Fixed: Issue #603: Support existence/nonexistence test for filesystem check.
+
 Fixed: *BSD: If device parsing for UFS filesystem failed, skip the I/O monitoring
 only and continue monitoring the space/inode usage.  Thanks to Daniel Bilik for patch.
 

@@ -451,6 +451,7 @@ optfilesyslist  : /* EMPTY */
 optfilesys      : start
                 | stop
                 | restart
+                | exist
                 | actionrate
                 | every
                 | alert
