@@ -231,7 +231,7 @@ set httpd port 2812 and
 #    stop program  = "/bin/umount /data"
 #    if failed permission 660 then unmonitor
 #    if failed uid root then unmonitor
-#    if failed gid disk then unmonitor
+#    if failed gid "disk" then unmonitor
 #    if space usage > 80% for 5 times within 15 cycles then alert
 #    if space usage > 99% then stop
 #    if inode usage > 30000 then alert
