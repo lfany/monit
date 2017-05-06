@@ -132,6 +132,16 @@ static void _programOutput(InputStream_T I, StringBuffer_T S) {
                         StringBuffer_append(S, "%s", buf);
                 }
         } while (n > 0 && StringBuffer_length(S) < Run.limits.programOutput);
+
+        /**
+         * Read remaining bytes from the stream to ensure that
+         * child process doesn't hang on write to sderr / stdout
+         */
+        if (StringBuffer_length(S) >= Run.limits.programOutput) {
+            do {
+                    n = InputStream_readBytes(I, buf, sizeof(buf) - 1);
+            } while (n > 0);
+        }
 }
 
 
@@ -1568,6 +1578,10 @@ State_Type check_program(Service_T s) {
         time_t now = Time_now();
         Process_T P = s->program->P;
         if (P) {
+				// Save program output
+				_programOutput(Process_getErrorStream(P), s->program->output);
+				_programOutput(Process_getInputStream(P), s->program->output);
+
                 if (Process_exitStatus(P) < 0) { // Program is still running
                         int64_t execution_time = (now - s->program->started) * 1000;
                         if (execution_time > s->program->timeout) { // Program timed out
@@ -1582,12 +1596,10 @@ State_Type check_program(Service_T s) {
                                 return State_Init;
                         }
                 }
-                s->program->exitStatus = Process_exitStatus(P); // Save exit status for web-view display
-                // Save program output
-                StringBuffer_clear(s->program->output);
-                _programOutput(Process_getErrorStream(P), s->program->output);
-                _programOutput(Process_getInputStream(P), s->program->output);
+
                 StringBuffer_trim(s->program->output);
+
+                s->program->exitStatus = Process_exitStatus(P); // Save exit status for web-view display
                 // Evaluate program's exit status against our status checks.
                 for (Status_T status = s->statuslist; status; status = status->next) {
                         if (status->operator == Operator_Changed) {

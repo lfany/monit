@@ -99,7 +99,10 @@ T StringBuffer_new(const char *s) {
 T StringBuffer_create(int hint) {
         if (hint <= 0)
                 THROW(AssertException, "Illegal hint value");
-        return _ctor(hint);
+        T buffer = _ctor(hint);
+        StringBuffer_clear(buffer);
+
+        return buffer;
 }
 
 
