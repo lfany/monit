@@ -1578,7 +1578,7 @@ State_Type check_program(Service_T s) {
         time_t now = Time_now();
         Process_T P = s->program->P;
         if (P) {
-				// Save program output
+                // Save program output
                 _programOutput(Process_getErrorStream(P), s->program->output);
                 _programOutput(Process_getInputStream(P), s->program->output);
 
