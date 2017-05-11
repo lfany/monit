@@ -1437,7 +1437,8 @@ State_Type check_file(Service_T s) {
                 Event_post(s, Event_Invalid, State_Failed, s->action_INVALID, "is neither a regular file nor a socket");
                 return State_Failed;
         } else {
-                Event_post(s, Event_Invalid, State_Succeeded, s->action_INVALID, "is a regular file or socket");
+                Event_post(s, Event_Invalid, State_Succeeded, s->action_INVALID, "is a regular %s",
+                           S_ISSOCK(s->inf.file->mode) ? "socket" : "file");
         }
         if (_checkChecksum(s) == State_Failed)
                 rv = State_Failed;
