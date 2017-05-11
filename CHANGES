@@ -18,6 +18,8 @@ Fixed: Issue #603: Support existence/nonexistence test for filesystem check.
 Fixed: *BSD: If device parsing for UFS filesystem failed, skip the I/O monitoring
 only and continue monitoring the space/inode usage.  Thanks to Daniel Bilik for patch.
 
+Fixed: Keep the action-pending status until the action is finished.
+
 
 Version 5.22.0
 

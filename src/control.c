@@ -385,7 +385,6 @@ static boolean_t _doDepend(Service_T s, Action_Type action, boolean_t unmonitor)
         for (Service_T child = servicelist; child; child = child->next) {
                 for (Dependant_T d = child->dependantlist; d; d = d->next) {
                         if (IS(d->dependant, s->name)) {
-                                child->doaction = Action_Ignored;
                                 if (action == Action_Start) {
                                         // (re)start children only if it's monitoring is enabled (we keep monitoring flag during restart, allowing to restore original pre-restart configuration)
                                         if (child->monitor != Monitor_Not && ! _doStart(child))
@@ -407,6 +406,7 @@ static boolean_t _doDepend(Service_T s, Action_Type action, boolean_t unmonitor)
                                                 }
                                         }
                                 }
+                                child->doaction = Action_Ignored;
                                 break;
                         }
                 }
@@ -456,7 +456,6 @@ boolean_t control_service(const char *S, Action_Type A) {
                 LogError("Service '%s' -- doesn't exist\n", S);
                 return false;
         }
-        s->doaction = Action_Ignored;
         switch (A) {
                 case Action_Start:
                         rv = _doStart(s);
@@ -500,8 +499,9 @@ boolean_t control_service(const char *S, Action_Type A) {
 
                 default:
                         LogError("Service '%s' -- invalid action %d\n", S, A);
-                        return false;
+                        rv = false;
         }
+        s->doaction = Action_Ignored;
         return rv;
 }
 
