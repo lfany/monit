@@ -129,7 +129,7 @@ static void _programOutput(InputStream_T I, StringBuffer_T S) {
         InputStream_setTimeout(I, 0);
         do {
                 n = InputStream_readBytes(I, buf, sizeof(buf) - 1);
-                if (n && StringBuffer_length(S) < Run.limits.programOutput) {
+                if (n > 0 && StringBuffer_length(S) < Run.limits.programOutput) {
                         buf[n] = 0;
                         StringBuffer_append(S, "%s", buf);
                 }
