@@ -288,7 +288,7 @@ int main(void) {
                 assert(StringBuffer_length(sb) == 0);
                 size_t compressedLength;
                 const void *compressed = StringBuffer_toCompressed(sb, 6, &compressedLength);
-                assert(compressed = NULL);
+                assert(compressed == NULL);
                 assert(compressedLength == 0);
                 StringBuffer_free(&sb);
                 assert(sb == NULL);

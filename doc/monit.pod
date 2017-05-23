@@ -1790,7 +1790,7 @@ enable execute repetition if the error persists for a given number of
 cycles. For instance:
 
  if failed <test> then exec "/usr/local/bin/sms.sh"
-      as uid nobody and gid nobody
+      as uid "nobody" and gid "nobody"
       repeat every 5 cycles
 
 Remember, if Monit is run by root, then all programs executed by Monit
@@ -2563,9 +2563,9 @@ or owner and effective user of a process.
 
 Syntax:
 
- IF FAILED [E]UID user THEN action
+ IF FAILED [E]UID <value> THEN action
 
-I<user> defines a user id either in numeric or in string form.
+I<value> defines a user id either in numeric or in string form.
 
 I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 "EXEC" or "UNMONITOR".
@@ -2573,7 +2573,7 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 Example:
 
  check file shadow with path /etc/shadow
-       if failed uid root then alert
+       if failed uid "root" then alert
 
 
 =head2 GID TEST
@@ -2583,9 +2583,9 @@ or process.
 
 Syntax:
 
- IF FAILED GID group THEN action
+ IF FAILED GID <value> THEN action
 
-I<group> defines a group id either in numeric or in string form.
+I<value> defines a group id either in numeric or in string form.
 
 I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 "EXEC" or "UNMONITOR".
@@ -2593,7 +2593,7 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 Example:
 
  check file shadow with path /etc/shadow
-       if failed gid shadow then alert
+       if failed gid "shadow" then alert
 
 
 =head2 PID TEST
@@ -3632,7 +3632,7 @@ request to change uid and gid.
 
  check process tomcat with pidfile /var/run/tomcat.pid
        start program = "/etc/init.d/tomcat start"
-             as uid nobody and gid nobody
+             as uid "nobody" and gid "nobody"
        stop program  = "/etc/init.d/tomcat stop"
              # You can also use id numbers instead and write:
              as uid 99 and with gid 99
@@ -3826,8 +3826,8 @@ statement and a file check dependency:
           and expect 8f7f419955cefa0b33a2ba316cba3659
               then unmonitor
        if failed permission 755 then unmonitor
-       if failed uid root then unmonitor
-       if failed gid root then unmonitor
+       if failed uid "root" then unmonitor
+       if failed gid "root" then unmonitor
        if changed timestamp then alert
        group apache
 
