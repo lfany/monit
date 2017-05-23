@@ -6,9 +6,13 @@ Version 5.23.0
 
 New: Issue #594: Systemd template for Monit: Added documentation reference.
 
-Fixed: Linux: When checking root filesystem via a mountpoint "/", Monit may
-alert that the filesystem flags changed if the system has "rootfs" overlay
-mount.
+Fixed: Issue #602: Linux: When checking root filesystem via a mountpoint "/",
+Monit may alert that the filesystem flags changed if the system has "rootfs"
+overlay mount.
+
+Fixed: Issue #614: Monit may crash if "total memory" test is used in "check system"
+context. The "total memory" test is for process checks only (includes children
+memory total) and will produce syntax error if used in system check now.
 
 
 Version 5.22.0

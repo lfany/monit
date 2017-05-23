@@ -2077,7 +2077,7 @@ resourceprocesslist : resourceprocessopt
                     ;
 
 resourceprocessopt  : resourcecpuproc
-                    | resourcemem
+                    | resourcememproc
                     | resourcethreads
                     | resourcechild
                     | resourceload
@@ -2127,6 +2127,18 @@ resourcecpuid   : CPUUSER   { $<number>$ = Resource_CpuUser; }
                 ;
 
 resourcemem     : MEMORY operator value unit {
+                        resourceset.resource_id = Resource_MemoryKbyte;
+                        resourceset.operator = $<number>2;
+                        resourceset.limit = $<real>3 * $<number>4;
+                  }
+                | MEMORY operator value PERCENT {
+                        resourceset.resource_id = Resource_MemoryPercent;
+                        resourceset.operator = $<number>2;
+                        resourceset.limit = $<real>3;
+                  }
+                ;
+
+resourcememproc : MEMORY operator value unit {
                         resourceset.resource_id = Resource_MemoryKbyte;
                         resourceset.operator = $<number>2;
                         resourceset.limit = $<real>3 * $<number>4;
