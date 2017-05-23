@@ -19,6 +19,9 @@ Fixed: Issue #614: Monit may crash if "total memory" test is used in "check syst
 context. The "total memory" test is for process checks only (includes children
 memory total) and will produce syntax error if used in system check now.
 
+Fixed: The "check program" may timeout if the executed program produces lot of output.
+Thanks to Artur Molchanov for patch.
+
 Fixed: *BSD: If device parsing for UFS filesystem failed, skip the I/O monitoring
 only and continue monitoring the space/inode usage.  Thanks to Daniel Bilik for patch.
 

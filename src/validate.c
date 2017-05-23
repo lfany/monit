@@ -119,7 +119,9 @@
 
 
 /**
- * Read program output into stringbuffer. Limit the output per Run.limits.programOutput
+ * Read program output. The output is saved to StringBuffer up to Run.limits.programOutput,
+ * remaining bytes are dropped (must read whole output so the program doesn't hang on full
+ * stdout / stderr pipe).
  */
 static void _programOutput(InputStream_T I, StringBuffer_T S) {
         int n;
@@ -127,21 +129,11 @@ static void _programOutput(InputStream_T I, StringBuffer_T S) {
         InputStream_setTimeout(I, 0);
         do {
                 n = InputStream_readBytes(I, buf, sizeof(buf) - 1);
-                if (n) {
+                if (n && StringBuffer_length(S) < Run.limits.programOutput) {
                         buf[n] = 0;
                         StringBuffer_append(S, "%s", buf);
                 }
-        } while (n > 0 && StringBuffer_length(S) < Run.limits.programOutput);
-
-        /**
-         * Read remaining bytes from the stream to ensure that
-         * child process doesn't hang on write to sderr / stdout
-         */
-        if (StringBuffer_length(S) >= Run.limits.programOutput) {
-            do {
-                    n = InputStream_readBytes(I, buf, sizeof(buf) - 1);
-            } while (n > 0);
-        }
+        } while (n > 0);
 }
 
 
@@ -1599,11 +1591,12 @@ State_Type check_program(Service_T s) {
         time_t now = Time_now();
         Process_T P = s->program->P;
         if (P) {
-                // Save program output
+                // Process program output
                 _programOutput(Process_getErrorStream(P), s->program->output);
                 _programOutput(Process_getInputStream(P), s->program->output);
-
-                if (Process_exitStatus(P) < 0) { // Program is still running
+                StringBuffer_trim(s->program->output);
+                // Is the program still running?
+                if (Process_exitStatus(P) < 0) {
                         int64_t execution_time = (now - s->program->started) * 1000;
                         if (execution_time > s->program->timeout) { // Program timed out
                                 rv = State_Failed;
@@ -1617,9 +1610,6 @@ State_Type check_program(Service_T s) {
                                 return State_Init;
                         }
                 }
-
-                StringBuffer_trim(s->program->output);
-
                 s->program->exitStatus = Process_exitStatus(P); // Save exit status for web-view display
                 // Evaluate program's exit status against our status checks.
                 for (Status_T status = s->statuslist; status; status = status->next) {
@@ -1651,6 +1641,7 @@ State_Type check_program(Service_T s) {
         //FIXME: the current off-by-one-cycle based design requires that the check program will collect the exit value next cycle even if program startup should be skipped in the given cycle => must test skip here (new scheduler will obsolete this deferred skip checking)
         if (! _checkSkip(s) && s->monitor != Monitor_Not) { // The status evaluation may disable service monitoring
                 // Start program
+                StringBuffer_clear(s->program->output);
                 s->program->P = Command_execute(s->program->C);
                 if (! s->program->P) {
                         rv = State_Failed;
