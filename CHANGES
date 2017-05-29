@@ -4,6 +4,9 @@
 
 Version 5.23.0
 
+New: Spamassassin protocol test added. Example:
+    if failed port 783 protocol spamassassin then alert
+
 New: Issue #594: Systemd template for Monit: Added documentation reference.
 
 Fixed: Issue #601: The Monit web interface highlighted non-SSL TCP port tests
