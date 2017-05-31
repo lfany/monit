@@ -406,7 +406,9 @@ static boolean_t _doDepend(Service_T s, Action_Type action, boolean_t unmonitor)
                                                 }
                                         }
                                 }
-                                child->doaction = Action_Ignored;
+                                if (child->doaction == action) {
+                                        child->doaction = Action_Ignored;
+                                }
                                 break;
                         }
                 }
@@ -501,7 +503,9 @@ boolean_t control_service(const char *S, Action_Type A) {
                         LogError("Service '%s' -- invalid action %d\n", S, A);
                         rv = false;
         }
-        s->doaction = Action_Ignored;
+        if (s->doaction == A) {
+                s->doaction = Action_Ignored;
+        }
         return rv;
 }
 

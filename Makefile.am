@@ -83,6 +83,7 @@ monit_SOURCES	= src/y.tab.c \
 		  src/protocols/sieve.c \
 		  src/protocols/sip.c \
 		  src/protocols/smtp.c \
+		  src/protocols/spamassassin.c \
 		  src/protocols/ssh.c \
 		  src/protocols/tns.c \
 		  src/protocols/websocket.c \

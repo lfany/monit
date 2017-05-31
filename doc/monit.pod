@@ -3147,6 +3147,7 @@ knows how to speak:
  I<SIP>
  I<SMTP>
  I<SMTPS>
+ I<SPAMASSASSIN>
  I<SSH>
  I<TNS>
  I<WEBSOCKET>

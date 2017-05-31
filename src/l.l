@@ -305,6 +305,7 @@ ssh               { return SSH; }
 redis             { return REDIS; }
 mongodb           { return MONGODB; }
 sieve             { return SIEVE; }
+spamassassin      { return SPAMASSASSIN; }
 dwp               { return DWP; }
 ldap2             { return LDAP2; }
 ldap3             { return LDAP3; }

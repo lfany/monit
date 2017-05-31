@@ -63,7 +63,8 @@ typedef enum {
         Protocol_WEBSOCKET,
         Protocol_REDIS,
         Protocol_MONGODB,
-        Protocol_SIEVE
+        Protocol_SIEVE,
+        Protocol_SPAMASSASSIN
 } Protocol_Type;
 
 
@@ -86,6 +87,7 @@ void check_postfix_policy(Socket_T);
 void check_pop(Socket_T);
 void check_sieve(Socket_T);
 void check_smtp(Socket_T);
+void check_spamassassin(Socket_T);
 void check_ssh(Socket_T);
 void check_redis(Socket_T);
 void check_rdate(Socket_T);
