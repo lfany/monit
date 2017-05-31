@@ -68,4 +68,15 @@ void System_abort(const char *e, ...) __attribute__((format (printf, 1, 2)));
 void System_error(const char *e, ...) __attribute__((format (printf, 1, 2)));
 
 
+/**
+ * Returns the number of available file descriptors for a process.
+ * This method uses <code>getdtablesize</code> internally, but returns
+ * a fixed size of <code>max</code> if <code>getdtablesize</code> returns
+ * a value outside the range [3..max].
+ * @param max Upper limit for descriptors
+ * @return A guarded number of available file descriptors for a process
+ */
+int System_getDescriptorsGuarded(int max);
+
+
 #endif

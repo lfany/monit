@@ -1607,14 +1607,9 @@ void Util_redirectStdFds() {
 
 
 void Util_closeFds() {
-        int i;
-#ifdef HAVE_UNISTD_H
-        int max_descriptors = getdtablesize();
-#else
-        int max_descriptors = 1024;
-#endif
-        for (i = 3; i < max_descriptors; i++)
+        for (int i = 3, descriptors = System_getDescriptorsGuarded(2<<15); i < descriptors; i++) {
                 close(i);
+        }
         errno = 0;
 }
 

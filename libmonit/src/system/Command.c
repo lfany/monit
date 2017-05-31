@@ -536,8 +536,9 @@ Process_T Command_execute(T C) {
                 setsid(); // Loose controlling terminal
                 _setupChildPipes(P);
                 // Close all descriptors except stdio
-                for (int i = 3, descriptors = getdtablesize(); i < descriptors; i++)
+                for (int i = 3, descriptors = System_getDescriptorsGuarded(2<<15); i < descriptors; i++) {
                         close(i);
+                }
                 // Unblock any signals and reset signal handlers
                 sigset_t mask;
                 sigemptyset(&mask);

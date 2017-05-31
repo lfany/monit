@@ -233,11 +233,8 @@ void Util_redirectStdFds();
 
 
 /*
- * Close all filedescriptors except standard. Everything
- * seems to have getdtablesize, so we'll use it here, and back
- * out to use 1024 if getdtablesize not available.
+ * Close all filedescriptors except standard.
  */
-
 void Util_closeFds();
 
 
@@ -245,7 +242,6 @@ void Util_closeFds();
  * Check if monit does have credentials for this user.  If successful
  * a pointer to the password is returned.
  */
-
 Auth_T Util_getUserCredentials(char *uname);
 
 

@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "Str.h"
 #include "system/System.h"
@@ -85,3 +86,10 @@ void System_error(const char *e, ...) {
                 vfprintf(stderr, e, ap);
         va_end(ap);
 }
+
+
+int System_getDescriptorsGuarded(int max) {
+        int descriptors = getdtablesize();
+        return (descriptors < 3 || descriptors > max) ? max : descriptors;
+}
+

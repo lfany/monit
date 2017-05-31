@@ -37,6 +37,13 @@ int main(void) {
         }
         printf("=> Test0: OK\n\n");
 
+        printf("=> Test1: check filedescriptors wrapper\n");
+        {
+                assert(System_getDescriptorsGuarded(10) == 10);
+
+        }
+        printf("=> Test1: OK\n\n");
+
         printf("============> System Tests: OK\n\n");
 
         return 0;

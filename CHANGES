@@ -19,6 +19,10 @@ Fixed: Issue #614: Monit may crash if "total memory" test is used in "check syst
 context. The "total memory" test is for process checks only (includes children
 memory total) and will produce syntax error if used in system check now.
 
+Fixed: Issue #616: If no filedescriptors limit is set when Monit starts, Monit may 
+freeze for a long time during startup and when executing start/stop methods or
+program checks.
+
 Fixed: The "check program" may timeout if the executed program produces lot of output.
 Thanks to Artur Molchanov for patch.
 
