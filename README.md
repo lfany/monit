@@ -30,9 +30,7 @@ INSTALLATION
 Monit utilize the GNU auto-tools and provided the requirements above are
 satisfied, building Monit is conducted via the standard;
 
-> ./configure
-> make
-> make install
+> ./configure && make && make install
 
 This will install Monit and the Monit man-file in /usr/local/bin and /usr/local/man/man1 respectively. If you want another location than
 /usr/local, run configure with the *--prefix* options and specify the install directory.
