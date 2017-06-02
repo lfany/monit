@@ -43,9 +43,7 @@ DISTRIBUTION
 
 If you need to build your own Monit source release package, follow these steps.
 
-> make cleanall
-> ./bootstrap && ./configure
-> make dist
+> make cleanall && ./bootstrap && ./configure && make dist
 
 This will produce a `monit-x.y.tar.gz` file in the current directory which can be used for distribution. Note that we do not use *make distclean* which is the convention, instead we use `make cleanall` to reset the Monit build directory, including libmonit, to pristine condition for a source release. Before a release you might also want to run *unit-tests* in *libmonit*. I.e. *cd libmonit; make verify;*.
 
