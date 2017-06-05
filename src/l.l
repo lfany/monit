@@ -304,6 +304,7 @@ ntp3              { return NTP3; }
 ssh               { return SSH; }
 redis             { return REDIS; }
 mongodb           { return MONGODB; }
+fail2ban          { return FAIL2BAN; }
 sieve             { return SIEVE; }
 spamassassin      { return SPAMASSASSIN; }
 dwp               { return DWP; }

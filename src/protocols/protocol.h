@@ -64,7 +64,8 @@ typedef enum {
         Protocol_REDIS,
         Protocol_MONGODB,
         Protocol_SIEVE,
-        Protocol_SPAMASSASSIN
+        Protocol_SPAMASSASSIN,
+        Protocol_FAIL2BAN
 } Protocol_Type;
 
 
@@ -72,6 +73,7 @@ void check_apache_status(Socket_T);
 void check_default(Socket_T);
 void check_dns(Socket_T);
 void check_dwp(Socket_T);
+void check_fail2ban(Socket_T);
 void check_ftp(Socket_T);
 void check_generic(Socket_T);
 void check_http(Socket_T);

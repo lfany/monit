@@ -5,7 +5,16 @@
 Version 5.23.0
 
 New: Spamassassin protocol test added. Example:
-    if failed port 783 protocol spamassassin then alert
+    check process spamd with pidfile /var/run/spamassassin.pid
+       start program = "/etc/init.d/spamassassin start"
+       stop  program = "/etc/init.d/spamassassin stop"
+       if failed port 783 protocol spamassassin then alert
+
+New: Fail2ban protocol test added. Example:
+    check process fail2ban with pidfile /var/run/fail2ban/fail2ban.pid
+       start program = "/etc/init.d/fail2ban start"
+       stop program = "/etc/init.d/fail2ban stop"
+       if failed unixsocket /var/run/fail2ban/fail2ban.sock protocol fail2ban then alert
 
 New: Issue #594: Systemd template for Monit: Added documentation reference.
 

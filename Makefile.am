@@ -59,6 +59,7 @@ monit_SOURCES	= src/y.tab.c \
 		  src/protocols/default.c \
 		  src/protocols/dns.c \
 		  src/protocols/dwp.c \
+		  src/protocols/fail2ban.c \
 		  src/protocols/ftp.c \
 		  src/protocols/generic.c \
 		  src/protocols/gps.c \
