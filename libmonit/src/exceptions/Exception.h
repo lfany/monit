@@ -197,11 +197,11 @@ enum {
         Exception_thrown,
         Exception_handled,
         Exception_finalized
-} __attribute__((__packed__));
-extern TD_T Exception_stack;
+};
+extern TD_T Exception_Stack;
 void Exception_init(void);
 void Exception_throw(const T *e, const char *func, const char *file, int line, const char *cause, ...) CLANG_ANALYZER_NORETURN;
-#define pop_exception_stack TD_set(Exception_stack, ((Exception_Frame*)TD_get(Exception_stack))->prev)
+#define pop_exception_stack TD_set(Exception_Stack, ((Exception_Frame*)TD_get(Exception_Stack))->prev)
 /** @endcond */
 
 
@@ -241,8 +241,8 @@ void Exception_throw(const T *e, const char *func, const char *file, int line, c
 	volatile int Exception_flag; \
         Exception_Frame Exception_frame; \
         Exception_frame.message[0] = 0; \
-        Exception_frame.prev = TD_get(Exception_stack); \
-        TD_set(Exception_stack, &Exception_frame); \
+        Exception_frame.prev = TD_get(Exception_Stack); \
+        TD_set(Exception_Stack, &Exception_frame); \
         Exception_flag = setjmp(Exception_frame.env); \
         if (Exception_flag == Exception_entered) {
 

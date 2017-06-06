@@ -57,13 +57,13 @@
 
 #define T Exception_T
 /* Thread specific Exception stack */
-ThreadData_T Exception_stack;
-/* Placeholder for system exceptions */
-Exception_T IOException = {"IOException"};
-Exception_T AssertException = {"AssertException"};
-Exception_T MemoryException = {"MemoryException"};
-Exception_T NumberFormatException = {"NumberFormatException"};
-Exception_T ProtocolException = {"ProtocolException"};
+ThreadData_T Exception_Stack;
+/* System exceptions */
+T IOException = {"IOException"};
+T AssertException = {"AssertException"};
+T MemoryException = {"MemoryException"};
+T NumberFormatException = {"NumberFormatException"};
+T ProtocolException = {"ProtocolException"};
 
 static pthread_once_t once_control = PTHREAD_ONCE_INIT;
 
@@ -71,7 +71,7 @@ static pthread_once_t once_control = PTHREAD_ONCE_INIT;
 /* --------------------------------------------------------------- Private */
 
 
-static void init_once(void) { ThreadData_create(Exception_stack); }
+static void init_once(void) { ThreadData_create(Exception_Stack); }
 
 
 /* ---------------------------------------------------------------- Public */
@@ -83,7 +83,7 @@ void Exception_init() { pthread_once(&once_control, init_once); }
 void Exception_throw(const T *e, const char *func, const char *file, int line, const char *cause, ...) {
 	assert(e);
         va_list ap;
-	Exception_Frame *p = ThreadData_get(Exception_stack);
+	Exception_Frame *p = ThreadData_get(Exception_Stack);
 	if (p) {
                 p->exception = e;
                 p->func = func;
