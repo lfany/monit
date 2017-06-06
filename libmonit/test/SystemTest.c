@@ -28,8 +28,8 @@ int main(void) {
 
         printf("=> Test0: check error description\n");
         {
-                const char *error;
-                assert((error = System_getError(EINVAL)) != NULL);
+                const char *error = System_getError(EINVAL);
+                assert(error != NULL);
                 printf("\tEINVAL description: %s\n", error);
                 errno = EINVAL;
                 assert(Str_isEqual(System_getLastError(), error));
