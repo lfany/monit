@@ -84,6 +84,8 @@
 		9397E3091D897CCA008CAD1F /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9397E3081D897CCA008CAD1F /* libz.tbd */; };
 		93A23ED41C85E6890076FBFE /* Address.c in Sources */ = {isa = PBXBuildFile; fileRef = 93A23ED21C85E6890076FBFE /* Address.c */; };
 		93DE91B01CBAED0400BC8E0C /* client.c in Sources */ = {isa = PBXBuildFile; fileRef = 93DE91AE1CBAED0400BC8E0C /* client.c */; };
+		93F14A6B1EE7002500FF756B /* fail2ban.c in Sources */ = {isa = PBXBuildFile; fileRef = 93F14A691EE7002500FF756B /* fail2ban.c */; };
+		93F14A6C1EE7002500FF756B /* spamassassin.c in Sources */ = {isa = PBXBuildFile; fileRef = 93F14A6A1EE7002500FF756B /* spamassassin.c */; };
 		93F515891CEF651000CC00F4 /* ProcessTree.c in Sources */ = {isa = PBXBuildFile; fileRef = 93F515861CEF651000CC00F4 /* ProcessTree.c */; };
 /* End PBXBuildFile section */
 
@@ -148,6 +150,13 @@
 			proxyType = 2;
 			remoteGlobalIDString = 52FDD6A8189C2036008E3D5E;
 			remoteInfo = CommandTest;
+		};
+		93F14A711EE7002500FF756B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 52A1310B13A7882A00583257 /* libmonit.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 52F8BB411ECE55270007DF91;
+			remoteInfo = StringBufferTest;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -311,6 +320,8 @@
 		93C635D91E6213CB009B873B /* sysdep_DRAGONFLY.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sysdep_DRAGONFLY.c; sourceTree = "<group>"; };
 		93DE91AE1CBAED0400BC8E0C /* client.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = client.c; sourceTree = "<group>"; };
 		93DE91AF1CBAED0400BC8E0C /* client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = client.h; sourceTree = "<group>"; };
+		93F14A691EE7002500FF756B /* fail2ban.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fail2ban.c; sourceTree = "<group>"; };
+		93F14A6A1EE7002500FF756B /* spamassassin.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = spamassassin.c; sourceTree = "<group>"; };
 		93F515861CEF651000CC00F4 /* ProcessTree.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ProcessTree.c; sourceTree = "<group>"; };
 		93F515871CEF651000CC00F4 /* ProcessTree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ProcessTree.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -440,6 +451,7 @@
 				52FDD6B6189C2762008E3D5E /* CommandTest */,
 				524981ED194B368C004A50DB /* TimeTest */,
 				52F675FD19B873A100E1FF1E /* StrTest */,
+				93F14A721EE7002500FF756B /* StringBufferTest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -583,6 +595,7 @@
 				52F6E78413A74F220023F87A /* default.c */,
 				52F6E78513A74F220023F87A /* dns.c */,
 				52F6E78613A74F220023F87A /* dwp.c */,
+				93F14A691EE7002500FF756B /* fail2ban.c */,
 				52F6E78713A74F220023F87A /* ftp.c */,
 				52F6E78813A74F220023F87A /* generic.c */,
 				52F6E78913A74F220023F87A /* gps.c */,
@@ -608,6 +621,7 @@
 				9378737A1A13907100CF8C5E /* sieve.c */,
 				52F6E79C13A74F220023F87A /* sip.c */,
 				52F6E79D13A74F220023F87A /* smtp.c */,
+				93F14A6A1EE7002500FF756B /* spamassassin.c */,
 				52F6E79E13A74F220023F87A /* ssh.c */,
 				52F6E79F13A74F220023F87A /* tns.c */,
 				9303FB7F18C47E7000138D72 /* websocket.c */,
@@ -750,6 +764,13 @@
 			remoteRef = 52FDD6B5189C2762008E3D5E /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		93F14A721EE7002500FF756B /* StringBufferTest */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = StringBufferTest;
+			remoteRef = 93F14A711EE7002500FF756B /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -775,6 +796,7 @@
 				9331C5B51CF4D2D800CFB86A /* xml.c in Sources */,
 				52F6E81E13A74F220023F87A /* log.c in Sources */,
 				52F6E81F13A74F220023F87A /* md5.c in Sources */,
+				93F14A6B1EE7002500FF756B /* fail2ban.c in Sources */,
 				52AE77CF14037E6A00D2861D /* md5_crypt.c in Sources */,
 				52F6E82013A74F220023F87A /* monit.c in Sources */,
 				52F6E82113A74F220023F87A /* net.c in Sources */,
@@ -825,6 +847,7 @@
 				52F6E84D13A74F220023F87A /* socket.c in Sources */,
 				52F6E84E13A74F220023F87A /* spawn.c in Sources */,
 				52F6E85013A74F220023F87A /* state.c in Sources */,
+				93F14A6C1EE7002500FF756B /* spamassassin.c in Sources */,
 				52F6E85213A74F220023F87A /* util.c in Sources */,
 				52F6E85313A74F220023F87A /* validate.c in Sources */,
 			);
