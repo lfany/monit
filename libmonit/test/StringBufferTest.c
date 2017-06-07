@@ -262,20 +262,24 @@ int main(void) {
                                     "<cccccccccc></cccccccccc>"
                                     "</bbbbbbbbbb>"
                                     "</aaaaaaaaaa>";
-                const char output[] = {0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                       0x00, 0x03, 0xb3, 0x49, 0x84, 0x03, 0x3b, 0x9b,
-                                       0x24, 0x38, 0xb0, 0xb3, 0x49, 0x86, 0x03, 0x3b,
-                                       0x1b, 0x7d, 0x64, 0xce, 0xe0, 0x94, 0xd0, 0x47,
-                                       0x76, 0xbb, 0x3e, 0x92, 0xa7, 0x00, 0xdd, 0x84,
-                                       0x33, 0xe7, 0xe1, 0x00, 0x00, 0x00};
+                const char compressedInput[] = {
+                        0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03,                                                                                                             // Header
+                        0xb3, 0x49, 0x84, 0x03, 0x3b, 0x9b, 0x24, 0x38, 0xb0, 0xb3, 0x49, 0x86, 0x03, 0x3b, 0x1b, 0x7d, 0x64, 0xce, 0xe0, 0x94, 0xd0, 0x47, 0x76, 0xbb, 0x3e, 0x92, 0xa7, 0x00, // Compressed blocks
+                        0xdd, 0x84, 0x33, 0xe7,                                                                                                                                                 // CRC
+                        0xe1, 0x00, 0x00, 0x00                                                                                                                                                  // Input size
+                };
                 sb = StringBuffer_new(input);
                 assert(StringBuffer_length(sb) == 225);
                 size_t compressedLength;
                 const void *compressed = StringBuffer_toCompressed(sb, 6, &compressedLength);
                 assert(compressed);
                 assert(compressedLength == 46);
-                for (int i = 0; i < compressedLength; i++)
-                        assert(output[i] == *(unsigned char *)(compressed + i));
+                for (int i = 0; i < compressedLength; i++) {
+                        // Skip header OS type as it is platform dependent (see 2.3.1 in https://www.ietf.org/rfc/rfc1952.txt)
+                        if (i != 9) {
+                                assert(compressedInput[i] == *(unsigned char *)(compressed + i));
+                        }
+                }
                 StringBuffer_free(&sb);
                 assert(sb == NULL);
         }
@@ -309,20 +313,24 @@ int main(void) {
                                      "<cccccccccc></cccccccccc>"
                                      "</bbbbbbbbbb>"
                                      "</aaaaaaaaaa>";
-                const char output1[] = {0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                        0x00, 0x03, 0xb3, 0x49, 0x84, 0x03, 0x3b, 0x9b,
-                                        0x24, 0x38, 0xb0, 0xb3, 0x49, 0x86, 0x03, 0x3b,
-                                        0x1b, 0x7d, 0x64, 0xce, 0xe0, 0x94, 0xd0, 0x47,
-                                        0x76, 0xbb, 0x3e, 0x92, 0xa7, 0x00, 0xdd, 0x84,
-                                        0x33, 0xe7, 0xe1, 0x00, 0x00, 0x00};
+                const char output1[] = {
+                        0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03,                                                                                                             // Header
+                        0xb3, 0x49, 0x84, 0x03, 0x3b, 0x9b, 0x24, 0x38, 0xb0, 0xb3, 0x49, 0x86, 0x03, 0x3b, 0x1b, 0x7d, 0x64, 0xce, 0xe0, 0x94, 0xd0, 0x47, 0x76, 0xbb, 0x3e, 0x92, 0xa7, 0x00, // Compressed blocks
+                        0xdd, 0x84, 0x33, 0xe7,                                                                                                                                                 // CRC
+                        0xe1, 0x00, 0x00, 0x00                                                                                                                                                  // Input size
+                };
                 sb = StringBuffer_new(input1);
                 assert(StringBuffer_length(sb) == 225);
                 size_t compressedLength;
                 const void *compressed = StringBuffer_toCompressed(sb, 6, &compressedLength);
                 assert(compressed);
                 assert(compressedLength == 46);
-                for (int i = 0; i < compressedLength; i++)
-                        assert(output1[i] == *(unsigned char *)(compressed + i));
+                for (int i = 0; i < compressedLength; i++) {
+                        // Skip header OS type as it is platform dependent (see 2.3.1 in https://www.ietf.org/rfc/rfc1952.txt)
+                        if (i != 9) {
+                                assert(output1[i] == *(unsigned char *)(compressed + i));
+                        }
+                }
 
                 //////////////////////////////////////////////////////////////////////////////
 
@@ -332,39 +340,46 @@ int main(void) {
                                      "<ffffffffff></ffffffffff>"
                                      "</eeeeeeeeee>"
                                      "</dddddddddd>";
-                const char output2[] = {0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                        0x00, 0x03, 0xb3, 0x49, 0x81, 0x03, 0x3b, 0x9b,
-                                        0x54, 0x38, 0xb0, 0xb3, 0x49, 0x83, 0x03, 0x3b,
-                                        0x1b, 0x7d, 0x14, 0x0e, 0xb2, 0x2a, 0x7d, 0x24,
-                                        0xed, 0x00, 0xa9, 0x23, 0x54, 0xf5, 0x4b, 0x00,
-                                        0x00, 0x00};
+                const char output2[] = {
+                        0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03,                                                                                     // Header
+                        0xb3, 0x49, 0x81, 0x03, 0x3b, 0x9b, 0x54, 0x38, 0xb0, 0xb3, 0x49, 0x83, 0x03, 0x3b, 0x1b, 0x7d, 0x14, 0x0e, 0xb2, 0x2a, 0x7d, 0x24, 0xed, 0x00, // Compressed blocks
+                        0xa9, 0x23, 0x54, 0xf5,                                                                                                                         // CRC
+                        0x4b, 0x00, 0x00, 0x00                                                                                                                          // Input size
+                };
                 StringBuffer_clear(sb);
                 StringBuffer_append(sb, "%s", input2);
                 assert(StringBuffer_length(sb) == 75);
                 compressed = StringBuffer_toCompressed(sb, 6, &compressedLength);
                 assert(compressed);
                 assert(compressedLength == 42);
-                for (int i = 0; i < compressedLength; i++)
-                        assert(output2[i] == *(unsigned char *)(compressed + i));
+                for (int i = 0; i < compressedLength; i++) {
+                        // Skip header OS type as it is platform dependent (see 2.3.1 in https://www.ietf.org/rfc/rfc1952.txt)
+                        if (i != 9) {
+                                assert(output2[i] == *(unsigned char *)(compressed + i));
+                        }
+                }
 
                 //////////////////////////////////////////////////////////////////////////////
 
                 printf("\tStage 3: append content + compress\n");
                 const char *input3 = "<gggggggggg></gggggggggg>";
-                const char output3[] = {0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                        0x00, 0x03, 0xb3, 0x49, 0x81, 0x03, 0x3b, 0x9b,
-                                        0x54, 0x38, 0xb0, 0xb3, 0x49, 0x83, 0x03, 0x3b,
-                                        0x1b, 0x7d, 0x14, 0x0e, 0xb2, 0x2a, 0x7d, 0x64,
-                                        0xed, 0xe9, 0x70, 0x00, 0x94, 0x40, 0xe2, 0x00,
-                                        0x00, 0x4c, 0x64, 0x9a, 0x52, 0x64, 0x00, 0x00,
-                                        0x00};
+                const char output3[] = {
+                        0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03,                                                                                                                               // Header
+                        0xb3, 0x49, 0x81, 0x03, 0x3b, 0x9b, 0x54, 0x38, 0xb0, 0xb3, 0x49, 0x83, 0x03, 0x3b, 0x1b, 0x7d, 0x14, 0x0e, 0xb2, 0x2a, 0x7d, 0x64, 0xed, 0xe9, 0x70, 0x00, 0x94, 0x40, 0xe2, 0x00, 0x00, // Compressed blocks
+                        0x4c, 0x64, 0x9a, 0x52,                                                                                                                                                                   // CRC
+                        0x64, 0x00, 0x00, 0x00                                                                                                                                                                    // Input size
+                };
                 StringBuffer_append(sb, "%s", input3);
                 assert(StringBuffer_length(sb) == 100); // length of input2 + input3
                 compressed = StringBuffer_toCompressed(sb, 6, &compressedLength);
                 assert(compressed);
                 assert(compressedLength == 49);
-                for (int i = 0; i < compressedLength; i++)
-                        assert(output3[i] == *(unsigned char *)(compressed + i));
+                for (int i = 0; i < compressedLength; i++) {
+                        // Skip header OS type as it is platform dependent (see 2.3.1 in https://www.ietf.org/rfc/rfc1952.txt)
+                        if (i != 9) {
+                                assert(output3[i] == *(unsigned char *)(compressed + i));
+                        }
+                }
 
                 //////////////////////////////////////////////////////////////////////////////
 
