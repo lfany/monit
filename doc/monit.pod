@@ -3120,6 +3120,7 @@ knows how to speak:
  I<APACHE-STATUS>
  I<DNS>
  I<DWP>
+ I<FAIL2BAN>
  I<FTP>
  I<GPS>
  I<HTTP>
