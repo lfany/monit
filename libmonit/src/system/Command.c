@@ -493,6 +493,7 @@ Process_T Command_execute(T C) {
         assert(_args(C));
         volatile int exec_error = 0;
         Process_T P = _Process_new();
+        int descriptors = System_getDescriptorsGuarded();
         _createPipes(P);
         if ((P->pid = vfork()) < 0) {
                 ERROR("Command: fork failed -- %s\n", System_getLastError());
@@ -506,6 +507,12 @@ Process_T Command_execute(T C) {
                                 ERROR("Command: sub-process cannot change working directory to '%s' -- %s\n", C->working_directory, System_getLastError());
                                 _exit(errno);
                         }
+                }
+                setsid(); // Loose controlling terminal
+                _setupChildPipes(P);
+                // Close all descriptors except stdio, _before_ any uid/gid switching
+                for (int i = 3; i < descriptors; i++) {
+                        close(i);
                 }
                 P->gid = getgid();
                 if (C->gid) {
@@ -532,12 +539,6 @@ Process_T Command_execute(T C) {
                         } else {
                                 ERROR("Command: uid %d not found on the system -- %s\n", C->uid, System_getLastError());
                         }
-                }
-                setsid(); // Loose controlling terminal
-                _setupChildPipes(P);
-                // Close all descriptors except stdio
-                for (int i = 3, descriptors = System_getDescriptorsGuarded(2<<15); i < descriptors; i++) {
-                        close(i);
                 }
                 // Unblock any signals and reset signal handlers
                 sigset_t mask;

@@ -88,8 +88,12 @@ void System_error(const char *e, ...) {
 }
 
 
-int System_getDescriptorsGuarded(int max) {
-        int descriptors = getdtablesize();
-        return (descriptors < 3 || descriptors > max) ? max : descriptors;
+int System_getDescriptorsGuarded() {
+        int max = 2<<15;
+        int fileDescriptors = (int)sysconf(_SC_OPEN_MAX);
+        if (fileDescriptors < 2)
+                fileDescriptors = getdtablesize();
+        assert(fileDescriptors > 2);
+        return (fileDescriptors > max) ? max : fileDescriptors;
 }
 

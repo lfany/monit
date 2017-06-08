@@ -39,7 +39,7 @@ int main(void) {
 
         printf("=> Test1: check filedescriptors wrapper\n");
         {
-                assert(System_getDescriptorsGuarded(10) == 10);
+                assert(System_getDescriptorsGuarded() <= 2<<15);
 
         }
         printf("=> Test1: OK\n\n");
