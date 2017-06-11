@@ -79,7 +79,7 @@ int main(void) {
                 assert((File_mod(path) & 07777) == 00640);
                 assert(File_isReadable(path) == true);
                 assert(File_isWritable(path) == true);
-#if defined(SOLARIS) || defined (FREEBSD) || defined (AIX)
+#if defined(SOLARIS) || defined (FREEBSD) || defined (AIX) || defined(DRAGONFLY)
                 /* Some systems like Solaris and FreeBSD return X_OK if the process has
                  * appropriate privilege even if none of the execute file permission bits
                  * are set. */
