@@ -39,35 +39,27 @@
  *
  *  @file
  */
+/**
+ *  Send PING and check for PONG.
+ *
+ *  @file
+ */
 void check_fail2ban(Socket_T socket) {
         ASSERT(socket);
 
-        const unsigned char ping[] = {
-                0x80, 0x04, 0x95, 0x0b, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x5d, 0x94, 0x8c, 0x04, 0x70,
-                0x69, 0x6e, 0x67, 0x94, 0x61, 0x2e, 0x3c, 0x46,
-                0x32, 0x42, 0x5f, 0x45, 0x4e, 0x44, 0x5f, 0x43,
-                0x4f, 0x4d, 0x4d, 0x41, 0x4e, 0x44, 0x3e, 0x00
-        };
-        const unsigned char pong[] = {
-                0x80, 0x04, 0x95, 0x0c, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x4b, 0x00, 0x8c, 0x04, 0x70,
-                0x6f, 0x6e, 0x67, 0x94, 0x86, 0x94, 0x2e, 0x3c,
-                0x46, 0x32, 0x42, 0x5f, 0x45, 0x4e, 0x44, 0x5f,
-                0x43, 0x4f, 0x4d, 0x4d, 0x41, 0x4e, 0x44, 0x3e
-        };
+        const unsigned char ping[] = "(lp0\nS'ping'\np1\na.<F2B_END_COMMAND>"; // pickle protocol version 0
 
         // Send PING
         if (Socket_write(socket, (void *)ping, sizeof(ping)) < 0) {
                 THROW(IOException, "FAIL2BAN: PING command error -- %s", STRERROR);
         }
 
-        // Read and check PONG
-        unsigned char response[40];
-        if (Socket_read(socket, response, sizeof(response)) != sizeof(pong)) {
+        // Read and check response - just the pickle protocol header beginning to see if the server reacts to commands, so we can keep the response test pickle-protocol-version agnostic
+        unsigned char response[1] = {};
+        if (Socket_read(socket, response, sizeof(response)) != 1) {
                 THROW(IOException, "FAIL2BAN: PONG read error -- %s", STRERROR);
         }
-        if (memcmp(response, pong, sizeof(pong))) {
+        if (response[0] != 0x80) {
                 THROW(ProtocolException, "FAIL2BAN: PONG error");
         }
 }

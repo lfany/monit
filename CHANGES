@@ -4,6 +4,9 @@
 
 Version 5.24.0
 
+Fixed: Issue #624: Make the fail2ban protocol test backward
+compatible with older protocol versions.
+
 
 Version 5.23.0
 
